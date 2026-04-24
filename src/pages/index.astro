@@ -3,7 +3,7 @@ import '../styles/global.css'
 import WorkflowDiagram from '../components/WorkflowDiagram'
 import ContextRot from '../components/ContextRot'
 import SkillSection from '../components/SkillSection'
-import { grillMe, writeAPrd } from '../data/skills'
+import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork } from '../data/skills'
 ---
 
 <html lang="pt-BR">
@@ -64,25 +64,15 @@ import { grillMe, writeAPrd } from '../data/skills'
 		</section>
 
 		<section id="skill-prd-to-plan" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
-				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/prd-to-plan</span>
-			</h2>
-			<p class="text-neutral-400">Quebre o PRD em stories técnicas curtas e acionáveis.</p>
+			<SkillSection {...prdToPlan} client:visible />
 		</section>
 
 		<section id="skill-plan-to-tracker" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
-				<span class="text-cyan-400 font-mono text-2xl sm:text-3xl">/plan-to-tracker</span>
-				<span class="ml-3 text-xs uppercase tracking-wider text-cyan-400/70 border border-cyan-400/30 rounded-full px-3 py-1 align-middle">opcional</span>
-			</h2>
-			<p class="text-neutral-400">Mova stories para ClickUp, Jira ou Linear via MCP.</p>
+			<SkillSection {...planToTracker} client:visible />
 		</section>
 
 		<section id="skill-do-work" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
-				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/do-work</span>
-			</h2>
-			<p class="text-neutral-400">IA executa o código e gerencia branches automaticamente.</p>
+			<SkillSection {...doWork} client:visible />
 		</section>
 
 		<section id="skill-improve-codebase-architecture" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
