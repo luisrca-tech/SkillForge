@@ -82,13 +82,13 @@ A reusable skill section layout that follows the template: "O problema" → "A s
 
 ### Acceptance criteria
 
-- [ ] Skill section layout is consistent and reusable
-- [ ] Terminal simulator component renders with dark theme, monospace font, neon colors
-- [ ] Terminal has typewriter text effect
-- [ ] Terminal supports clickable tabs to switch between scenarios
-- [ ] `grill-me` section has complete copy and at least 2 terminal scenarios
-- [ ] `write-a-prd` section has complete copy and at least 2 terminal scenarios
-- [ ] Sections have scroll-triggered entrance animations via Motion
+- [x] Skill section layout is consistent and reusable
+- [x] Terminal simulator component renders with dark theme, monospace font, neon colors
+- [x] Terminal has typewriter text effect
+- [x] Terminal supports clickable tabs to switch between scenarios
+- [x] `grill-me` section has complete copy and at least 2 terminal scenarios
+- [x] `write-a-prd` section has complete copy and at least 2 terminal scenarios
+- [x] Sections have scroll-triggered entrance animations via Motion
 
 ---
 
