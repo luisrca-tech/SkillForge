@@ -518,3 +518,178 @@ export const writeAPrd: SkillData = {
     },
   ],
 };
+
+export const improveCodebaseArchitecture: SkillData = {
+  name: "improve-codebase-architecture",
+  problem: {
+    title: "O problema",
+    description:
+      "O código funciona, os testes passam, o PR está aberto — mas ninguém fez uma revisão estrutural. Padrões foram quebrados, responsabilidades estão misturadas, abstrações desnecessárias foram criadas, e a arquitetura foi comprometida sem que ninguém percebesse. O code review humano foca em detalhes de implementação e deixa passar problemas sistêmicos.",
+  },
+  skill: {
+    title: "A skill",
+    description:
+      "O /improve-codebase-architecture funciona como um code review arquitetural automatizado. A IA analisa o código implementado buscando gaps: violações de padrões do projeto, acoplamento excessivo, abstrações prematuras, inconsistências com o restante da codebase. Não é um linter — é uma revisão que entende o contexto do projeto e sugere melhorias estruturais.",
+  },
+  howItWorks: {
+    title: "Como funciona",
+    steps: [
+      "A IA lê o código recém-implementado e o compara com os padrões da codebase",
+      "Identifica violações de arquitetura, code smells e inconsistências",
+      "Sugere refatorações específicas com justificativa técnica",
+      "Você aplica as mudanças e roda os testes para garantir que nada quebrou",
+    ],
+  },
+  scenarios: [
+    {
+      id: "patterns",
+      label: "Padrões violados",
+      lines: [
+        {
+          type: "prompt",
+          text: "Revisar a implementação do módulo de notificações",
+        },
+        {
+          type: "response",
+          text: "Analisando src/notifications/ contra os padrões da codebase...",
+        },
+        {
+          type: "response",
+          text: "⚠ NotificationService mistura lógica de negócio com acesso ao banco. O restante da codebase usa Repository pattern — extrair NotificationRepository.",
+        },
+        {
+          type: "response",
+          text: "⚠ O enum NotificationType está definido inline no service. Outros módulos definem enums em src/types/ — mover para manter consistência.",
+        },
+        {
+          type: "response",
+          text: "✓ Testes seguem o padrão do projeto (describe/it, fixtures separados).",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "2 issues encontrados. Nenhum é crítico, mas ambos geram debt se não corrigidos agora. Sugestão: corrigir antes do merge.",
+        },
+      ],
+    },
+    {
+      id: "coupling",
+      label: "Acoplamento",
+      lines: [
+        {
+          type: "prompt",
+          text: "Verificar acoplamento no módulo de checkout",
+        },
+        {
+          type: "response",
+          text: "Analisando dependências de src/checkout/...",
+        },
+        {
+          type: "response",
+          text: "⚠ CheckoutService importa diretamente UserRepository, PaymentGateway e EmailService. 3 dependências externas — alto acoplamento.",
+        },
+        {
+          type: "response",
+          text: "O restante da codebase usa injeção de dependência via constructor. CheckoutService instancia dependências internamente.",
+        },
+        {
+          type: "response",
+          text: "Sugestão: receber dependências via constructor e criar CheckoutServiceFactory para composição.",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "Isso também vai facilitar os testes — atualmente o test file faz mock de 3 módulos com jest.mock(). Com DI, basta passar mocks no constructor.",
+        },
+      ],
+    },
+  ],
+};
+
+export const handleCoderabbit: SkillData = {
+  name: "handle-coderabbit",
+  problem: {
+    title: "O problema",
+    description:
+      "Você abre um PR e o CodeRabbit (ou outro bot de review) deixa 15 comentários. Alguns são relevantes, outros são falsos positivos. Você precisa ler cada um, decidir o que é válido, implementar as correções, responder os comentários, e re-request review. É um processo manual e tedioso que transforma um merge de 5 minutos em 30 minutos de trabalho burocrático.",
+  },
+  skill: {
+    title: "A skill",
+    description:
+      "O /handle-coderabbit automatiza o ciclo de feedback de code review automatizado. A IA lê os comentários do CodeRabbit (ou GitHub Copilot review), classifica cada um como válido ou falso positivo, implementa as correções necessárias, e responde os comentários diretamente no PR — tudo via CLI, sem sair do terminal.",
+  },
+  howItWorks: {
+    title: "Como funciona",
+    steps: [
+      "A IA lê todos os comentários do bot de review no PR aberto",
+      "Classifica cada comentário: correção necessária, sugestão válida, ou falso positivo",
+      "Implementa as correções e melhorias aceitas automaticamente",
+      "Responde cada comentário no PR explicando a ação tomada",
+      "Faz commit das correções e solicita re-review",
+    ],
+  },
+  scenarios: [
+    {
+      id: "coderabbit",
+      label: "CodeRabbit",
+      lines: [
+        {
+          type: "prompt",
+          text: "Processar review do CodeRabbit no PR #47",
+        },
+        {
+          type: "response",
+          text: "Lendo 8 comentários do CodeRabbit no PR #47...",
+        },
+        {
+          type: "response",
+          text: "✓ Comentário 1: 'Missing error handling in fetchUser' — VÁLIDO. Adicionando try/catch com error boundary.",
+        },
+        {
+          type: "response",
+          text: "✗ Comentário 2: 'Consider using optional chaining' — FALSO POSITIVO. O valor nunca é null aqui (garantido pelo schema Zod).",
+        },
+        {
+          type: "response",
+          text: "✓ Comentário 3: 'SQL injection risk in query builder' — VÁLIDO. Substituindo concatenação por parameterized query.",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "5/8 comentários corrigidos, 3 marcados como falso positivo com justificativa. Commit: 'fix: address CodeRabbit review feedback'. Re-review solicitado.",
+        },
+      ],
+    },
+    {
+      id: "copilot",
+      label: "GitHub Copilot",
+      lines: [
+        {
+          type: "prompt",
+          text: "Processar review do Copilot no PR #52",
+        },
+        {
+          type: "response",
+          text: "Lendo 5 sugestões do GitHub Copilot no PR #52...",
+        },
+        {
+          type: "response",
+          text: "✓ Sugestão 1: 'Extract magic number 86400 to named constant' — VÁLIDO. Criando SECONDS_PER_DAY.",
+        },
+        {
+          type: "response",
+          text: "✓ Sugestão 2: 'This async function never awaits' — VÁLIDO. Removendo async desnecessário.",
+        },
+        {
+          type: "response",
+          text: "✗ Sugestão 3: 'Consider memoizing this computation' — FALSO POSITIVO. Função é chamada uma vez no startup, memoização não traz benefício.",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "3/5 sugestões aplicadas, 2 rejeitadas com justificativa. Commit: 'fix: apply Copilot review suggestions'.",
+        },
+      ],
+    },
+  ],
+};

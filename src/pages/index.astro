@@ -3,7 +3,7 @@ import '../styles/global.css'
 import WorkflowDiagram from '../components/WorkflowDiagram'
 import ContextRot from '../components/ContextRot'
 import SkillSection from '../components/SkillSection'
-import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork } from '../data/skills'
+import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseArchitecture, handleCoderabbit } from '../data/skills'
 ---
 
 <html lang="pt-BR">
@@ -76,17 +76,11 @@ import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork } from '../data/sk
 		</section>
 
 		<section id="skill-improve-codebase-architecture" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
-				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/improve-codebase-architecture</span>
-			</h2>
-			<p class="text-neutral-400">Code review automatizado para encontrar gaps na implementação.</p>
+			<SkillSection {...improveCodebaseArchitecture} client:visible />
 		</section>
 
 		<section id="skill-handle-coderabbit" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
-				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/handle-coderabbit</span>
-			</h2>
-			<p class="text-neutral-400">Integre feedback automatizado do CodeRabbit ou GitHub Copilot via CLI.</p>
+			<SkillSection {...handleCoderabbit} client:visible />
 		</section>
 
 		<footer class="px-6 py-12 text-center text-neutral-600 text-sm border-t border-neutral-800">

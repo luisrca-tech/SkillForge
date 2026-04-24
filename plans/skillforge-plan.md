@@ -120,10 +120,10 @@ Apply the skill section template to the last two skills: `improve-codebase-archi
 
 ### Acceptance criteria
 
-- [ ] `improve-codebase-architecture` section complete with copy and terminal scenarios
-- [ ] `handle-coderabbit` section complete with copy and terminal scenarios
-- [ ] Both follow the established template
-- [ ] Both have scroll-triggered entrance animations
+- [x] `improve-codebase-architecture` section complete with copy and terminal scenarios
+- [x] `handle-coderabbit` section complete with copy and terminal scenarios
+- [x] Both follow the established template
+- [x] Both have scroll-triggered entrance animations
 
 ---
 
