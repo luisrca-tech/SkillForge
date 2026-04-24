@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css'
 import WorkflowDiagram from '../components/WorkflowDiagram'
+import ContextRot from '../components/ContextRot'
 ---
 
 <html lang="pt-BR">
@@ -48,11 +49,8 @@ import WorkflowDiagram from '../components/WorkflowDiagram'
 			<WorkflowDiagram client:only="react" />
 		</section>
 
-		<section id="context-rot" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">A Ciência por Trás</h2>
-			<p class="text-neutral-400 text-center max-w-2xl mx-auto">
-				Por que skills on-demand são mais eficientes que regras globais na janela de contexto dos LLMs.
-			</p>
+		<section id="context-rot" class="px-6 py-24 max-w-4xl mx-auto">
+			<ContextRot client:visible />
 		</section>
 
 		<section id="skill-grill-me" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
