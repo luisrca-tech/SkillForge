@@ -137,9 +137,9 @@ Full animation polish pass across all sections (consistent Motion entrance anima
 
 ### Acceptance criteria
 
-- [ ] All sections have consistent, smooth scroll-triggered animations
-- [ ] Site is fully responsive and functional on mobile devices
-- [ ] Footer is present
+- [x] All sections have consistent, smooth scroll-triggered animations
+- [x] Site is fully responsive and functional on mobile devices
+- [x] Footer is present
 - [ ] Lighthouse performance score >= 90
-- [ ] No layout shifts or animation jank on mobile
-- [ ] Total JS bundle size is reasonable for a static landing page
+- [x] No layout shifts or animation jank on mobile
+- [x] Total JS bundle size is reasonable for a static landing page

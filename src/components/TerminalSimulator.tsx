@@ -157,7 +157,7 @@ export default function TerminalSimulator({
 
       <div
         ref={containerRef}
-        className="p-4 sm:p-6 font-mono text-sm leading-relaxed h-80 sm:h-96 overflow-y-auto"
+        className="p-4 sm:p-6 font-mono text-xs sm:text-sm leading-relaxed h-64 sm:h-80 md:h-96 overflow-y-auto"
       >
         {activeScenario?.lines.map((line, index) => {
           const text = displayedLines[index];
