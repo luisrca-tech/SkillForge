@@ -64,11 +64,11 @@ The "A ciencia por tras" section explaining Context Rot — why LLM performance 
 
 ### Acceptance criteria
 
-- [ ] Section explains Context Rot concept accessibly
-- [ ] Section argues skills-on-demand vs. global rules with technical depth
-- [ ] At least 5 references to real studies/sources from the PRD
-- [ ] Entrance animations trigger on scroll via Motion
-- [ ] Section is responsive
+- [x] Section explains Context Rot concept accessibly
+- [x] Section argues skills-on-demand vs. global rules with technical depth
+- [x] At least 5 references to real studies/sources from the PRD
+- [x] Entrance animations trigger on scroll via Motion
+- [x] Section is responsive
 
 ---
 
