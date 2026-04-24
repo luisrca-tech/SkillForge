@@ -12,7 +12,100 @@ import '../styles/global.css'
 		<title>SkillForge</title>
 		<meta name="description" content="Pare de fazer vibe coding. Tenha um workflow profissional de desenvolvimento assistido por IA." />
 	</head>
-	<body class="bg-neutral-950 text-neutral-100">
-		<h1 class="text-4xl font-bold text-center py-20">SkillForge</h1>
+	<body class="bg-neutral-950 text-neutral-100 scroll-smooth">
+
+		<header id="hero" class="min-h-screen flex flex-col items-center justify-center px-6 text-center">
+			<p class="text-sm uppercase tracking-widest text-emerald-400 mb-4 font-mono">SkillForge</p>
+			<h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold max-w-4xl leading-tight">
+				Pare de fazer <span class="text-emerald-400">vibe coding.</span>
+			</h1>
+			<p class="mt-6 max-w-2xl text-lg sm:text-xl text-neutral-400 leading-relaxed">
+				Você pede código à IA sem processo, sem rastreabilidade, sem revisão.
+				O resultado? Código frágil, débito técnico invisível e zero aproveitamento
+				do potencial real dessas ferramentas.
+			</p>
+			<p class="mt-4 max-w-2xl text-lg sm:text-xl text-neutral-300 leading-relaxed">
+				SkillForge é um workflow completo de desenvolvimento assistido por IA — da
+				concepção da feature ao code review — com embasamento técnico sobre
+				<strong class="text-emerald-400">por que</strong> essa abordagem funciona melhor.
+			</p>
+			<nav class="mt-10">
+				<a
+					href="#workflow"
+					class="inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold rounded-lg transition-colors"
+				>
+					Conhecer o workflow
+				</a>
+			</nav>
+		</header>
+
+		<section id="workflow" class="min-h-screen px-6 py-24 max-w-6xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">O Workflow</h2>
+			<p class="text-neutral-400 text-center max-w-2xl mx-auto mb-16">
+				7 skills que transformam o uso da IA em um processo disciplinado e reproduzível.
+			</p>
+		</section>
+
+		<section id="context-rot" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">A Ciência por Trás</h2>
+			<p class="text-neutral-400 text-center max-w-2xl mx-auto">
+				Por que skills on-demand são mais eficientes que regras globais na janela de contexto dos LLMs.
+			</p>
+		</section>
+
+		<section id="skill-grill-me" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
+				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/grill-me</span>
+			</h2>
+			<p class="text-neutral-400">Entrevista técnica para definir requisitos antes de codar.</p>
+		</section>
+
+		<section id="skill-write-a-prd" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
+				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/write-a-prd</span>
+			</h2>
+			<p class="text-neutral-400">PRD completo gerado com assistência de IA.</p>
+		</section>
+
+		<section id="skill-prd-to-plan" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
+				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/prd-to-plan</span>
+			</h2>
+			<p class="text-neutral-400">Quebre o PRD em stories técnicas curtas e acionáveis.</p>
+		</section>
+
+		<section id="skill-plan-to-tracker" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
+				<span class="text-cyan-400 font-mono text-2xl sm:text-3xl">/plan-to-tracker</span>
+				<span class="ml-3 text-xs uppercase tracking-wider text-cyan-400/70 border border-cyan-400/30 rounded-full px-3 py-1 align-middle">opcional</span>
+			</h2>
+			<p class="text-neutral-400">Mova stories para ClickUp, Jira ou Linear via MCP.</p>
+		</section>
+
+		<section id="skill-do-work" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
+				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/do-work</span>
+			</h2>
+			<p class="text-neutral-400">IA executa o código e gerencia branches automaticamente.</p>
+		</section>
+
+		<section id="skill-improve-codebase-architecture" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
+				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/improve-codebase-architecture</span>
+			</h2>
+			<p class="text-neutral-400">Code review automatizado para encontrar gaps na implementação.</p>
+		</section>
+
+		<section id="skill-handle-coderabbit" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
+				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/handle-coderabbit</span>
+			</h2>
+			<p class="text-neutral-400">Integre feedback automatizado do CodeRabbit ou GitHub Copilot via CLI.</p>
+		</section>
+
+		<footer class="px-6 py-12 text-center text-neutral-600 text-sm border-t border-neutral-800">
+			<p>SkillForge &mdash; workflow profissional de desenvolvimento assistido por IA.</p>
+		</footer>
+
 	</body>
 </html>
