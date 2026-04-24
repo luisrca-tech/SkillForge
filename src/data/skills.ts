@@ -110,6 +110,305 @@ export const grillMe: SkillData = {
   ],
 };
 
+export const prdToPlan: SkillData = {
+  name: "prd-to-plan",
+  problem: {
+    title: "O problema",
+    description:
+      "Você tem um PRD completo, mas ele é um documento de negócio — não um plano de execução. Tentar implementar direto do PRD resulta em commits gigantes, stories vagas tipo 'implementar autenticação', e zero rastreabilidade entre o que foi planejado e o que foi entregue. O desenvolvedor pula de seção em seção do PRD sem ordem clara.",
+  },
+  skill: {
+    title: "A skill",
+    description:
+      "O /prd-to-plan transforma o PRD em um plano técnico com fases sequenciais, cada uma contendo stories curtas e específicas com critérios de aceite. O plano é otimizado para ser consumido por IA durante a implementação — cada story referencia exatamente o que construir, sem ambiguidade.",
+  },
+  howItWorks: {
+    title: "Como funciona",
+    steps: [
+      "A IA lê o PRD e identifica as dependências entre componentes",
+      "Agrupa o trabalho em fases com ordem lógica de implementação",
+      "Cada fase contém stories técnicas curtas com critérios de aceite claros",
+      "O plano serve como input direto para o /do-work executar fase por fase",
+    ],
+  },
+  scenarios: [
+    {
+      id: "fullstack",
+      label: "App Fullstack",
+      lines: [
+        {
+          type: "prompt",
+          text: "Gerar plano técnico a partir do PRD do sistema de notificações",
+        },
+        {
+          type: "response",
+          text: "## Phase 1: Modelo de dados e API base",
+        },
+        {
+          type: "response",
+          text: "Story 1.1: Criar tabela notifications com campos user_id, type, channel, payload, read_at, created_at",
+        },
+        {
+          type: "response",
+          text: "Story 1.2: Endpoint POST /notifications — criar notificação e enfileirar para entrega",
+        },
+        {
+          type: "response",
+          text: "Story 1.3: Endpoint GET /notifications — listar com paginação e filtro por read/unread",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "## Phase 2: Entrega multi-canal",
+        },
+        {
+          type: "response",
+          text: "Story 2.1: Worker que consome a fila e despacha via email (SendGrid) ou push (FCM)",
+        },
+        {
+          type: "response",
+          text: "Story 2.2: Tabela user_notification_preferences com configuração por canal e tipo",
+        },
+      ],
+    },
+    {
+      id: "mobile",
+      label: "App Mobile",
+      lines: [
+        {
+          type: "prompt",
+          text: "Gerar plano técnico para o app de delivery",
+        },
+        {
+          type: "response",
+          text: "## Phase 1: Setup e navegação",
+        },
+        {
+          type: "response",
+          text: "Story 1.1: Scaffold React Native com Expo Router, configurar navegação bottom tabs",
+        },
+        {
+          type: "response",
+          text: "Story 1.2: Tela de login com autenticação via API existente",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "## Phase 2: Fluxo de pedido",
+        },
+        {
+          type: "response",
+          text: "Story 2.1: Tela de listagem de restaurantes com busca e filtros",
+        },
+        {
+          type: "response",
+          text: "Story 2.2: Tela de cardápio com adição ao carrinho e variações de item",
+        },
+        {
+          type: "response",
+          text: "Story 2.3: Checkout com endereço, método de pagamento e confirmação",
+        },
+      ],
+    },
+  ],
+};
+
+export const planToTracker: SkillData = {
+  name: "plan-to-tracker",
+  variant: "optional",
+  problem: {
+    title: "O problema",
+    description:
+      "O plano técnico existe, mas as stories ficam presas em um arquivo Markdown que ninguém consulta depois da primeira semana. O PM cobra status no ClickUp, o time atualiza Jira manualmente, e a fonte da verdade se fragmenta entre o plano, o tracker e a cabeça do dev. Stories são copiadas com erros, perdem contexto, e o tracker vira um cemitério de tickets desatualizados.",
+  },
+  skill: {
+    title: "A skill",
+    description:
+      "O /plan-to-tracker é um passo opcional que sincroniza as stories do plano diretamente para o seu tracker de projetos (ClickUp, Jira, Linear) via MCP. Cada story vira um ticket com título, descrição, critérios de aceite e labels corretos — sem copiar e colar manual. O plano e o tracker ficam em sincronia desde o início.",
+  },
+  howItWorks: {
+    title: "Como funciona",
+    steps: [
+      "A IA lê o plano gerado pelo /prd-to-plan e identifica cada story",
+      "Conecta ao seu tracker via MCP server (ClickUp, Jira, Linear)",
+      "Cria tickets com título, descrição formatada e critérios de aceite",
+      "Organiza os tickets em sprints ou fases conforme o plano original",
+    ],
+  },
+  scenarios: [
+    {
+      id: "clickup",
+      label: "ClickUp",
+      lines: [
+        {
+          type: "prompt",
+          text: "Sincronizar plano com o ClickUp no espaço 'Backend v2'",
+        },
+        {
+          type: "response",
+          text: "Conectando ao ClickUp via MCP server...",
+        },
+        {
+          type: "response",
+          text: "Espaço 'Backend v2' encontrado. Criando lista 'Phase 1: Modelo de dados e API base'...",
+        },
+        {
+          type: "response",
+          text: "✓ Ticket criado: 'Criar tabela notifications' — prioridade: alta, tags: [database, backend]",
+        },
+        {
+          type: "response",
+          text: "✓ Ticket criado: 'Endpoint POST /notifications' — prioridade: alta, tags: [api, backend]",
+        },
+        {
+          type: "response",
+          text: "✓ Ticket criado: 'Endpoint GET /notifications' — prioridade: média, tags: [api, backend]",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "6 tickets criados em 2 listas. Dependências configuradas. Link do board: clickup.com/...",
+        },
+      ],
+    },
+    {
+      id: "linear",
+      label: "Linear",
+      lines: [
+        {
+          type: "prompt",
+          text: "Exportar stories para o Linear no projeto 'Mobile App'",
+        },
+        {
+          type: "response",
+          text: "Conectando ao Linear via MCP server...",
+        },
+        {
+          type: "response",
+          text: "Projeto 'Mobile App' encontrado. Criando ciclo 'Phase 1: Setup e navegação'...",
+        },
+        {
+          type: "response",
+          text: "✓ MOB-42: 'Scaffold React Native com Expo Router' — estimate: 3pts, label: setup",
+        },
+        {
+          type: "response",
+          text: "✓ MOB-43: 'Tela de login com autenticação' — estimate: 5pts, label: auth",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "8 issues criados em 3 ciclos. Projeto atualizado: linear.app/team/mobile-app",
+        },
+      ],
+    },
+  ],
+};
+
+export const doWork: SkillData = {
+  name: "do-work",
+  problem: {
+    title: "O problema",
+    description:
+      "Você pede à IA para implementar uma feature e ela gera 500 linhas de código de uma vez. Sem testes, sem commits incrementais, sem branches. Se algo quebra no meio, você não sabe onde. O histórico do Git é um único commit 'implement feature' que mistura modelo, API, frontend e migrations. Code review? Impossível.",
+  },
+  skill: {
+    title: "A skill",
+    description:
+      "O /do-work é o executor. Ele pega uma story do plano e implementa seguindo TDD rigoroso: cria a branch, escreve o teste primeiro (red), implementa o mínimo para passar (green), refatora, e faz commit. Uma story por vez, um teste por vez. O resultado é código testado, commits atômicos e rastreabilidade total entre a story e o código.",
+  },
+  howItWorks: {
+    title: "Como funciona",
+    steps: [
+      "Lê a story do plano e cria uma branch específica para ela",
+      "Escreve o primeiro teste (red) — o teste deve falhar",
+      "Implementa o código mínimo para o teste passar (green)",
+      "Refatora mantendo os testes verdes, faz commit e repete",
+      "Ao finalizar a story, abre PR com descrição vinculada ao plano",
+    ],
+  },
+  scenarios: [
+    {
+      id: "backend",
+      label: "Story Backend",
+      lines: [
+        {
+          type: "prompt",
+          text: "Executar Story 1.1: Criar tabela notifications",
+        },
+        {
+          type: "response",
+          text: "Branch criada: feat/story-1.1-notifications-table",
+        },
+        {
+          type: "response",
+          text: "Escrevendo teste: 'should create notification with required fields'...",
+        },
+        {
+          type: "response",
+          text: "✗ Teste falhou (red) — tabela não existe ainda. Correto.",
+        },
+        {
+          type: "response",
+          text: "Criando migration: add_notifications_table com campos user_id, type, channel, payload, read_at, created_at...",
+        },
+        {
+          type: "response",
+          text: "✓ Teste passou (green). Commit: 'feat: add notifications table with base schema'",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "Escrevendo teste: 'should enforce NOT NULL on user_id and type'...",
+        },
+        {
+          type: "response",
+          text: "✓ Teste passou. Commit: 'feat: add NOT NULL constraints to notifications'",
+        },
+      ],
+    },
+    {
+      id: "frontend",
+      label: "Story Frontend",
+      lines: [
+        {
+          type: "prompt",
+          text: "Executar Story 2.3: Tela de checkout",
+        },
+        {
+          type: "response",
+          text: "Branch criada: feat/story-2.3-checkout-screen",
+        },
+        {
+          type: "response",
+          text: "Implementando componente CheckoutScreen com formulário de endereço...",
+        },
+        {
+          type: "response",
+          text: "✓ Componente renderiza com campos: endereço, método de pagamento, resumo do pedido",
+        },
+        {
+          type: "response",
+          text: "Adicionando validação de formulário com Zod schema...",
+        },
+        {
+          type: "response",
+          text: "✓ Validação funcional. Commit: 'feat: add checkout screen with address form'",
+        },
+        { type: "divider", text: "" },
+        {
+          type: "response",
+          text: "Integrando com API de pagamento — loading state, error handling, confirmação...",
+        },
+        {
+          type: "response",
+          text: "✓ Fluxo completo. Commit: 'feat: integrate checkout with payment API'",
+        },
+      ],
+    },
+  ],
+};
+
 export const writeAPrd: SkillData = {
   name: "write-a-prd",
   problem: {

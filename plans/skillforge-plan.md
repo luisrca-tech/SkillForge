@@ -102,11 +102,11 @@ Apply the skill section template and terminal simulator to three more skills: `p
 
 ### Acceptance criteria
 
-- [ ] `plan-to-tracker` section complete with optional-step visual indicator
-- [ ] `prd-to-plan` section complete with copy and terminal scenarios
-- [ ] `do-work` section complete with copy and terminal scenarios
-- [ ] All three sections follow the established template
-- [ ] All three have scroll-triggered entrance animations
+- [x] `plan-to-tracker` section complete with optional-step visual indicator
+- [x] `prd-to-plan` section complete with copy and terminal scenarios
+- [x] `do-work` section complete with copy and terminal scenarios
+- [x] All three sections follow the established template
+- [x] All three have scroll-triggered entrance animations
 
 ---
 
