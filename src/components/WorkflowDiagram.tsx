@@ -43,10 +43,10 @@ const OPTIONAL_SKILL = {
   anchor: "#skill-plan-to-tracker",
 } as const;
 
-const NODE_WIDTH = 240;
+const NODE_WIDTH = 220;
 const NODE_HEIGHT = 56;
-const GAP_X = 100;
-const GAP_Y = 120;
+const GAP_X = 80;
+const GAP_Y = 100;
 const NODES_PER_ROW = 3;
 
 function buildInitialNodes(): Node[] {

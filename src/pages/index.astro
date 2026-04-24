@@ -3,6 +3,7 @@ import '../styles/global.css'
 import WorkflowDiagram from '../components/WorkflowDiagram'
 import ContextRot from '../components/ContextRot'
 import SkillSection from '../components/SkillSection'
+import HeroSection from '../components/HeroSection'
 import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseArchitecture, handleCoderabbit } from '../data/skills'
 ---
 
@@ -13,78 +14,68 @@ import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseAr
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>SkillForge</title>
-		<meta name="description" content="Pare de fazer vibe coding. Tenha um workflow profissional de desenvolvimento assistido por IA." />
+		<title>SkillForge — Workflow profissional de AI coding</title>
+		<meta name="description" content="Pare de fazer vibe coding. Tenha um workflow profissional de desenvolvimento assistido por IA — da concepção ao code review." />
+		<meta name="theme-color" content="#0a0a0a" />
 	</head>
 	<body class="bg-neutral-950 text-neutral-100 scroll-smooth">
 
-		<header id="hero" class="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-			<p class="text-sm uppercase tracking-widest text-emerald-400 mb-4 font-mono">SkillForge</p>
-			<h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold max-w-4xl leading-tight">
-				Pare de fazer <span class="text-emerald-400">vibe coding.</span>
-			</h1>
-			<p class="mt-6 max-w-2xl text-lg sm:text-xl text-neutral-400 leading-relaxed">
-				Você pede código à IA sem processo, sem rastreabilidade, sem revisão.
-				O resultado? Código frágil, débito técnico invisível e zero aproveitamento
-				do potencial real dessas ferramentas.
-			</p>
-			<p class="mt-4 max-w-2xl text-lg sm:text-xl text-neutral-300 leading-relaxed">
-				SkillForge é um workflow completo de desenvolvimento assistido por IA — da
-				concepção da feature ao code review — com embasamento técnico sobre
-				<strong class="text-emerald-400">por que</strong> essa abordagem funciona melhor.
-			</p>
-			<nav class="mt-10">
-				<a
-					href="#workflow"
-					class="inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold rounded-lg transition-colors"
-				>
-					Conhecer o workflow
-				</a>
-			</nav>
+		<header id="hero" class="min-h-[100dvh] flex flex-col items-center justify-center px-4 sm:px-6 text-center">
+			<HeroSection client:load />
 		</header>
 
-		<section id="workflow" class="min-h-screen px-6 py-24 max-w-6xl mx-auto">
+		<section id="workflow" class="min-h-screen px-4 sm:px-6 py-16 sm:py-24 max-w-6xl mx-auto">
 			<h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">O Workflow</h2>
-			<p class="text-neutral-400 text-center max-w-2xl mx-auto mb-16">
+			<p class="text-neutral-400 text-center max-w-2xl mx-auto mb-12 sm:mb-16">
 				7 skills que transformam o uso da IA em um processo disciplinado e reproduzível.
 			</p>
 			<WorkflowDiagram client:only="react" />
 		</section>
 
-		<section id="context-rot" class="px-6 py-24 max-w-4xl mx-auto">
+		<section id="context-rot" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<ContextRot client:visible />
 		</section>
 
-		<section id="skill-grill-me" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+		<section id="skill-grill-me" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<SkillSection {...grillMe} client:visible />
 		</section>
 
-		<section id="skill-write-a-prd" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+		<section id="skill-write-a-prd" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<SkillSection {...writeAPrd} client:visible />
 		</section>
 
-		<section id="skill-prd-to-plan" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+		<section id="skill-prd-to-plan" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<SkillSection {...prdToPlan} client:visible />
 		</section>
 
-		<section id="skill-plan-to-tracker" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+		<section id="skill-plan-to-tracker" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<SkillSection {...planToTracker} client:visible />
 		</section>
 
-		<section id="skill-do-work" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+		<section id="skill-do-work" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<SkillSection {...doWork} client:visible />
 		</section>
 
-		<section id="skill-improve-codebase-architecture" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+		<section id="skill-improve-codebase-architecture" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<SkillSection {...improveCodebaseArchitecture} client:visible />
 		</section>
 
-		<section id="skill-handle-coderabbit" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
+		<section id="skill-handle-coderabbit" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
 			<SkillSection {...handleCoderabbit} client:visible />
 		</section>
 
-		<footer class="px-6 py-12 text-center text-neutral-600 text-sm border-t border-neutral-800">
-			<p>SkillForge &mdash; workflow profissional de desenvolvimento assistido por IA.</p>
+		<footer class="px-4 sm:px-6 py-12 sm:py-16 border-t border-neutral-800">
+			<div class="max-w-4xl mx-auto text-center space-y-4">
+				<p class="text-sm uppercase tracking-widest text-emerald-400 font-mono">SkillForge</p>
+				<p class="text-neutral-500 text-sm">
+					Workflow profissional de desenvolvimento assistido por IA.
+				</p>
+				<nav class="flex items-center justify-center gap-6 text-sm text-neutral-600">
+					<a href="#hero" class="hover:text-neutral-300 transition-colors">Topo</a>
+					<a href="#workflow" class="hover:text-neutral-300 transition-colors">Workflow</a>
+					<a href="#context-rot" class="hover:text-neutral-300 transition-colors">Context Rot</a>
+				</nav>
+			</div>
 		</footer>
 
 	</body>
