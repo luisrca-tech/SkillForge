@@ -18,6 +18,7 @@
     "@types/react-dom": "^19.2.3",
     "@xyflow/react": "^12.10.2",
     "astro": "^6.1.9",
+    "motion": "^12.38.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "tailwindcss": "^4.2.4"

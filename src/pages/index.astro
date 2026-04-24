@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css'
+import WorkflowDiagram from '../components/WorkflowDiagram'
 ---
 
 <html lang="pt-BR">
@@ -44,6 +45,7 @@ import '../styles/global.css'
 			<p class="text-neutral-400 text-center max-w-2xl mx-auto mb-16">
 				7 skills que transformam o uso da IA em um processo disciplinado e reproduzível.
 			</p>
+			<WorkflowDiagram client:only="react" />
 		</section>
 
 		<section id="context-rot" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
