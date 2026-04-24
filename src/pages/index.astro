@@ -2,6 +2,8 @@
 import '../styles/global.css'
 import WorkflowDiagram from '../components/WorkflowDiagram'
 import ContextRot from '../components/ContextRot'
+import SkillSection from '../components/SkillSection'
+import { grillMe, writeAPrd } from '../data/skills'
 ---
 
 <html lang="pt-BR">
@@ -54,17 +56,11 @@ import ContextRot from '../components/ContextRot'
 		</section>
 
 		<section id="skill-grill-me" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
-				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/grill-me</span>
-			</h2>
-			<p class="text-neutral-400">Entrevista técnica para definir requisitos antes de codar.</p>
+			<SkillSection {...grillMe} client:visible />
 		</section>
 
 		<section id="skill-write-a-prd" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold mb-4">
-				<span class="text-emerald-400 font-mono text-2xl sm:text-3xl">/write-a-prd</span>
-			</h2>
-			<p class="text-neutral-400">PRD completo gerado com assistência de IA.</p>
+			<SkillSection {...writeAPrd} client:visible />
 		</section>
 
 		<section id="skill-prd-to-plan" class="min-h-screen px-6 py-24 max-w-4xl mx-auto">
