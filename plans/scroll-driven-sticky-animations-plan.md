@@ -9,11 +9,12 @@ Durable decisions that apply across all phases:
 - **Animation engine**: Motion v12 (`useScroll`, `useTransform`) drives all scroll-based animations. No GSAP or additional animation libraries.
 - **Viewport constraint**: Every section must fit within 100vh. No section ever exceeds viewport height. Content adapts (responsive stacking, smaller gaps) but never overflows.
 - **Beat model**: Substitutive, not additive. Only the active beat is visible within a section — previous beats fade out as the next fades in. The section title stays fixed; the content area below it transitions between beats.
-- **Skill section beats (3 beats)**: Beat 0 = Problem + Skill cards together (side-by-side on desktop, stacked on mobile). Beat 1 = How it Works (steps). Beat 2 = Terminal Simulator.
+- **Skill section beats (2 beats after Phase 7)**: Beat 0 = Problem + Skill cards + How it Works (steps) in one combined viewport. Beat 1 = Terminal / exemplo prático (interactive) alone. *(Before Phase 7: 3 substitutive beats — Problem+Skill → How it Works → Terminal.)*
+- **Section order (after Phase 7)**: Skills blocks come immediately after the Workflow (diagram) section. Context Rot is moved to **after** all seven skill sections (narrative: hero → workflow → skills → context rot → footer), reducing cognitive breaks between the diagram and the skills it introduces.
 - **Context Rot beats (5 beats)**: Beat 0 = "What is Context Rot?" card. Beat 1 = Side-by-side comparison. Beat 2 = "Why it matters". Beat 3 = Analogy. Beat 4 = References grid.
 - **Carousel architecture (shader.se pattern)**: `body` has `overflow: hidden; overscroll-behavior: none`. A single scroll container (`position: fixed; inset: 0; overflow-y: auto`) holds scroll content. A viewport layer (`position: fixed; inset: 0`) holds all sections layered via `position: absolute; inset: 0`. Scroll progress drives which section is visible and its internal animations. Transitions happen in-place (crossfade/scale), not via push-up. *(Phases 1–2 used Pattern A with per-section sticky containers; Phase 3 refactors to Pattern B.)*
 - **Scroll progress model**: A single master `useScroll({ container: scrollContainerRef })` produces a 0→1 progress for the entire page. Each section is allocated a sub-range derived from its scroll budget. Within each sub-range, `useTransform` maps to enter transition → internal beats → exit transition. *(Phases 1–2 used per-section `useScroll`; Phase 3 refactors to a single master scroll.)*
-- **Scroll budgets**: Hero 200vh, Workflow 100vh, Context Rot 400vh (5 beats × ~80vh), Skill sections 300vh each (3 beats × ~100vh). Total spacer height ≈ 2800vh.
+- **Scroll budgets**: Tuned per phase; after Phase 7 skill sections use **2 beats** each (e.g. ~200vh per skill if ~100vh per beat) and Context Rot follows the skill block (reallocate ranges in `sections` / scroll allocator accordingly).
 - **GPU-only properties**: All animations use `transform` and `opacity` exclusively for 60fps compositing.
 - **New dependency**: shadcn/ui (Card component) installed with required peers (`tailwind-merge`, `clsx`, `class-variance-authority`, `@radix-ui/react-slot`).
 
@@ -108,6 +109,8 @@ Refactor from per-section sticky containers (Pattern A) to a fixed-viewport vert
 | do-work | 300vh | 3 substitutive | 0.679 → 0.786 |
 | improve-arch | 300vh | 3 substitutive | 0.786 → 0.893 |
 | handle-coderabbit | 300vh | 3 substitutive | 0.893 → 1.000 |
+
+*(After Phase 7, section order and per-section budgets change — recompute the allocator; see Phase 7.)*
 
 **Section behavior**:
 - Only the active section is visible (opacity 1, `pointer-events: auto`); all others have opacity 0 and `pointer-events: none`.
@@ -236,3 +239,41 @@ Performance is audited: ensure all animations use GPU-composited properties only
 - [ ] `will-change: transform` applied to pinned containers
 - [ ] No unnecessary React re-renders during scroll (verified via React DevTools profiler)
 - [ ] ReactFlow diagram does not re-render during scroll-driven node reveal
+
+---
+
+## Phase 7: Section order + merged skill layout (fewer beats)
+
+**User stories**: 1, 2, 8, 9, 10, 11 (clarity of narrative; less scroll per skill)
+
+### What to build
+
+Tighten the story arc and reduce internal scrolling.
+
+**A — Section order**
+
+- Reorder `SECTIONS` (and any nav / anchor logic that assumes the old order) so the **Workflow** (animated diagram) is followed **immediately** by the seven skill sections.
+- Move **Context Rot** to **after** the last skill section (still before the footer). The diagram introduces the skills; the user then walks each skill; Context Rot closes the “why on-demand skills” story afterward.
+- Update deep links, `nuqs` defaults, and tests (`sections.test.ts`, etc.) to match the new order.
+
+**B — Two beats per skill (layout)**
+
+- Change each skill section from **3** substitutive beats to **2**.
+- **Beat 0 (combined)**: In one 100vh-friendly layout, show together: Problem card, Skill card, and **Como funciona** (the numbered steps / `howItWorks`). Use responsive stacking and typography so nothing exceeds the plan’s no-overflow rule (tighter gaps, optional slightly smaller type on small screens if needed).
+- **Beat 1 (alone)**: Keep the **exemplo prático** as its own full beat — the interactive `TerminalSimulator` (align heading copy with “exemplo prático” if you rename from “Exemplo interativo”). Same interactivity and `pointer-events` as today.
+- Update `substitutiveBeats` / `StickySkillSection` so only two opacity+Y layers drive the content area; the former middle beat is no longer a separate full-screen step.
+
+**C — Scroll budgets**
+
+- Recompute spacer height and per-section scroll ranges: each skill section loses one beat; Context Rot’s position in the timeline moves. Allocator and Phase 3–style range tables need the new order and numbers.
+
+### Acceptance criteria
+
+- [x] `SECTIONS` order is: `hero` → `workflow` → all `skill-*` in sequence → `context-rot`
+- [x] Each skill section has **2** beats in `sections.ts` and in UI behavior
+- [x] Beat 0 shows problem + skill + how-it-works steps in one view (no separate substitutive step for cards-only then steps)
+- [x] Beat 1 shows only the terminal / exemplo prático, prominent in the content area below the section title
+- [x] No vertical overflow beyond 100vh per section/beat (layout tuned: compact type + `overflow-y-auto` on combined beat if needed on small viewports)
+- [x] Master scroll allocation N/A in current `VerticalScrollPage` (nuqs wheel nav, no 2800vh spacer); tests pass
+- [x] Context Rot still has 5 substitutive beats; only order and per-skill beat counts changed
+- [x] Workflow diagram node → anchor links still resolve to the correct skill section (ids unchanged)
