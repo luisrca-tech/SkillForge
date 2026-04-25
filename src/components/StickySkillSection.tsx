@@ -76,7 +76,7 @@ export default function StickySkillSection({
   );
 
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-6 pointer-events-none">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-4 sm:py-5 pointer-events-none">
       <motion.div
         style={{ opacity: titleLock }}
         className="shrink-0 flex items-center gap-3 mb-2 sm:mb-3 flex-wrap pointer-events-auto"
@@ -98,49 +98,53 @@ export default function StickySkillSection({
       <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto pointer-events-auto">
         <motion.div
           style={{ opacity: beat0Opacity, y: beat0Y }}
-          className="absolute inset-0 flex flex-col gap-2 sm:gap-3 min-h-0 will-change-transform"
+          className="absolute inset-0 flex flex-col min-h-0 will-change-transform"
         >
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5 -mr-0.5">
-            <div className="grid md:grid-cols-2 gap-2 sm:gap-3">
-              <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-3 sm:p-4 md:p-6 min-h-0">
-                <h3 className="text-sm sm:text-base font-semibold text-red-400 mb-1.5 sm:mb-2">
+          <div className="min-h-0 flex-1 flex flex-col overflow-y-auto overscroll-contain pr-0.5 -mr-0.5">
+            <div className="grid md:grid-cols-2 gap-3 sm:gap-4 shrink-0">
+              <div className="bg-red-950/20 border border-red-900/30 rounded-xl min-h-0 overflow-hidden px-3 sm:px-4 py-2 sm:py-2.5">
+                <h3 className="text-sm sm:text-base font-semibold text-red-400 mb-0.5 sm:mb-1">
                   {problem.title}
                 </h3>
-                <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed line-clamp-4 sm:line-clamp-5 md:line-clamp-6">
+                <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
                   {problem.description}
                 </p>
               </div>
               <div
-                className={`${accentBg} border ${accentBorder} rounded-2xl p-3 sm:p-4 md:p-6 min-h-0`}
+                className={`${accentBg} border ${accentBorder} rounded-xl min-h-0 overflow-hidden px-3 sm:px-4 py-2 sm:py-2.5`}
               >
-                <h3 className={`text-sm sm:text-base font-semibold ${accentText} mb-1.5 sm:mb-2`}>
+                <h3
+                  className={`text-sm sm:text-base font-semibold ${accentText} mb-0.5 sm:mb-1`}
+                >
                   {skill.title}
                 </h3>
-                <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed line-clamp-4 sm:line-clamp-5 md:line-clamp-6">
+                <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
                   {skill.description}
                 </p>
               </div>
             </div>
-            <h3 className="text-sm sm:text-base font-semibold text-neutral-200 mt-2 sm:mt-3 mb-1.5 sm:mb-2">
-              {howItWorks.title}
-            </h3>
-            <ol className="space-y-1 sm:space-y-1.5 pb-1">
-              {howItWorks.steps.map((step, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-2 text-xs sm:text-sm"
-                >
-                  <span
-                    className={`${stepDot} text-neutral-950 text-[10px] sm:text-xs font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
+            <div className="shrink-0 mt-2 sm:mt-3 md:mt-4 pt-0.5">
+              <h3 className="text-sm sm:text-base font-semibold text-neutral-200 mb-1.5 sm:mb-2">
+                {howItWorks.title}
+              </h3>
+              <ol className="space-y-1 sm:space-y-1.5 pb-0.5">
+                {howItWorks.steps.map((step, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-xs sm:text-sm"
                   >
-                    {i + 1}
-                  </span>
-                  <span className="text-neutral-400 leading-snug sm:leading-relaxed">
-                    {step}
-                  </span>
-                </li>
-              ))}
-            </ol>
+                    <span
+                      className={`${stepDot} text-neutral-950 text-[10px] sm:text-xs font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="text-neutral-300 leading-relaxed">
+                      {step}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
         </motion.div>
 
