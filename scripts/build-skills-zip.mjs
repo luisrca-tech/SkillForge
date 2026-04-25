@@ -25,5 +25,8 @@ archive.on("error", (err) => {
 });
 
 archive.pipe(output);
-archive.directory(SKILLS_DIR, "skills");
+archive.glob("**/*", {
+  cwd: SKILLS_DIR,
+  ignore: ["**/*:Zone.Identifier", "**/plan-to-tracker/plan-to-tracker/**"],
+});
 await archive.finalize();
