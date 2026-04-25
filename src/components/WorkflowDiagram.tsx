@@ -70,7 +70,7 @@ function buildInitialNodes(): Node[] {
       type: "skill",
       position: { x, y },
       style: { width: NODE_WIDTH },
-      data: { label: skill.label, anchor: skill.anchor, optional: false, description: SKILL_DESCRIPTIONS[skill.id], descriptionPosition: DESCRIPTION_POSITION[skill.id] },
+      data: { label: skill.label, anchor: skill.anchor, optional: false, description: SKILL_DESCRIPTIONS[skill.id], descriptionPosition: DESCRIPTION_POSITION[skill.id], handles: SKILL_HANDLES[skill.id] },
     };
   });
 
@@ -100,6 +100,7 @@ function buildInitialNodes(): Node[] {
       optional: true,
       description: SKILL_DESCRIPTIONS[OPTIONAL_SKILL.id],
       descriptionPosition: DESCRIPTION_POSITION[OPTIONAL_SKILL.id],
+      handles: SKILL_HANDLES[OPTIONAL_SKILL.id],
     },
   });
 
@@ -114,6 +115,16 @@ const DESCRIPTION_POSITION: Record<string, "top" | "bottom"> = {
   "do-work": "bottom",
   "improve-codebase-architecture": "bottom",
   "handle-coderabbit": "bottom",
+};
+
+const SKILL_HANDLES: Record<string, Set<string>> = {
+  "grill-me": new Set(["right"]),
+  "write-a-prd": new Set(["left", "top", "right"]),
+  "prd-to-plan": new Set(["left", "bottom"]),
+  "plan-to-tracker": new Set(["bottom"]),
+  "do-work": new Set(["top", "right"]),
+  "improve-codebase-architecture": new Set(["left", "right"]),
+  "handle-coderabbit": new Set(["left"]),
 };
 
 const SKILL_DESCRIPTIONS: Record<string, string> = {
@@ -159,10 +170,11 @@ function buildEdges(): Edge[] {
 }
 
 function SkillNode({ data }: NodeProps) {
-  const { label, anchor, optional } = data as {
+  const { label, anchor, optional, handles } = data as {
     label: string;
     anchor: string;
     optional: boolean;
+    handles?: Set<string>;
   };
 
   const navigateTo = useNavigateTo();
@@ -174,10 +186,12 @@ function SkillNode({ data }: NodeProps) {
     }
   }, [anchor, navigateTo]);
 
+  const h = handles ?? new Set(["left", "top", "right", "bottom"]);
+
   return (
     <>
-      <Handle type="target" position={Position.Left} id="left" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
-      <Handle type="target" position={Position.Top} id="top" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
+      {h.has("left") && <Handle type="target" position={Position.Left} id="left" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
+      {h.has("top") && <Handle type="target" position={Position.Top} id="top" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
       <button
         type="button"
         onClick={handleClick}
@@ -195,8 +209,8 @@ function SkillNode({ data }: NodeProps) {
           </span>
         )}
       </button>
-      <Handle type="source" position={Position.Right} id="right" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
-      <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
+      {h.has("right") && <Handle type="source" position={Position.Right} id="right" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
+      {h.has("bottom") && <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
     </>
   );
 }
