@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { useScrollToSection } from "../context/ScrollStoryContext";
+import { useCallback, useEffect } from "react";
+import { useNavigateTo } from "../context/SectionNavContext";
+import type { SectionId } from "../lib/sections";
 import {
   ReactFlow,
   type Node,
@@ -119,16 +120,14 @@ function SkillNode({ data }: NodeProps) {
     optional: boolean;
   };
 
-  const scrollToSection = useScrollToSection();
+  const navigateTo = useNavigateTo();
 
   const handleClick = useCallback(() => {
-    if (scrollToSection) {
-      scrollToSection(anchor);
-      return;
+    const id = anchor.startsWith("#") ? anchor.slice(1) : anchor;
+    if (navigateTo) {
+      navigateTo(id as SectionId);
     }
-    const el = document.querySelector(anchor);
-    el?.scrollIntoView({ behavior: "smooth" });
-  }, [anchor, scrollToSection]);
+  }, [anchor, navigateTo]);
 
   return (
     <>
@@ -161,27 +160,8 @@ const nodeTypes: NodeTypes = { skill: SkillNode };
 export default function WorkflowDiagram() {
   const [nodes, setNodes, onNodesChange] = useNodesState(buildInitialNodes());
   const [edges, setEdges, onEdgesChange] = useEdgesState(buildEdges());
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    const el = document.getElementById("workflow-diagram");
-    if (el) observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!visible) return;
-
     const allNodes = buildInitialNodes();
     const allEdges = buildEdges();
     const totalNodes = allNodes.length;
@@ -197,7 +177,7 @@ export default function WorkflowDiagram() {
         }
       }, i * 120);
     });
-  }, [visible]);
+  }, []);
 
   const diagramWidth = NODES_PER_ROW * (NODE_WIDTH + GAP_X) - GAP_X;
   const rows = Math.ceil((SKILLS.length + 1) / NODES_PER_ROW);
