@@ -25,7 +25,7 @@ export const SECTIONS: Section[] = [
   { id: "skill-do-work", beats: 2 },
   { id: "skill-improve-codebase-architecture", beats: 2 },
   { id: "skill-handle-coderabbit", beats: 2 },
-  { id: "context-rot", beats: 5 },
+  { id: "context-rot", beats: 3 },
 ];
 
 export const DEFAULT_SECTION: SectionId = "hero";

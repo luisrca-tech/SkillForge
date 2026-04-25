@@ -11,7 +11,7 @@ import {
 describe("findSection", () => {
   it("returns the section for a valid id", () => {
     const s = findSection("context-rot");
-    expect(s).toEqual({ id: "context-rot", beats: 5 });
+    expect(s).toEqual({ id: "context-rot", beats: 3 });
   });
 
   it("returns undefined for an invalid id", () => {
@@ -40,8 +40,8 @@ describe("advance", () => {
   });
 
   it("stays put on last beat of last section (context-rot)", () => {
-    const result = advance({ sectionId: "context-rot", beat: 4 });
-    expect(result).toEqual({ sectionId: "context-rot", beat: 4 });
+    const result = advance({ sectionId: "context-rot", beat: 2 });
+    expect(result).toEqual({ sectionId: "context-rot", beat: 2 });
   });
 
   it("advances single-beat section to next section", () => {
@@ -67,8 +67,8 @@ describe("advance", () => {
 
 describe("retreat", () => {
   it("retreats beat within a multi-beat section", () => {
-    const result = retreat({ sectionId: "context-rot", beat: 3 });
-    expect(result).toEqual({ sectionId: "context-rot", beat: 2 });
+    const result = retreat({ sectionId: "context-rot", beat: 2 });
+    expect(result).toEqual({ sectionId: "context-rot", beat: 1 });
   });
 
   it("retreats to previous section last beat when on beat 0 (skill after workflow)", () => {
@@ -117,11 +117,4 @@ describe("beatToLocalProgress", () => {
     expect(beatToLocalProgress(1, 2)).toBeCloseTo(3 / 4);
   });
 
-  it("maps beat 0 of 5 to 1/10", () => {
-    expect(beatToLocalProgress(0, 5)).toBeCloseTo(1 / 10);
-  });
-
-  it("maps beat 4 of 5 to 9/10", () => {
-    expect(beatToLocalProgress(4, 5)).toBeCloseTo(9 / 10);
-  });
 });

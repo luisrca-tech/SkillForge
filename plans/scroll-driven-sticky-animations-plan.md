@@ -101,7 +101,7 @@ Refactor from per-section sticky containers (Pattern A) to a fixed-viewport vert
 |---|---|---|---|
 | Hero | 200vh | 1 (fade-out) | 0.000 → 0.071 |
 | Workflow | 100vh | 1 (fade in/out) | 0.071 → 0.107 |
-| Context Rot | 400vh | 5 substitutive | 0.107 → 0.250 |
+| Context Rot | 240vh (typ.) | 3 substitutive | (recompute with allocator) |
 | grill-me | 300vh | 3 substitutive | 0.250 → 0.357 |
 | write-a-prd | 300vh | 3 substitutive | 0.357 → 0.464 |
 | prd-to-plan | 300vh | 3 substitutive | 0.464 → 0.571 |
@@ -132,7 +132,7 @@ Refactor from per-section sticky containers (Pattern A) to a fixed-viewport vert
 - [x] Every section fits within 100vh — no overflow, no scroll within sections
 - [x] Beats are substitutive: only the active beat is visible, previous beats fade out
 - [x] Skill sections show 3 beats: Problem+Skill together → How it Works → Terminal
-- [x] Context Rot shows 5 substitutive beats
+- [x] Context Rot shows 3 substitutive beats (intro + comparison | prática + analogia | referências)
 - [x] Hero, Workflow, Context Rot, and all 7 Skill Sections are part of the carousel
 - [x] Footer scrolls normally after the spacer ends
 - [x] Terminal Simulators remain interactive while their section/beat is active
@@ -275,5 +275,5 @@ Tighten the story arc and reduce internal scrolling.
 - [x] Beat 1 shows only the terminal / exemplo prático, prominent in the content area below the section title
 - [x] No vertical overflow beyond 100vh per section/beat (layout tuned: compact type + `overflow-y-auto` on combined beat if needed on small viewports)
 - [x] Master scroll allocation N/A in current `VerticalScrollPage` (nuqs wheel nav, no 2800vh spacer); tests pass
-- [x] Context Rot still has 5 substitutive beats; only order and per-skill beat counts changed
+- [x] Context Rot has 3 substitutive beats (merged narrative beats); skill sections remain at 2 beats each
 - [x] Workflow diagram node → anchor links still resolve to the correct skill section (ids unchanged)

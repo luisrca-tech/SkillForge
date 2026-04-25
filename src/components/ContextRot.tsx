@@ -6,7 +6,6 @@ const references = [
     author: "Chroma",
     title: "Context Rot: How Increasing Input Tokens Impacts LLM Performance",
     date: "Jul 2025",
-    highlight: true,
   },
   {
     id: 2,
@@ -92,36 +91,32 @@ export default function ContextRot() {
         <motion.div
           variants={fadeUp}
           transition={{ duration: 0.6 }}
-          className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10"
+          className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10 space-y-8"
         >
-          <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-4">
-            O que é Context Rot?
-          </h3>
-          <p className="text-neutral-300 leading-relaxed mb-4">
-            LLMs como Claude, GPT e Gemini possuem janelas de contexto cada vez
-            maiores — 128k, 200k, até 1M tokens. Mas{" "}
-            <strong className="text-neutral-100">
-              maior janela não significa melhor performance
-            </strong>
-            . Estudos mostram que a qualidade das respostas degrada
-            significativamente quando o input ultrapassa a faixa de 80k–120k
-            tokens.
-          </p>
-          <p className="text-neutral-300 leading-relaxed">
-            Esse fenômeno é chamado de{" "}
-            <strong className="text-emerald-400">Context Rot</strong>: quanto
-            mais informação irrelevante ou redundante é empurrada para a janela
-            de contexto, pior o modelo se sai em tarefas que exigem precisão —
-            como gerar código, seguir instruções complexas ou manter coerência em
-            conversas longas.
-          </p>
-        </motion.div>
-
-        <motion.div
-          variants={fadeUp}
-          transition={{ duration: 0.6 }}
-          className="grid md:grid-cols-2 gap-6"
-        >
+          <div>
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-4">
+              O que é Context Rot?
+            </h3>
+            <p className="text-neutral-300 leading-relaxed mb-4">
+              LLMs como Claude, GPT e Gemini possuem janelas de contexto cada vez
+              maiores — 128k, 200k, até 1M tokens. Mas{" "}
+              <strong className="text-neutral-100">
+                maior janela não significa melhor performance
+              </strong>
+              . Estudos mostram que a qualidade das respostas degrada
+              significativamente quando o input ultrapassa a faixa de 80k–120k
+              tokens.
+            </p>
+            <p className="text-neutral-300 leading-relaxed">
+              Esse fenômeno é chamado de{" "}
+              <strong className="text-emerald-400">Context Rot</strong>: quanto
+              mais informação irrelevante ou redundante é empurrada para a janela
+              de contexto, pior o modelo se sai em tarefas que exigem precisão —
+              como gerar código, seguir instruções complexas ou manter coerência em
+              conversas longas.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-8">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">⚠</span>
@@ -194,6 +189,7 @@ export default function ContextRot() {
               </li>
             </ul>
           </div>
+          </div>
         </motion.div>
       </motion.div>
 
@@ -207,71 +203,68 @@ export default function ContextRot() {
         <motion.div
           variants={fadeUp}
           transition={{ duration: 0.6 }}
-          className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10"
+          className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10 space-y-8"
         >
-          <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-4">
-            Por que isso importa na prática?
-          </h3>
-          <p className="text-neutral-300 leading-relaxed mb-4">
-            Um arquivo <code className="text-emerald-400">CLAUDE.md</code> com
-            centenas de regras parece organizado — mas na realidade está
-            consumindo os tokens mais valiosos da janela de contexto: os
-            primeiros. Quando você pede ao modelo para implementar uma feature, o
-            contexto já está parcialmente "podre" com instruções que não se
-            aplicam àquela tarefa.
-          </p>
-          <p className="text-neutral-300 leading-relaxed mb-4">
-            A pesquisa da Chroma (2025) demonstrou que modelos perdem até{" "}
-            <strong className="text-neutral-100">
-              30% de precisão em tarefas de retrieval
-            </strong>{" "}
-            quando o contexto é preenchido com informação irrelevante, mesmo que
-            esteja dentro do limite técnico da janela.
-          </p>
-          <p className="text-neutral-300 leading-relaxed">
-            O paper do arXiv sobre{" "}
-            <em className="text-neutral-200">
-              Context Discipline and Performance Correlation
-            </em>{" "}
-            reforça: disciplina no que entra na janela de contexto tem correlação
-            direta com a qualidade do output. Menos lixo, melhor resultado.
-          </p>
-        </motion.div>
-
-        <motion.div
-          variants={fadeUp}
-          transition={{ duration: 0.6 }}
-          className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10"
-        >
-          <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-6">
-            A analogia
-          </h3>
-          <div className="grid sm:grid-cols-2 gap-8">
-            <div>
-              <p className="text-sm uppercase tracking-wider text-red-400 mb-2 font-mono">
-                Regras Globais
-              </p>
-              <p className="text-neutral-300 leading-relaxed">
-                É como entrar em uma reunião carregando{" "}
-                <strong className="text-neutral-100">
-                  todos os documentos de todos os projetos
-                </strong>{" "}
-                da empresa. A informação relevante existe, mas está enterrada em
-                ruído. Você gasta mais tempo procurando do que decidindo.
-              </p>
-            </div>
-            <div>
-              <p className="text-sm uppercase tracking-wider text-emerald-400 mb-2 font-mono">
-                Skills On-Demand
-              </p>
-              <p className="text-neutral-300 leading-relaxed">
-                É como entrar na reunião com{" "}
-                <strong className="text-neutral-100">
-                  apenas o briefing relevante
-                </strong>{" "}
-                para aquela pauta. Foco total, decisões rápidas, zero distração.
-                Exatamente o que o modelo precisa para performar.
-              </p>
+          <div>
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-4">
+              Por que isso importa na prática?
+            </h3>
+            <p className="text-neutral-300 leading-relaxed mb-4">
+              Um arquivo <code className="text-emerald-400">CLAUDE.md</code> com
+              centenas de regras parece organizado — mas na realidade está
+              consumindo os tokens mais valiosos da janela de contexto: os
+              primeiros. Quando você pede ao modelo para implementar uma feature, o
+              contexto já está parcialmente "podre" com instruções que não se
+              aplicam àquela tarefa.
+            </p>
+            <p className="text-neutral-300 leading-relaxed mb-4">
+              A pesquisa da Chroma (2025) demonstrou que modelos perdem até{" "}
+              <strong className="text-neutral-100">
+                30% de precisão em tarefas de retrieval
+              </strong>{" "}
+              quando o contexto é preenchido com informação irrelevante, mesmo que
+              esteja dentro do limite técnico da janela.
+            </p>
+            <p className="text-neutral-300 leading-relaxed">
+              O paper do arXiv sobre{" "}
+              <em className="text-neutral-200">
+                Context Discipline and Performance Correlation
+              </em>{" "}
+              reforça: disciplina no que entra na janela de contexto tem correlação
+              direta com a qualidade do output. Menos lixo, melhor resultado.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-6">
+              A analogia
+            </h3>
+            <div className="grid sm:grid-cols-2 gap-8">
+              <div>
+                <p className="text-sm uppercase tracking-wider text-red-400 mb-2 font-mono">
+                  Regras Globais
+                </p>
+                <p className="text-neutral-300 leading-relaxed">
+                  É como entrar em uma reunião carregando{" "}
+                  <strong className="text-neutral-100">
+                    todos os documentos de todos os projetos
+                  </strong>{" "}
+                  da empresa. A informação relevante existe, mas está enterrada em
+                  ruído. Você gasta mais tempo procurando do que decidindo.
+                </p>
+              </div>
+              <div>
+                <p className="text-sm uppercase tracking-wider text-emerald-400 mb-2 font-mono">
+                  Skills On-Demand
+                </p>
+                <p className="text-neutral-300 leading-relaxed">
+                  É como entrar na reunião com{" "}
+                  <strong className="text-neutral-100">
+                    apenas o briefing relevante
+                  </strong>{" "}
+                  para aquela pauta. Foco total, decisões rápidas, zero distração.
+                  Exatamente o que o modelo precisa para performar.
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -299,20 +292,12 @@ export default function ContextRot() {
           {references.map((ref) => (
             <div
               key={ref.id}
-              className={`rounded-xl p-5 border transition-colors ${
-                ref.highlight
-                  ? "bg-emerald-950/30 border-emerald-800/50"
-                  : "bg-neutral-900/50 border-neutral-800"
-              }`}
+              className="group rounded-xl p-5 border bg-neutral-900/50 border-neutral-800 transition-colors hover:bg-emerald-950/30 hover:border-emerald-800/50"
             >
               <p className="text-sm text-neutral-500 mb-1 font-mono">
                 {ref.author}
               </p>
-              <p
-                className={`text-sm leading-snug ${
-                  ref.highlight ? "text-emerald-300" : "text-neutral-300"
-                }`}
-              >
+              <p className="text-sm leading-snug text-neutral-300 transition-colors group-hover:text-emerald-300">
                 {ref.title}
               </p>
               <p className="text-xs text-neutral-600 mt-2">{ref.date}</p>
