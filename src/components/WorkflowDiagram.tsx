@@ -45,25 +45,39 @@ const OPTIONAL_SKILL = {
   anchor: "#skill-plan-to-tracker",
 } as const;
 
-const NODE_WIDTH = 220;
-const NODE_HEIGHT = 56;
-const GAP_X = 80;
-const GAP_Y = 100;
+const NODE_WIDTH = 268;
+const NODE_HEIGHT = 58;
+const GAP_X = 104;
+const GAP_Y = 72;
 const NODES_PER_ROW = 3;
+const TOP_PAD = 40;
+const OPTIONAL_ABOVE_WRITE_GAP = 80;
+const HANDLE_EXTRA_GAP_X = 64;
 
 function buildInitialNodes(): Node[] {
   const nodes: Node[] = SKILLS.map((skill, i) => {
     const row = Math.floor(i / NODES_PER_ROW);
     const col = i % NODES_PER_ROW;
     const x = col * (NODE_WIDTH + GAP_X);
-    const y = row * (NODE_HEIGHT + GAP_Y);
+    const y = row * (NODE_HEIGHT + GAP_Y) + TOP_PAD;
     return {
       id: skill.id,
       type: "skill",
       position: { x, y },
+      style: { width: NODE_WIDTH },
       data: { label: skill.label, anchor: skill.anchor, optional: false },
     };
   });
+
+  const handleIdx = nodes.findIndex((n) => n.id === "handle-coderabbit");
+  if (handleIdx >= 0) {
+    const n = nodes[handleIdx];
+    nodes[handleIdx] = {
+      ...n,
+      style: { width: NODE_WIDTH },
+      position: { x: n.position.x + HANDLE_EXTRA_GAP_X, y: n.position.y },
+    };
+  }
 
   const branchSourceIndex = 1;
   const sourceNode = nodes[branchSourceIndex];
@@ -72,8 +86,9 @@ function buildInitialNodes(): Node[] {
     type: "skill",
     position: {
       x: sourceNode.position.x,
-      y: sourceNode.position.y + NODE_HEIGHT + GAP_Y + 60,
+      y: sourceNode.position.y - (NODE_HEIGHT + GAP_Y + OPTIONAL_ABOVE_WRITE_GAP),
     },
+    style: { width: NODE_WIDTH },
     data: {
       label: OPTIONAL_SKILL.label,
       anchor: OPTIONAL_SKILL.anchor,
@@ -101,9 +116,9 @@ function buildEdges(): Edge[] {
   }
 
   edges.push({
-    id: `e-write-a-prd-plan-to-tracker`,
-    source: "write-a-prd",
-    target: "plan-to-tracker",
+    id: "e-plan-to-tracker-write-a-prd",
+    source: "plan-to-tracker",
+    target: "write-a-prd",
     sourceHandle: "bottom",
     targetHandle: "top",
     animated: true,
@@ -131,26 +146,46 @@ function SkillNode({ data }: NodeProps) {
 
   return (
     <>
-      <Handle type="target" position={Position.Left} id="left" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
-      <Handle type="target" position={Position.Top} id="top" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        className="!bg-emerald-400 !w-2 !h-2 !border-0"
+      />
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        className="!bg-emerald-400 !w-2 !h-2 !border-0"
+      />
       <button
+        type="button"
         onClick={handleClick}
-        className={`px-5 py-3 rounded-lg font-mono text-sm cursor-pointer transition-all duration-200 w-full text-left
-          ${
-            optional
-              ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40 hover:border-cyan-400 hover:bg-cyan-950/80"
-              : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40 hover:border-emerald-400 hover:bg-emerald-950/80"
+        className={`px-3.5 py-2.5 rounded-lg font-mono text-[13px] leading-snug cursor-pointer transition-all duration-200 w-full min-w-0 text-left
+          ${optional
+            ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40 hover:border-cyan-400 hover:bg-cyan-950/80"
+            : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40 hover:border-emerald-400 hover:bg-emerald-950/80"
           }`}
       >
-        {label}
+        <span className="block break-words pr-0.5 text-pretty">{label}</span>
         {optional && (
-          <span className="ml-2 text-[10px] uppercase tracking-wider text-cyan-400/60">
+          <span className="mt-0.5 inline-block text-[10px] uppercase tracking-wider text-cyan-400/60">
             opcional
           </span>
         )}
       </button>
-      <Handle type="source" position={Position.Right} id="right" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
-      <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        className="!bg-emerald-400 !w-2 !h-2 !border-0"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        className="!bg-emerald-400 !w-2 !h-2 !border-0"
+      />
     </>
   );
 }
@@ -179,19 +214,24 @@ export default function WorkflowDiagram() {
     });
   }, []);
 
-  const diagramWidth = NODES_PER_ROW * (NODE_WIDTH + GAP_X) - GAP_X;
+  const diagramWidth =
+    NODES_PER_ROW * (NODE_WIDTH + GAP_X) - GAP_X + HANDLE_EXTRA_GAP_X;
   const rows = Math.ceil((SKILLS.length + 1) / NODES_PER_ROW);
-  const diagramHeight = rows * (NODE_HEIGHT + GAP_Y) + GAP_Y + 60;
+  const optionalStack = TOP_PAD + NODE_HEIGHT + GAP_Y + OPTIONAL_ABOVE_WRITE_GAP;
+  const diagramHeight = rows * (NODE_HEIGHT + GAP_Y) + GAP_Y + optionalStack;
 
   return (
     <div
       id="workflow-diagram"
       className="w-full overflow-x-auto pointer-events-none"
-      style={{ minHeight: diagramHeight + 40 }}
+      style={{ minHeight: Math.max(diagramHeight + 80, 640) }}
     >
       <div
-        style={{ width: Math.max(diagramWidth + 80, 800), height: diagramHeight + 40 }}
-        className="mx-auto react-flow-pass-wheel pointer-events-none"
+        style={{
+          width: Math.max(diagramWidth + 100, 880),
+          height: diagramHeight + 64,
+        }}
+        className="ml-0 mr-auto 2xl:mx-auto react-flow-pass-wheel pointer-events-auto"
       >
         <ReactFlow
           nodes={nodes}
@@ -200,7 +240,7 @@ export default function WorkflowDiagram() {
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           fitView
-          fitViewOptions={{ padding: 0.3 }}
+          fitViewOptions={{ padding: 0.22, maxZoom: 1.2 }}
           proOptions={{ hideAttribution: true }}
           panOnDrag={false}
           zoomOnScroll={false}

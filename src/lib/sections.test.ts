@@ -6,7 +6,6 @@ import {
   findSection,
   sectionIndex,
   SECTIONS,
-  type NavState,
 } from "./sections";
 
 describe("findSection", () => {
