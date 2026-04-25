@@ -1,5 +1,8 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useTransform, type MotionValue } from "motion/react";
+import {
+  useSubstitutiveBeatOpacity,
+  useSubstitutiveBeatY,
+} from "../lib/substitutiveBeats";
 
 const references = [
   {
@@ -59,74 +62,76 @@ const references = [
   },
 ];
 
-function useBeatOpacity(
-  progress: ReturnType<typeof useScroll>["scrollYProgress"],
-  beat: number,
-  totalBeats: number,
-) {
-  const beatSize = 1 / totalBeats;
-  const start = beat * beatSize;
-  const fadeIn = start + beatSize * 0.3;
+const TOTAL_BEATS = 5;
 
-  return useTransform(progress, [start, fadeIn], [0, 1]);
-}
+type StickyContextRotProps = {
+  localProgress: MotionValue<number>;
+};
 
-function useBeatY(
-  progress: ReturnType<typeof useScroll>["scrollYProgress"],
-  beat: number,
-  totalBeats: number,
-) {
-  const beatSize = 1 / totalBeats;
-  const start = beat * beatSize;
-  const fadeIn = start + beatSize * 0.3;
+export default function StickyContextRot({ localProgress }: StickyContextRotProps) {
+  const beat0Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    0,
+    TOTAL_BEATS,
+  );
+  const beat0Y = useSubstitutiveBeatY(localProgress, 0, TOTAL_BEATS);
+  const beat1Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    1,
+    TOTAL_BEATS,
+  );
+  const beat1Y = useSubstitutiveBeatY(localProgress, 1, TOTAL_BEATS);
+  const beat2Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    2,
+    TOTAL_BEATS,
+  );
+  const beat2Y = useSubstitutiveBeatY(localProgress, 2, TOTAL_BEATS);
+  const beat3Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    3,
+    TOTAL_BEATS,
+  );
+  const beat3Y = useSubstitutiveBeatY(localProgress, 3, TOTAL_BEATS);
+  const beat4Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    4,
+    TOTAL_BEATS,
+  );
+  const beat4Y = useSubstitutiveBeatY(localProgress, 4, TOTAL_BEATS);
 
-  return useTransform(progress, [start, fadeIn], [32, 0]);
-}
-
-export default function StickyContextRot() {
-  const outerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: outerRef,
-    offset: ["start start", "end start"],
-  });
-
-  const totalBeats = 5;
-
-  const beat0Opacity = useBeatOpacity(scrollYProgress, 0, totalBeats);
-  const beat0Y = useBeatY(scrollYProgress, 0, totalBeats);
-
-  const beat1Opacity = useBeatOpacity(scrollYProgress, 1, totalBeats);
-  const beat1Y = useBeatY(scrollYProgress, 1, totalBeats);
-
-  const beat2Opacity = useBeatOpacity(scrollYProgress, 2, totalBeats);
-  const beat2Y = useBeatY(scrollYProgress, 2, totalBeats);
-
-  const beat3Opacity = useBeatOpacity(scrollYProgress, 3, totalBeats);
-  const beat3Y = useBeatY(scrollYProgress, 3, totalBeats);
-
-  const beat4Opacity = useBeatOpacity(scrollYProgress, 4, totalBeats);
-  const beat4Y = useBeatY(scrollYProgress, 4, totalBeats);
+  const titleLock = useTransform(
+    localProgress,
+    [0, 0.02],
+    [0.96, 1],
+    { clamp: true },
+  );
 
   return (
-    <div ref={outerRef} className="relative h-[500vh]">
-      <div className="sticky top-0 h-dvh flex items-center will-change-transform">
-        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 space-y-6 overflow-y-auto max-h-[90vh] py-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-2">
-            A Ciência por Trás
-          </h2>
-          <p className="text-neutral-400 text-center max-w-2xl mx-auto text-lg mb-4">
-            Por que skills on-demand são mais eficientes que regras globais na
-            janela de contexto dos LLMs.
-          </p>
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-4">
+      <motion.div
+        style={{ opacity: titleLock }}
+        className="shrink-0 text-center mb-2"
+      >
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">
+          A Ciência por Trás
+        </h2>
+        <p className="text-neutral-400 text-xs sm:text-sm max-w-2xl mx-auto mt-1 line-clamp-2">
+          Por que skills on-demand são mais eficientes que regras globais na
+          janela de contexto dos LLMs.
+        </p>
+      </motion.div>
 
-          <motion.div
-            style={{ opacity: beat0Opacity, y: beat0Y }}
-            className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10 will-change-transform"
-          >
-            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-4">
+      <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto">
+        <motion.div
+          style={{ opacity: beat0Opacity, y: beat0Y }}
+          className="absolute inset-0 flex flex-col justify-center will-change-transform overflow-hidden"
+        >
+          <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-4 sm:p-6 min-h-0">
+            <h3 className="text-base sm:text-lg font-semibold text-emerald-400 mb-2">
               O que é Context Rot?
             </h3>
-            <p className="text-neutral-300 leading-relaxed mb-4">
+            <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed mb-2 line-clamp-4 sm:line-clamp-none">
               LLMs como Claude, GPT e Gemini possuem janelas de contexto cada vez
               maiores — 128k, 200k, até 1M tokens. Mas{" "}
               <strong className="text-neutral-100">
@@ -136,197 +141,180 @@ export default function StickyContextRot() {
               significativamente quando o input ultrapassa a faixa de 80k–120k
               tokens.
             </p>
-            <p className="text-neutral-300 leading-relaxed">
+            <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed line-clamp-3 sm:line-clamp-none">
               Esse fenômeno é chamado de{" "}
               <strong className="text-emerald-400">Context Rot</strong>: quanto
               mais informação irrelevante ou redundante é empurrada para a janela
-              de contexto, pior o modelo se sai em tarefas que exigem precisão —
-              como gerar código, seguir instruções complexas ou manter coerência em
-              conversas longas.
+              de contexto, pior o modelo se sai em tarefas que exigem precisão.
             </p>
-          </motion.div>
+          </div>
+        </motion.div>
 
-          <motion.div
-            style={{ opacity: beat1Opacity, y: beat1Y }}
-            className="grid md:grid-cols-2 gap-6 will-change-transform"
-          >
-            <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">⚠</span>
-                <h4 className="text-lg font-semibold text-red-400">
+        <motion.div
+          style={{ opacity: beat1Opacity, y: beat1Y }}
+          className="absolute inset-0 flex flex-col justify-center min-h-0 will-change-transform"
+        >
+            <div className="grid md:grid-cols-2 gap-2 min-h-0 text-xs sm:text-sm">
+            <div className="bg-red-950/20 border border-red-900/30 rounded-xl p-3 sm:p-4 min-h-0 overflow-hidden">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">⚠</span>
+                <h4 className="text-sm font-semibold text-red-400">
                   Regras Globais (CLAUDE.md gigante)
                 </h4>
               </div>
-              <ul className="space-y-3 text-neutral-400">
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1 shrink-0">✗</span>
+              <ul className="space-y-1.5 text-neutral-400">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-red-400 shrink-0">✗</span>
                   <span>
                     Todas as instruções carregadas em toda interação, mesmo quando
                     irrelevantes
                   </span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1 shrink-0">✗</span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-red-400 shrink-0">✗</span>
                   <span>
                     Consome tokens do contexto antes mesmo da sua primeira
                     mensagem
                   </span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1 shrink-0">✗</span>
-                  <span>
-                    Instruções conflitantes se acumulam e confundem o modelo
-                  </span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-red-400 shrink-0">✗</span>
+                  <span>Instruções conflitantes se acumulam</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1 shrink-0">✗</span>
-                  <span>
-                    Performance degrada à medida que o arquivo de regras cresce
-                  </span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-red-400 shrink-0">✗</span>
+                  <span>Performance degrada à medida que o arquivo cresce</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-emerald-950/20 border border-emerald-900/30 rounded-2xl p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">⚡</span>
-                <h4 className="text-lg font-semibold text-emerald-400">
+            <div className="bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-3 sm:p-4 min-h-0 overflow-hidden">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">⚡</span>
+                <h4 className="text-sm font-semibold text-emerald-400">
                   Skills On-Demand
                 </h4>
               </div>
-              <ul className="space-y-3 text-neutral-400">
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1 shrink-0">✓</span>
+              <ul className="space-y-1.5 text-neutral-400">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 shrink-0">✓</span>
                   <span>
-                    Apenas a skill relevante é carregada na hora que você precisa
+                    Apenas a skill relevante é carregada na hora que você
+                    precisa
                   </span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1 shrink-0">✓</span>
-                  <span>
-                    Contexto limpo e focado — o modelo sabe exatamente o que fazer
-                  </span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 shrink-0">✓</span>
+                  <span>Contexto limpo e focado</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1 shrink-0">✓</span>
-                  <span>
-                    Sem conflito entre instruções — cada skill é autocontida
-                  </span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 shrink-0">✓</span>
+                  <span>Sem conflito entre instruções</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-1 shrink-0">✓</span>
-                  <span>
-                    Escala sem degradação — adicione novas skills sem poluir o
-                    contexto
-                  </span>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 shrink-0">✓</span>
+                  <span>Adicione skills sem poluir o contexto</span>
                 </li>
               </ul>
             </div>
-          </motion.div>
+          </div>
+        </motion.div>
 
-          <motion.div
-            style={{ opacity: beat2Opacity, y: beat2Y }}
-            className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10 will-change-transform"
-          >
-            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-4">
+        <motion.div
+          style={{ opacity: beat2Opacity, y: beat2Y }}
+          className="absolute inset-0 flex flex-col justify-center will-change-transform overflow-hidden"
+        >
+          <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-3 sm:p-5 min-h-0">
+            <h3 className="text-base sm:text-lg font-semibold text-emerald-400 mb-2">
               Por que isso importa na prática?
             </h3>
-            <p className="text-neutral-300 leading-relaxed mb-4">
-              Um arquivo <code className="text-emerald-400">CLAUDE.md</code> com
-              centenas de regras parece organizado — mas na realidade está
-              consumindo os tokens mais valiosos da janela de contexto: os
-              primeiros. Quando você pede ao modelo para implementar uma feature, o
-              contexto já está parcialmente "podre" com instruções que não se
-              aplicam àquela tarefa.
+            <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed mb-2">
+              Um{" "}
+              <code className="text-emerald-400">CLAUDE.md</code> enorme
+              consome os tokens mais valiosos — os primeiros. O contexto já está
+              parcialmente &quot;podre&quot; com instruções que não se aplicam à
+              tarefa.
             </p>
-            <p className="text-neutral-300 leading-relaxed mb-4">
-              A pesquisa da Chroma (2025) demonstrou que modelos perdem até{" "}
+            <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed mb-2">
+              A pesquisa da Chroma (2025) demonstrou perda de até{" "}
               <strong className="text-neutral-100">
-                30% de precisão em tarefas de retrieval
+                30% de precisão em retrieval
               </strong>{" "}
-              quando o contexto é preenchido com informação irrelevante, mesmo que
-              esteja dentro do limite técnico da janela.
+              com contexto irrelevante, mesmo dentro do limite técnico.
             </p>
-            <p className="text-neutral-300 leading-relaxed">
-              O paper do arXiv sobre{" "}
-              <em className="text-neutral-200">
-                Context Discipline and Performance Correlation
-              </em>{" "}
-              reforça: disciplina no que entra na janela de contexto tem correlação
-              direta com a qualidade do output. Menos lixo, melhor resultado.
+            <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
+              Menos lixo, melhor resultado.
             </p>
-          </motion.div>
+          </div>
+        </motion.div>
 
-          <motion.div
-            style={{ opacity: beat3Opacity, y: beat3Y }}
-            className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 sm:p-10 will-change-transform"
-          >
-            <h3 className="text-xl sm:text-2xl font-semibold text-emerald-400 mb-6">
+        <motion.div
+          style={{ opacity: beat3Opacity, y: beat3Y }}
+          className="absolute inset-0 flex flex-col justify-center will-change-transform"
+        >
+          <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-3 sm:p-5 min-h-0">
+            <h3 className="text-base sm:text-lg font-semibold text-emerald-400 mb-2">
               A analogia
             </h3>
-            <div className="grid sm:grid-cols-2 gap-8">
+            <div className="grid sm:grid-cols-2 gap-3 text-xs sm:text-sm">
               <div>
-                <p className="text-sm uppercase tracking-wider text-red-400 mb-2 font-mono">
+                <p className="text-[10px] uppercase tracking-wider text-red-400 mb-1 font-mono">
                   Regras Globais
                 </p>
                 <p className="text-neutral-300 leading-relaxed">
-                  É como entrar em uma reunião carregando{" "}
+                  Reunião com{" "}
                   <strong className="text-neutral-100">
                     todos os documentos de todos os projetos
-                  </strong>{" "}
-                  da empresa. A informação relevante existe, mas está enterrada em
-                  ruído. Você gasta mais tempo procurando do que decidindo.
+                  </strong>
+                  . A informação relevante existe, mas enterrada em ruído.
                 </p>
               </div>
               <div>
-                <p className="text-sm uppercase tracking-wider text-emerald-400 mb-2 font-mono">
+                <p className="text-[10px] uppercase tracking-wider text-emerald-400 mb-1 font-mono">
                   Skills On-Demand
                 </p>
                 <p className="text-neutral-300 leading-relaxed">
-                  É como entrar na reunião com{" "}
-                  <strong className="text-neutral-100">
-                    apenas o briefing relevante
-                  </strong>{" "}
-                  para aquela pauta. Foco total, decisões rápidas, zero distração.
-                  Exatamente o que o modelo precisa para performar.
+                  Apenas o{" "}
+                  <strong className="text-neutral-100">briefing relevante</strong>{" "}
+                  para aquela pauta. Foco total.
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
+        </motion.div>
 
-          <motion.div
-            style={{ opacity: beat4Opacity, y: beat4Y }}
-            className="will-change-transform"
-          >
-            <h3 className="text-xl sm:text-2xl font-semibold text-center mb-6">
-              Referências & Estudos
-            </h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {references.map((ref) => (
-                <div
-                  key={ref.id}
-                  className={`rounded-xl p-5 border transition-colors ${
-                    ref.highlight
-                      ? "bg-emerald-950/30 border-emerald-800/50"
-                      : "bg-neutral-900/50 border-neutral-800"
+        <motion.div
+          style={{ opacity: beat4Opacity, y: beat4Y }}
+          className="absolute inset-0 flex flex-col min-h-0 will-change-transform"
+        >
+          <h3 className="text-sm sm:text-base font-semibold text-center mb-2 shrink-0">
+            Referências & Estudos
+          </h3>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-1.5 min-h-0 overflow-hidden">
+            {references.map((ref) => (
+              <div
+                key={ref.id}
+                className={`rounded-lg p-2 sm:p-2.5 border ${
+                  ref.highlight
+                    ? "bg-emerald-950/30 border-emerald-800/50"
+                    : "bg-neutral-900/50 border-neutral-800"
+                }`}
+              >
+                <p className="text-[10px] text-neutral-500 mb-0.5 font-mono line-clamp-1">
+                  {ref.author}
+                </p>
+                <p
+                  className={`text-[10px] sm:text-xs leading-snug line-clamp-3 ${
+                    ref.highlight ? "text-emerald-300" : "text-neutral-300"
                   }`}
                 >
-                  <p className="text-sm text-neutral-500 mb-1 font-mono">
-                    {ref.author}
-                  </p>
-                  <p
-                    className={`text-sm leading-snug ${
-                      ref.highlight ? "text-emerald-300" : "text-neutral-300"
-                    }`}
-                  >
-                    {ref.title}
-                  </p>
-                  <p className="text-xs text-neutral-600 mt-2">{ref.date}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
+                  {ref.title}
+                </p>
+                <p className="text-[9px] text-neutral-600 mt-0.5">{ref.date}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

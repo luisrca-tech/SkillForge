@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useScrollToSection } from "../context/ScrollStoryContext";
 import {
   ReactFlow,
   type Node,
@@ -118,10 +119,16 @@ function SkillNode({ data }: NodeProps) {
     optional: boolean;
   };
 
+  const scrollToSection = useScrollToSection();
+
   const handleClick = useCallback(() => {
+    if (scrollToSection) {
+      scrollToSection(anchor);
+      return;
+    }
     const el = document.querySelector(anchor);
     el?.scrollIntoView({ behavior: "smooth" });
-  }, [anchor]);
+  }, [anchor, scrollToSection]);
 
   return (
     <>

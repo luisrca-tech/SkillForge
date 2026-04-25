@@ -1,6 +1,9 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useTransform, type MotionValue } from "motion/react";
 import TerminalSimulator from "./TerminalSimulator";
+import {
+  useSubstitutiveBeatOpacity,
+  useSubstitutiveBeatY,
+} from "../lib/substitutiveBeats";
 
 interface TerminalLine {
   type: "prompt" | "response" | "divider";
@@ -13,7 +16,7 @@ interface Scenario {
   lines: TerminalLine[];
 }
 
-interface StickySkillSectionProps {
+export interface StickySkillSectionProps {
   name: string;
   problem: {
     title: string;
@@ -29,31 +32,10 @@ interface StickySkillSectionProps {
   };
   scenarios: Scenario[];
   variant?: "default" | "optional";
+  localProgress: MotionValue<number>;
 }
 
-function useBeatOpacity(
-  progress: ReturnType<typeof useScroll>["scrollYProgress"],
-  beat: number,
-  totalBeats: number,
-) {
-  const beatSize = 1 / totalBeats;
-  const start = beat * beatSize;
-  const fadeIn = start + beatSize * 0.3;
-
-  return useTransform(progress, [start, fadeIn], [0, 1]);
-}
-
-function useBeatY(
-  progress: ReturnType<typeof useScroll>["scrollYProgress"],
-  beat: number,
-  totalBeats: number,
-) {
-  const beatSize = 1 / totalBeats;
-  const start = beat * beatSize;
-  const fadeIn = start + beatSize * 0.3;
-
-  return useTransform(progress, [start, fadeIn], [32, 0]);
-}
+const TOTAL_BEATS = 3;
 
 export default function StickySkillSection({
   name,
@@ -62,26 +44,28 @@ export default function StickySkillSection({
   howItWorks,
   scenarios,
   variant = "default",
+  localProgress,
 }: StickySkillSectionProps) {
-  const outerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: outerRef,
-    offset: ["start start", "end start"],
-  });
+  const beat0Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    0,
+    TOTAL_BEATS,
+  );
+  const beat0Y = useSubstitutiveBeatY(localProgress, 0, TOTAL_BEATS);
 
-  const totalBeats = 4;
+  const beat1Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    1,
+    TOTAL_BEATS,
+  );
+  const beat1Y = useSubstitutiveBeatY(localProgress, 1, TOTAL_BEATS);
 
-  const beat0Opacity = useBeatOpacity(scrollYProgress, 0, totalBeats);
-  const beat0Y = useBeatY(scrollYProgress, 0, totalBeats);
-
-  const beat1Opacity = useBeatOpacity(scrollYProgress, 1, totalBeats);
-  const beat1Y = useBeatY(scrollYProgress, 1, totalBeats);
-
-  const beat2Opacity = useBeatOpacity(scrollYProgress, 2, totalBeats);
-  const beat2Y = useBeatY(scrollYProgress, 2, totalBeats);
-
-  const beat3Opacity = useBeatOpacity(scrollYProgress, 3, totalBeats);
-  const beat3Y = useBeatY(scrollYProgress, 3, totalBeats);
+  const beat2Opacity = useSubstitutiveBeatOpacity(
+    localProgress,
+    2,
+    TOTAL_BEATS,
+  );
+  const beat2Y = useSubstitutiveBeatY(localProgress, 2, TOTAL_BEATS);
 
   const accentText =
     variant === "optional" ? "text-cyan-400" : "text-emerald-400";
@@ -91,78 +75,92 @@ export default function StickySkillSection({
     variant === "optional" ? "border-cyan-900/30" : "border-emerald-900/30";
   const stepDot = variant === "optional" ? "bg-cyan-400" : "bg-emerald-400";
 
+  const titleLock = useTransform(
+    localProgress,
+    [0, 0.02],
+    [0.96, 1],
+    { clamp: true },
+  );
+
   return (
-    <div ref={outerRef} className="relative h-[400vh]">
-      <div className="sticky top-0 h-dvh flex items-center will-change-transform">
-        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 space-y-6 overflow-y-auto max-h-[90vh] py-8">
-          <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <h2 className="text-3xl sm:text-4xl font-bold">
-              <span className={`${accentText} font-mono text-2xl sm:text-3xl`}>
-                /{name}
-              </span>
-            </h2>
-            {variant === "optional" && (
-              <span className="text-xs uppercase tracking-wider text-cyan-400/70 border border-cyan-400/30 rounded-full px-3 py-1">
-                opcional
-              </span>
-            )}
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-6">
+      <motion.div
+        style={{ opacity: titleLock }}
+        className="shrink-0 flex items-center gap-3 mb-3 flex-wrap"
+      >
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+          <span className={`${accentText} font-mono text-xl sm:text-2xl md:text-3xl`}>
+            /{name}
+          </span>
+        </h2>
+        {variant === "optional" && (
+          <span className="text-xs uppercase tracking-wider text-cyan-400/70 border border-cyan-400/30 rounded-full px-3 py-1">
+            opcional
+          </span>
+        )}
+      </motion.div>
+
+      <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto">
+        <motion.div
+          style={{ opacity: beat0Opacity, y: beat0Y }}
+          className="absolute inset-0 flex flex-col gap-3 min-h-0 will-change-transform"
+        >
+          <div className="grid md:grid-cols-2 gap-3 min-h-0">
+            <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-4 sm:p-6 min-h-0">
+              <h3 className="text-base font-semibold text-red-400 mb-2">
+                {problem.title}
+              </h3>
+              <p className="text-neutral-300 text-sm leading-relaxed line-clamp-6 md:line-clamp-8">
+                {problem.description}
+              </p>
+            </div>
+            <div
+              className={`${accentBg} border ${accentBorder} rounded-2xl p-4 sm:p-6 min-h-0`}
+            >
+              <h3 className={`text-base font-semibold ${accentText} mb-2`}>
+                {skill.title}
+              </h3>
+              <p className="text-neutral-300 text-sm leading-relaxed line-clamp-6 md:line-clamp-8">
+                {skill.description}
+              </p>
+            </div>
           </div>
+        </motion.div>
 
-          <motion.div
-            style={{ opacity: beat0Opacity, y: beat0Y }}
-            className="bg-red-950/20 border border-red-900/30 rounded-2xl p-8 will-change-transform"
-          >
-            <h3 className="text-lg font-semibold text-red-400 mb-3">
-              {problem.title}
-            </h3>
-            <p className="text-neutral-300 leading-relaxed">
-              {problem.description}
-            </p>
-          </motion.div>
+        <motion.div
+          style={{ opacity: beat1Opacity, y: beat1Y }}
+          className="absolute inset-0 flex flex-col min-h-0 justify-center will-change-transform"
+        >
+          <h3 className="text-base sm:text-lg font-semibold text-neutral-200 mb-3 shrink-0">
+            {howItWorks.title}
+          </h3>
+          <ol className="space-y-2 min-h-0">
+            {howItWorks.steps.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm sm:text-base">
+                <span
+                  className={`${stepDot} text-neutral-950 text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
+                >
+                  {i + 1}
+                </span>
+                <span className="text-neutral-400 leading-relaxed">
+                  {step}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </motion.div>
 
-          <motion.div
-            style={{ opacity: beat1Opacity, y: beat1Y }}
-            className={`${accentBg} border ${accentBorder} rounded-2xl p-8 will-change-transform`}
-          >
-            <h3 className={`text-lg font-semibold ${accentText} mb-3`}>
-              {skill.title}
-            </h3>
-            <p className="text-neutral-300 leading-relaxed">
-              {skill.description}
-            </p>
-          </motion.div>
-
-          <motion.div
-            style={{ opacity: beat2Opacity, y: beat2Y }}
-            className="will-change-transform"
-          >
-            <h3 className="text-lg font-semibold text-neutral-200 mb-4">
-              {howItWorks.title}
-            </h3>
-            <ol className="space-y-3">
-              {howItWorks.steps.map((step, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span
-                    className={`${stepDot} text-neutral-950 text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
-                  >
-                    {i + 1}
-                  </span>
-                  <span className="text-neutral-400">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </motion.div>
-
-          <motion.div
-            style={{ opacity: beat3Opacity, y: beat3Y }}
-            className="will-change-transform"
-          >
-            <h3 className="text-lg font-semibold text-neutral-200 mb-4">
-              Exemplo interativo
-            </h3>
+        <motion.div
+          style={{ opacity: beat2Opacity, y: beat2Y }}
+          className="absolute inset-0 flex flex-col min-h-0 will-change-transform"
+        >
+          <h3 className="text-base sm:text-lg font-semibold text-neutral-200 mb-2 shrink-0">
+            Exemplo interativo
+          </h3>
+          <div className="flex-1 min-h-0 max-h-full overflow-hidden">
             <TerminalSimulator scenarios={scenarios} title={`/${name}`} />
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

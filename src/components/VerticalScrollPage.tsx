@@ -1,0 +1,267 @@
+import { useEffect, useRef, type ReactNode } from "react";
+import { motion, useMotionValue, useTransform, type MotionValue } from "motion/react";
+import { ScrollStoryProvider, useScrollStory } from "../context/ScrollStoryContext";
+import {
+  STORY_SECTIONS,
+  TOTAL_STORY_VH,
+  type StorySection,
+} from "../lib/scrollSections";
+import {
+  grillMe,
+  writeAPrd,
+  prdToPlan,
+  planToTracker,
+  doWork,
+  improveCodebaseArchitecture,
+  handleCoderabbit,
+} from "../data/skills";
+import StickyHero from "./StickyHero";
+import StickySkillSection from "./StickySkillSection";
+import StickyContextRot from "./StickyContextRot";
+import WorkflowDiagram from "./WorkflowDiagram";
+
+const SKILL_PROPS = {
+  "skill-grill-me": grillMe,
+  "skill-write-a-prd": writeAPrd,
+  "skill-prd-to-plan": prdToPlan,
+  "skill-plan-to-tracker": planToTracker,
+  "skill-do-work": doWork,
+  "skill-improve-codebase-architecture": improveCodebaseArchitecture,
+  "skill-handle-coderabbit": handleCoderabbit,
+} as const;
+
+function useSectionLocalProgress(
+  storyProgress: MotionValue<number>,
+  s: StorySection,
+) {
+  return useTransform(
+    storyProgress,
+    [s.startProgress, s.endProgress],
+    [0, 1],
+    { clamp: true },
+  );
+}
+
+function useSectionVisibility(
+  storyProgress: MotionValue<number>,
+  s: StorySection,
+) {
+  return useTransform(storyProgress, (v) => {
+    if (v < s.startProgress) {
+      return 0;
+    }
+    const last = s.id === "skill-handle-coderabbit";
+    if (last) {
+      return v <= 1 + 1e-9 ? 1 : 0;
+    }
+    return v < s.endProgress ? 1 : 0;
+  });
+}
+
+function WorkflowLayer() {
+  return (
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center px-4 sm:px-6 py-4">
+      <div className="w-full max-w-6xl mx-auto shrink-0">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1">
+          O Workflow
+        </h2>
+        <p className="text-neutral-400 text-sm text-center max-w-2xl mx-auto mb-4">
+          7 skills que transformam o uso da IA em um processo disciplinado e
+          reproduzível.
+        </p>
+      </div>
+      <div className="w-full min-h-0 flex-1 max-w-6xl mx-auto will-change-transform">
+        <WorkflowDiagram />
+      </div>
+    </div>
+  );
+}
+
+function StackedSection({
+  storyProgress,
+  s,
+}: {
+  storyProgress: MotionValue<number>;
+  s: StorySection;
+}) {
+  const local = useSectionLocalProgress(storyProgress, s);
+  const vis = useSectionVisibility(storyProgress, s);
+  const z = useTransform(vis, (x) => (x < 0.5 ? 0 : 10));
+  const pe = useTransform(vis, (x) => (x < 0.5 ? "none" : ("auto" as const)));
+
+  let body: ReactNode;
+  if (s.id === "hero") {
+    body = <StickyHero localProgress={local} />;
+  } else if (s.id === "workflow") {
+    body = <WorkflowLayer />;
+  } else if (s.id === "context-rot") {
+    body = <StickyContextRot localProgress={local} />;
+  } else {
+    const data = SKILL_PROPS[s.id as keyof typeof SKILL_PROPS];
+    body = data ? (
+      <StickySkillSection {...data} localProgress={local} />
+    ) : null;
+  }
+
+  return (
+    <motion.div
+      className="absolute inset-0 w-full h-dvh max-h-dvh pointer-events-none"
+      style={{
+        opacity: vis,
+        zIndex: z,
+        pointerEvents: pe,
+      }}
+    >
+      {body}
+    </motion.div>
+  );
+}
+
+function HashOnLoad() {
+  const ctx = useScrollStory();
+  useEffect(() => {
+    if (!ctx) {
+      return;
+    }
+    const { scrollToHash } = ctx;
+    const hash = window.location.hash;
+    if (hash && hash.length > 1) {
+      requestAnimationFrame(() => {
+        scrollToHash(hash);
+      });
+    }
+  }, [ctx]);
+  return null;
+}
+
+function HashLinkCapture() {
+  const ctx = useScrollStory();
+  useEffect(() => {
+    if (!ctx) {
+      return;
+    }
+    const { scrollToHash } = ctx;
+    const onClick = (e: MouseEvent) => {
+      const el = (e.target as Element | null)?.closest?.("a[href^='#']");
+      if (!el) {
+        return;
+      }
+      if ((el as HTMLAnchorElement).getAttribute("href") === "#") {
+        return;
+      }
+      e.preventDefault();
+      scrollToHash((el as HTMLAnchorElement).getAttribute("href")!);
+    };
+    document.addEventListener("click", onClick, true);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+    };
+  }, [ctx]);
+  return null;
+}
+
+function ScrollStoryLayout() {
+  const storyProgress = useMotionValue(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = containerRef.current;
+    const spacer = spacerRef.current;
+    if (!root || !spacer) {
+      return;
+    }
+    const update = () => {
+      const S = spacer.offsetHeight;
+      const V = root.clientHeight;
+      const t = root.scrollTop;
+      const cap = Math.max(0, S - V);
+      const p = cap === 0 ? 0 : t >= cap ? 1 : t / cap;
+      storyProgress.set(Math.min(1, Math.max(0, p)));
+    };
+    update();
+    root.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(root);
+    ro.observe(spacer);
+    return () => {
+      root.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [storyProgress]);
+
+  return (
+    <ScrollStoryProvider
+      containerRef={containerRef}
+      storyProgress={storyProgress}
+    >
+      <HashOnLoad />
+      <HashLinkCapture />
+      <div
+        ref={containerRef}
+        className="fixed inset-0 z-0 overflow-y-auto overflow-x-hidden overscroll-y-contain"
+      >
+        <div
+          ref={spacerRef}
+          className="w-full"
+          style={{ minHeight: `${TOTAL_STORY_VH}vh` }}
+        >
+          {STORY_SECTIONS.map((s) => (
+            <div
+              key={s.id}
+              id={s.id}
+              className="w-full"
+              style={{ minHeight: `${s.vh}vh` }}
+            />
+          ))}
+        </div>
+        <footer className="px-4 sm:px-6 py-12 sm:py-16 border-t border-neutral-800">
+          <div className="max-w-4xl mx-auto text-center space-y-4">
+            <p className="text-sm uppercase tracking-widest text-emerald-400 font-mono">
+              AI Coding Workflow
+            </p>
+            <p className="text-neutral-500 text-sm">
+              Workflow profissional de desenvolvimento assistido por IA.
+            </p>
+            <nav className="flex items-center justify-center gap-6 text-sm text-neutral-600">
+              <a
+                href="#hero"
+                className="hover:text-neutral-300 transition-colors"
+              >
+                Topo
+              </a>
+              <a
+                href="#workflow"
+                className="hover:text-neutral-300 transition-colors"
+              >
+                Workflow
+              </a>
+              <a
+                href="#context-rot"
+                className="hover:text-neutral-300 transition-colors"
+              >
+                Context Rot
+              </a>
+            </nav>
+          </div>
+        </footer>
+      </div>
+
+      <div className="fixed inset-0 z-10 pointer-events-none h-dvh max-h-dvh">
+        <div className="relative w-full h-full min-h-0">
+          {STORY_SECTIONS.map((s) => (
+            <StackedSection
+              key={s.id}
+              storyProgress={storyProgress}
+              s={s}
+            />
+          ))}
+        </div>
+      </div>
+    </ScrollStoryProvider>
+  );
+}
+
+export default function VerticalScrollPage() {
+  return <ScrollStoryLayout />;
+}

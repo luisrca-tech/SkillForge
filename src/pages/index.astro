@@ -1,13 +1,9 @@
 ---
 import '../styles/global.css'
-import WorkflowDiagram from '../components/WorkflowDiagram'
-import StickyContextRot from '../components/StickyContextRot'
-import StickyHero from '../components/StickyHero'
-import StickySkillSection from '../components/StickySkillSection'
-import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseArchitecture, handleCoderabbit } from '../data/skills'
+import VerticalScrollPage from '../components/VerticalScrollPage'
 ---
 
-<html lang="pt-BR">
+<html lang="pt-BR" class="h-full">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -18,65 +14,7 @@ import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseAr
 		<meta name="description" content="Pare de fazer vibe coding. Tenha um workflow profissional de desenvolvimento assistido por IA — da concepção ao code review." />
 		<meta name="theme-color" content="#0a0a0a" />
 	</head>
-	<body class="bg-neutral-950 text-neutral-100 scroll-smooth">
-
-		<header id="hero">
-			<StickyHero client:load />
-		</header>
-
-		<section id="workflow" class="min-h-screen px-4 sm:px-6 py-16 sm:py-24 max-w-6xl mx-auto">
-			<h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">O Workflow</h2>
-			<p class="text-neutral-400 text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-				7 skills que transformam o uso da IA em um processo disciplinado e reproduzível.
-			</p>
-			<WorkflowDiagram client:only="react" />
-		</section>
-
-		<section id="context-rot">
-			<StickyContextRot client:visible />
-		</section>
-
-		<section id="skill-grill-me">
-			<StickySkillSection {...grillMe} client:visible />
-		</section>
-
-		<section id="skill-write-a-prd">
-			<StickySkillSection {...writeAPrd} client:visible />
-		</section>
-
-		<section id="skill-prd-to-plan">
-			<StickySkillSection {...prdToPlan} client:visible />
-		</section>
-
-		<section id="skill-plan-to-tracker">
-			<StickySkillSection {...planToTracker} client:visible />
-		</section>
-
-		<section id="skill-do-work">
-			<StickySkillSection {...doWork} client:visible />
-		</section>
-
-		<section id="skill-improve-codebase-architecture">
-			<StickySkillSection {...improveCodebaseArchitecture} client:visible />
-		</section>
-
-		<section id="skill-handle-coderabbit">
-			<StickySkillSection {...handleCoderabbit} client:visible />
-		</section>
-
-		<footer class="px-4 sm:px-6 py-12 sm:py-16 border-t border-neutral-800">
-			<div class="max-w-4xl mx-auto text-center space-y-4">
-				<p class="text-sm uppercase tracking-widest text-emerald-400 font-mono">AI Coding Workflow</p>
-				<p class="text-neutral-500 text-sm">
-					Workflow profissional de desenvolvimento assistido por IA.
-				</p>
-				<nav class="flex items-center justify-center gap-6 text-sm text-neutral-600">
-					<a href="#hero" class="hover:text-neutral-300 transition-colors">Topo</a>
-					<a href="#workflow" class="hover:text-neutral-300 transition-colors">Workflow</a>
-					<a href="#context-rot" class="hover:text-neutral-300 transition-colors">Context Rot</a>
-				</nav>
-			</div>
-		</footer>
-
+	<body class="h-full min-h-0 m-0 overflow-hidden overscroll-none bg-neutral-950 text-neutral-100 antialiased">
+		<VerticalScrollPage client:load />
 	</body>
 </html>
