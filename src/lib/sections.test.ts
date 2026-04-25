@@ -59,8 +59,8 @@ describe("advance", () => {
     expect(result).toEqual({ sectionId: "skill-grill-me", beat: 0 });
   });
 
-  it("advances last skill beat to context-rot", () => {
-    const result = advance({ sectionId: "skill-handle-coderabbit", beat: 1 });
+  it("advances last skill (single-beat) to context-rot", () => {
+    const result = advance({ sectionId: "skill-handle-coderabbit", beat: 0 });
     expect(result).toEqual({ sectionId: "context-rot", beat: 0 });
   });
 });
@@ -86,9 +86,9 @@ describe("retreat", () => {
     expect(result).toEqual({ sectionId: "hero", beat: 0 });
   });
 
-  it("retreats from context-rot beat 0 to last skill last beat", () => {
+  it("retreats from context-rot beat 0 to last skill (single-beat)", () => {
     const result = retreat({ sectionId: "context-rot", beat: 0 });
-    expect(result).toEqual({ sectionId: "skill-handle-coderabbit", beat: 1 });
+    expect(result).toEqual({ sectionId: "skill-handle-coderabbit", beat: 0 });
   });
 });
 
