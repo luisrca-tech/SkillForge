@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useEffect, useRef } from "react";
+import { useCallback, useLayoutEffect, useEffect, useRef, useState } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
 import { useNavigateTo } from "../context/SectionNavContext";
 import type { SectionId } from "../lib/sections";
@@ -16,7 +16,7 @@ import {
   useReactFlow,
   useStore,
 } from "@xyflow/react";
-import AnimatedBeamEdge from "./AnimatedBeamEdge";
+import AnimatedBeamEdge, { useReducedMotion } from "./AnimatedBeamEdge";
 import "@xyflow/react/dist/style.css";
 
 const SKILLS = [
@@ -70,7 +70,7 @@ function buildInitialNodes(): Node[] {
       type: "skill",
       position: { x, y },
       style: { width: NODE_WIDTH },
-      data: { label: skill.label, anchor: skill.anchor, optional: false },
+      data: { label: skill.label, anchor: skill.anchor, optional: false, description: SKILL_DESCRIPTIONS[skill.id] },
     };
   });
 
@@ -98,6 +98,7 @@ function buildInitialNodes(): Node[] {
       label: OPTIONAL_SKILL.label,
       anchor: OPTIONAL_SKILL.anchor,
       optional: true,
+      description: SKILL_DESCRIPTIONS[OPTIONAL_SKILL.id],
     },
   });
 
@@ -128,11 +129,7 @@ function buildEdges(): Edge[] {
       targetHandle: isEndOfRow ? "top" : "left",
       type: "animatedBeam",
       style: { strokeWidth: 2 },
-      data: {
-        beamColor: "#6ee7b7",
-        baseColor: "#34d399",
-        targetDescription: SKILL_DESCRIPTIONS[targetId],
-      },
+      data: { beamColor: "#6ee7b7", baseColor: "#34d399" },
     });
   }
 
@@ -144,11 +141,7 @@ function buildEdges(): Edge[] {
     targetHandle: "top",
     type: "animatedBeam",
     style: { strokeWidth: 2 },
-    data: {
-      beamColor: "#67e8f9",
-      baseColor: "#22d3ee",
-      targetDescription: SKILL_DESCRIPTIONS["write-a-prd"],
-    },
+    data: { beamColor: "#67e8f9", baseColor: "#22d3ee" },
   });
 
   return edges;
@@ -197,7 +190,99 @@ function SkillNode({ data }: NodeProps) {
   );
 }
 
-const nodeTypes: NodeTypes = { skill: SkillNode };
+const CARD_HOLD_MS = 1500;
+
+function DescriptionCard({
+  description,
+  color,
+  visible,
+}: {
+  description: string;
+  color: string;
+  visible: boolean;
+}) {
+  const [phase, setPhase] = useState<"idle" | "visible" | "exiting">("idle");
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const hasShownRef = useRef(false);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (visible && !hasShownRef.current) {
+      hasShownRef.current = true;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setPhase("visible");
+        });
+      });
+      timerRef.current = setTimeout(() => {
+        setPhase("exiting");
+      }, CARD_HOLD_MS);
+    }
+
+    if (!visible) {
+      hasShownRef.current = false;
+      clearTimeout(timerRef.current);
+      setPhase("idle");
+    }
+
+    return () => clearTimeout(timerRef.current);
+  }, [visible]);
+
+  const isShown = phase === "visible";
+  const isExiting = phase === "exiting";
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "100%",
+        left: "50%",
+        transform: `translateX(-50%) translateY(${isShown ? -8 : isExiting ? -12 : 0}px)`,
+        opacity: isShown ? 1 : 0,
+        transition: reducedMotion
+          ? "opacity 0.1s"
+          : "opacity 0.35s ease, transform 0.35s ease",
+        pointerEvents: "none",
+        background: "rgba(24, 24, 27, 0.85)",
+        borderColor: color,
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderRadius: 6,
+        padding: "5px 10px",
+        backdropFilter: "blur(12px)",
+        whiteSpace: "nowrap",
+        maxWidth: 300,
+      }}
+      className="text-[11px] leading-tight text-zinc-200"
+    >
+      {description}
+    </div>
+  );
+}
+
+function SkillNodeWithCard(props: NodeProps) {
+  const { description, optional, visible } = props.data as {
+    description?: string;
+    optional: boolean;
+    visible?: boolean;
+  };
+  const color = optional ? "#22d3ee" : "#34d399";
+
+  return (
+    <div style={{ position: "relative" }}>
+      {description && (
+        <DescriptionCard
+          description={description}
+          color={color}
+          visible={!!visible}
+        />
+      )}
+      <SkillNode {...props} />
+    </div>
+  );
+}
+
+const nodeTypes: NodeTypes = { skill: SkillNodeWithCard };
 const edgeTypes: EdgeTypes = { animatedBeam: AnimatedBeamEdge };
 
 const REVEAL_ORDER = [
@@ -233,6 +318,7 @@ function applyVisibility(
     const revealed = visibleIds.has(node.id);
     return {
       ...node,
+      data: { ...node.data, visible: revealed },
       style: {
         ...node.style,
         opacity: revealed ? 1 : 0,
