@@ -3,7 +3,8 @@ import '../styles/global.css'
 import WorkflowDiagram from '../components/WorkflowDiagram'
 import ContextRot from '../components/ContextRot'
 import SkillSection from '../components/SkillSection'
-import HeroSection from '../components/HeroSection'
+import StickyHero from '../components/StickyHero'
+import StickySkillSection from '../components/StickySkillSection'
 import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseArchitecture, handleCoderabbit } from '../data/skills'
 ---
 
@@ -20,8 +21,8 @@ import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseAr
 	</head>
 	<body class="bg-neutral-950 text-neutral-100 scroll-smooth">
 
-		<header id="hero" class="min-h-[100dvh] flex flex-col items-center justify-center px-4 sm:px-6 text-center">
-			<HeroSection client:load />
+		<header id="hero">
+			<StickyHero client:load />
 		</header>
 
 		<section id="workflow" class="min-h-screen px-4 sm:px-6 py-16 sm:py-24 max-w-6xl mx-auto">
@@ -36,8 +37,8 @@ import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseAr
 			<ContextRot client:visible />
 		</section>
 
-		<section id="skill-grill-me" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<SkillSection {...grillMe} client:visible />
+		<section id="skill-grill-me">
+			<StickySkillSection {...grillMe} client:visible />
 		</section>
 
 		<section id="skill-write-a-prd" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
