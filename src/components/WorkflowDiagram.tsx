@@ -195,7 +195,16 @@ function computeVisibleCount(p: number): number {
   ));
 }
 
-function applyVisibility(nodes: Node[], visibleIds: Set<string>): Node[] {
+const STAGGER_DELAY = 0.3;
+const NODE_FADE = "opacity 0.5s ease";
+const EDGE_FADE = "opacity 0.45s ease";
+
+function applyVisibility(
+  nodes: Node[],
+  visibleIds: Set<string>,
+  delaySec: number,
+): Node[] {
+  const transition = delaySec > 0 ? `${NODE_FADE} ${delaySec}s` : NODE_FADE;
   return nodes.map((node) => {
     const revealed = visibleIds.has(node.id);
     return {
@@ -203,21 +212,26 @@ function applyVisibility(nodes: Node[], visibleIds: Set<string>): Node[] {
       style: {
         ...node.style,
         opacity: revealed ? 1 : 0,
-        transition: "opacity 0.4s ease",
+        transition,
         pointerEvents: (revealed ? "auto" : "none") as "auto" | "none",
       },
     };
   });
 }
 
-function applyEdgeVisibility(edges: Edge[], visibleIds: Set<string>): Edge[] {
+function applyEdgeVisibility(
+  edges: Edge[],
+  visibleIds: Set<string>,
+  delaySec: number,
+): Edge[] {
+  const transition = delaySec > 0 ? `${EDGE_FADE} ${delaySec}s` : EDGE_FADE;
   return edges.map((edge) => ({
     ...edge,
     style: {
       ...edge.style,
       opacity:
         visibleIds.has(edge.source) && visibleIds.has(edge.target) ? 1 : 0,
-      transition: "opacity 0.4s ease",
+      transition,
     },
   }));
 }
@@ -261,10 +275,10 @@ export default function WorkflowDiagram({
   const initialVisible = new Set<string>(REVEAL_ORDER.slice(0, initialCount));
 
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    applyVisibility(buildInitialNodes(), initialVisible),
+    applyVisibility(buildInitialNodes(), initialVisible, 0),
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState(
-    applyEdgeVisibility(buildEdges(), initialVisible),
+    applyEdgeVisibility(buildEdges(), initialVisible, 0),
   );
 
   const prevCountRef = useRef(initialCount);
@@ -272,11 +286,19 @@ export default function WorkflowDiagram({
   useMotionValueEvent(contentLocal, "change", (p) => {
     const visibleCount = computeVisibleCount(p);
     if (visibleCount === prevCountRef.current) return;
+
+    const growing = visibleCount > prevCountRef.current;
     prevCountRef.current = visibleCount;
 
     const visibleIds = new Set<string>(REVEAL_ORDER.slice(0, visibleCount));
-    setNodes((prev) => applyVisibility(prev, visibleIds));
-    setEdges((prev) => applyEdgeVisibility(prev, visibleIds));
+
+    if (growing) {
+      setEdges((prev) => applyEdgeVisibility(prev, visibleIds, 0));
+      setNodes((prev) => applyVisibility(prev, visibleIds, STAGGER_DELAY));
+    } else {
+      setNodes((prev) => applyVisibility(prev, visibleIds, 0));
+      setEdges((prev) => applyEdgeVisibility(prev, visibleIds, STAGGER_DELAY));
+    }
   });
 
   return (
