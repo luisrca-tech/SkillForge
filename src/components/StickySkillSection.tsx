@@ -56,7 +56,7 @@ export default function StickySkillSection({
   );
 
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-4 sm:py-5 pb-12 pointer-events-none">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 pt-4 sm:pt-5 pb-14 pointer-events-none">
       <motion.div
         style={{ opacity: titleLock }}
         className="shrink-0 flex items-center gap-3 mb-2 sm:mb-3 flex-wrap pointer-events-auto"
