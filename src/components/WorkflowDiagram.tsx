@@ -120,13 +120,23 @@ function buildEdges(): Edge[] {
 
   for (let i = 0; i < SKILLS.length - 1; i++) {
     const isEndOfRow = (i + 1) % NODES_PER_ROW === 0;
+    const sourceId = SKILLS[i].id;
     const targetId = SKILLS[i + 1].id;
+
+    let sourceHandle = isEndOfRow ? "bottom" : "right";
+    let targetHandle = isEndOfRow ? "top" : "left";
+
+    if (sourceId === "prd-to-plan" && targetId === "do-work") {
+      sourceHandle = "right";
+      targetHandle = "top";
+    }
+
     edges.push({
-      id: `e-${SKILLS[i].id}-${targetId}`,
-      source: SKILLS[i].id,
+      id: `e-${sourceId}-${targetId}`,
+      source: sourceId,
       target: targetId,
-      sourceHandle: isEndOfRow ? "bottom" : "right",
-      targetHandle: isEndOfRow ? "top" : "left",
+      sourceHandle,
+      targetHandle,
       type: "animatedBeam",
       style: { strokeWidth: 2 },
       data: { beamColor: "#6ee7b7", baseColor: "#34d399" },
@@ -137,7 +147,7 @@ function buildEdges(): Edge[] {
     id: "e-plan-to-tracker-write-a-prd",
     source: "plan-to-tracker",
     target: "write-a-prd",
-    sourceHandle: "bottom",
+    sourceHandle: "left",
     targetHandle: "top",
     type: "animatedBeam",
     style: { strokeWidth: 2 },
