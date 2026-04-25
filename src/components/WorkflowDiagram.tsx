@@ -107,7 +107,7 @@ function buildInitialNodes(): Node[] {
 }
 
 const DESCRIPTION_POSITION: Record<string, "top" | "bottom"> = {
-  "grill-me": "bottom",
+  "grill-me": "top",
   "write-a-prd": "bottom",
   "prd-to-plan": "top",
   "plan-to-tracker": "top",
