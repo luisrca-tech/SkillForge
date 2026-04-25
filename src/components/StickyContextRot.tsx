@@ -104,8 +104,8 @@ export default function StickyContextRot({ contentLocal }: StickyContextRotProps
 
   const titleLock = useTransform(
     contentLocal,
-    [0, 0.02],
-    [0.96, 1],
+    [0, 0.02, 0.6667, 0.7267],
+    [0.96, 1, 1, 0],
     { clamp: true },
   );
 
