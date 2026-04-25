@@ -343,48 +343,41 @@ Replace the default XyFlow marching-ants edge animation with custom **animated b
 
 ---
 
-## Phase 8B: Beam Skill Description Cards
+## Phase 8B: Skill Description Labels on Workflow Nodes ✅
 
 **User stories**: 4, 5, 6, 7 (diagram comprehension; each skill's purpose is communicated inline during the reveal)
 
-### What to build
+### What was built
 
-Add a transient floating card that appears above the midpoint of each edge during its scroll-driven reveal, showing a concise one-line description of the **target skill** that edge leads into. The card appears only during the reveal moment — it fades in when the edge becomes visible and fades out shortly after, so cards never stack on top of each other as the user scrolls through the full reveal sequence.
+Added persistent description labels to each skill node in the workflow diagram. Each label shows a concise one-line description of what the skill does, appearing/disappearing in sync with the node's scroll-driven reveal.
 
-**Phase 8B-1 — Card component + data**
+**8B-1 — Description data + per-node positioning**
 
-- Define a `SKILL_DESCRIPTIONS` map keyed by skill id, each value a short direct sentence describing what the skill does (e.g. `/grill-me` → "Simula entrevistas técnicas com feedback em tempo real").
-- Create a `BeamDescriptionCard` component (or extend `AnimatedBeamEdge`) that renders a small floating card positioned at the SVG midpoint of the edge path, offset upward so it doesn't overlap the line. The card shows the target skill's description text.
-- Card styling: dark glass-morphism background (`bg-zinc-900/80 backdrop-blur`), emerald or cyan border matching the edge color, small text (`text-xs`), rounded, no interactivity (`pointer-events: none`).
+- `SKILL_DESCRIPTIONS` map with 7 entries, one per skill, describing its core purpose.
+- `DESCRIPTION_POSITION` map controlling whether each label renders above (`top`) or below (`bottom`) the node, configured per-skill to avoid overlap with edge lines.
+- `SKILL_HANDLES` map that specifies which connection handles (dots) each node renders — unused handles are removed for a cleaner visual.
 
-**Phase 8B-2 — Transient reveal animation**
+**8B-2 — SkillNodeWithCard wrapper**
 
-- The card is **invisible by default** (opacity 0).
-- When the edge transitions from hidden → visible (the progressive scroll reveal), the card fades in (opacity 0→1) + slides up slightly (translateY 8→0), holds briefly (~1.5s), then fades out (opacity 1→0) + slides up further (translateY 0→−4).
-- The trigger is the same visibility signal already used by `AnimatedBeamEdge` (the `style.opacity` transition from 0 to >0).
-- On reverse scroll (edge going from visible → hidden), the card does **not** re-appear — it only shows on the forward reveal.
-- `prefers-reduced-motion`: card appears and disappears instantly (no slide, just opacity snap).
-
-### Constraints
-
-- **Do not modify** node layout, node styling, node constants, or JSX structure of `WorkflowDiagram` — only edge-related rendering changes.
-- Cards must be SVG `<foreignObject>` elements (inside the edge's `<g>`) so they participate in ReactFlow's coordinate system and zoom/pan.
-- All animated properties: `transform` and `opacity` only.
-- No new dependencies.
+- `SkillNodeWithCard` wraps `SkillNode` without modifying its JSX. Renders description text via absolute positioning (`top: 100%` or `bottom: 100%` depending on `descriptionPosition`).
+- Description opacity and translateY are tied directly to the `visible` flag in node data — no timers or phases. Appears when node is revealed, disappears when scroll reverses.
+- `prefers-reduced-motion` reduces transition to instant opacity snap.
+- `zIndex: 1` ensures text renders above edge lines.
 
 ### Acceptance criteria
 
-- [ ] `SKILL_DESCRIPTIONS` map exists with a concise direct description for each of the 7 skills
-- [ ] A floating card renders at the SVG midpoint of each edge, offset upward
-- [ ] Card shows the description of the **target** skill the edge points to
-- [ ] Card styling: dark glassmorphism, color-matched border (emerald/cyan), `text-xs`, `pointer-events: none`
-- [ ] Card fades in + slides up during forward reveal of its edge
-- [ ] Card auto-fades out after ~1.5s hold — does not persist while edge remains visible
-- [ ] Cards never visually overlap (only one card visible at a time due to staggered reveal + auto-dismiss)
-- [ ] Reverse scroll does not re-trigger the card animation
-- [ ] `prefers-reduced-motion` shows card with instant opacity, no slide
-- [ ] No modifications to node layout, styling, constants, or JSX structure
-- [ ] 60fps maintained with card animations running alongside beam pulses
+- [x] `SKILL_DESCRIPTIONS` map exists with a concise direct description for each of the 7 skills
+- [x] Description renders above or below each skill node based on `DESCRIPTION_POSITION`
+- [x] Description appears when node is revealed (scroll forward) and hides when node is hidden (scroll reverse)
+- [x] `prefers-reduced-motion` shows description with instant opacity, no slide
+- [x] Only connected handles are rendered per node (unused dots removed)
+- [x] No modifications to SkillNode's internal JSX, className strings, or button structure
+- [x] 60fps maintained with descriptions animating alongside beam pulses
+
+### Files changed
+
+- `src/components/AnimatedBeamEdge.tsx` — modified (exported `useReducedMotion`, removed card-related code)
+- `src/components/WorkflowDiagram.tsx` — modified (`SKILL_DESCRIPTIONS`, `DESCRIPTION_POSITION`, `SKILL_HANDLES` maps; `SkillNodeWithCard` wrapper; conditional handle rendering in `SkillNode`; `visible` flag in `applyVisibility`)
 
 ---
 
