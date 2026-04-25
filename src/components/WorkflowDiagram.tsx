@@ -209,6 +209,7 @@ function SkillNodeWithCard(props: NodeProps) {
             left: 0,
             right: 0,
             marginTop: 6,
+            zIndex: 1,
             opacity: visible ? 1 : 0,
             transform: `translateY(${visible ? 0 : -4}px)`,
             transition: reducedMotion
