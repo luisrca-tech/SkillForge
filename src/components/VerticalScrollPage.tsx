@@ -2,6 +2,10 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { motion, useMotionValue, useTransform, type MotionValue } from "motion/react";
 import { ScrollStoryProvider, useScrollStory } from "../context/ScrollStoryContext";
 import {
+  applyWheelToScrollRoot,
+  shouldDelegateWheelToInner,
+} from "../lib/rootWheelScroll";
+import {
   STORY_SECTIONS,
   TOTAL_STORY_VH,
   type StorySection,
@@ -60,8 +64,8 @@ function useSectionVisibility(
 
 function WorkflowLayer() {
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center px-4 sm:px-6 py-4">
-      <div className="w-full max-w-6xl mx-auto shrink-0">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center px-4 sm:px-6 py-4 pointer-events-none">
+      <div className="w-full max-w-6xl mx-auto shrink-0 pointer-events-auto">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1">
           O Workflow
         </h2>
@@ -87,7 +91,6 @@ function StackedSection({
   const local = useSectionLocalProgress(storyProgress, s);
   const vis = useSectionVisibility(storyProgress, s);
   const z = useTransform(vis, (x) => (x < 0.5 ? 0 : 10));
-  const pe = useTransform(vis, (x) => (x < 0.5 ? "none" : ("auto" as const)));
 
   let body: ReactNode;
   if (s.id === "hero") {
@@ -109,7 +112,6 @@ function StackedSection({
       style={{
         opacity: vis,
         zIndex: z,
-        pointerEvents: pe,
       }}
     >
       {body}
@@ -184,8 +186,21 @@ function ScrollStoryLayout() {
     const ro = new ResizeObserver(update);
     ro.observe(root);
     ro.observe(spacer);
+    const onWheel: EventListener = (ev) => {
+      const e = ev as WheelEvent;
+      if (e.deltaY === 0) {
+        return;
+      }
+      if (shouldDelegateWheelToInner(e.target, root, e)) {
+        return;
+      }
+      e.preventDefault();
+      applyWheelToScrollRoot(root, e);
+    };
+    root.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       root.removeEventListener("scroll", update);
+      root.removeEventListener("wheel", onWheel);
       ro.disconnect();
     };
   }, [storyProgress]);
@@ -199,11 +214,25 @@ function ScrollStoryLayout() {
       <HashLinkCapture />
       <div
         ref={containerRef}
-        className="fixed inset-0 z-0 overflow-y-auto overflow-x-hidden overscroll-y-contain"
+        id="scroll-container"
+        className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden overscroll-none touch-pan-y"
+        tabIndex={-1}
       >
+        <div className="fixed inset-0 z-40 pointer-events-none h-dvh max-h-dvh">
+          <div className="relative w-full h-full min-h-0">
+            {STORY_SECTIONS.map((s) => (
+              <StackedSection
+                key={s.id}
+                storyProgress={storyProgress}
+                s={s}
+              />
+            ))}
+          </div>
+        </div>
+
         <div
           ref={spacerRef}
-          className="w-full"
+          className="relative w-full pointer-events-none"
           style={{ minHeight: `${TOTAL_STORY_VH}vh` }}
         >
           {STORY_SECTIONS.map((s) => (
@@ -215,7 +244,7 @@ function ScrollStoryLayout() {
             />
           ))}
         </div>
-        <footer className="px-4 sm:px-6 py-12 sm:py-16 border-t border-neutral-800">
+        <footer className="relative z-[60] px-4 sm:px-6 py-12 sm:py-16 border-t border-neutral-800 bg-neutral-950">
           <div className="max-w-4xl mx-auto text-center space-y-4">
             <p className="text-sm uppercase tracking-widest text-emerald-400 font-mono">
               AI Coding Workflow
@@ -245,18 +274,6 @@ function ScrollStoryLayout() {
             </nav>
           </div>
         </footer>
-      </div>
-
-      <div className="fixed inset-0 z-10 pointer-events-none h-dvh max-h-dvh">
-        <div className="relative w-full h-full min-h-0">
-          {STORY_SECTIONS.map((s) => (
-            <StackedSection
-              key={s.id}
-              storyProgress={storyProgress}
-              s={s}
-            />
-          ))}
-        </div>
       </div>
     </ScrollStoryProvider>
   );

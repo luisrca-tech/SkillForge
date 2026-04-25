@@ -20,13 +20,13 @@ export default function StickyHero({ localProgress }: StickyHeroProps) {
   const scale = useTransform(localProgress, [0.3, 0.8], [1, 0.92]);
 
   return (
-    <div className="h-dvh w-full flex flex-col items-center justify-center px-4 sm:px-6 text-center">
+    <div className="h-dvh w-full flex flex-col items-center justify-center px-4 sm:px-6 text-center pointer-events-none">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={stagger}
         style={{ opacity, scale }}
-        className="flex flex-col items-center will-change-transform"
+        className="flex flex-col items-center will-change-transform pointer-events-auto"
       >
         <motion.p
           variants={fadeUp}
@@ -68,7 +68,7 @@ export default function StickyHero({ localProgress }: StickyHeroProps) {
         >
           <a
             href="#workflow"
-            className="inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold rounded-lg transition-colors"
+            className="pointer-events-auto inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold rounded-lg transition-colors"
           >
             Conhecer o workflow
           </a>

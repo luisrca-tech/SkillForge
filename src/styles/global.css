@@ -21,3 +21,11 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Scroll: let page wheel pass through the panes; node buttons stay clickable */
+.react-flow-pass-wheel .react-flow {
+  pointer-events: none;
+}
+.react-flow-pass-wheel .react-flow__node {
+  pointer-events: auto;
+}

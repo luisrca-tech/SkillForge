@@ -11,10 +11,10 @@ export function useSubstitutiveBeatOpacity(
     const w = b - a;
     const t = Math.max(0.04, 0.18 * w);
     if (p <= a) {
-      return 0;
+      return beatIndex === 0 ? 1 : 0;
     }
     if (p < a + t) {
-      return (p - a) / t;
+      return beatIndex === 0 ? 1 : (p - a) / t;
     }
     if (p < b - t) {
       return 1;
@@ -37,10 +37,10 @@ export function useSubstitutiveBeatY(
     const w = b - a;
     const t = Math.max(0.04, 0.18 * w);
     if (p < a) {
-      return 16;
+      return beatIndex === 0 ? 0 : 16;
     }
     if (p < a + t) {
-      return 16 * (1 - (p - a) / t);
+      return beatIndex === 0 ? 0 : 16 * (1 - (p - a) / t);
     }
     if (p < b - t) {
       return 0;

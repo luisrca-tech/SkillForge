@@ -83,10 +83,10 @@ export default function StickySkillSection({
   );
 
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-6">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-6 pointer-events-none">
       <motion.div
         style={{ opacity: titleLock }}
-        className="shrink-0 flex items-center gap-3 mb-3 flex-wrap"
+        className="shrink-0 flex items-center gap-3 mb-3 flex-wrap pointer-events-auto"
       >
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
           <span className={`${accentText} font-mono text-xl sm:text-2xl md:text-3xl`}>
@@ -100,7 +100,7 @@ export default function StickySkillSection({
         )}
       </motion.div>
 
-      <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto">
+      <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto pointer-events-auto">
         <motion.div
           style={{ opacity: beat0Opacity, y: beat0Y }}
           className="absolute inset-0 flex flex-col gap-3 min-h-0 will-change-transform"
@@ -157,7 +157,7 @@ export default function StickySkillSection({
           <h3 className="text-base sm:text-lg font-semibold text-neutral-200 mb-2 shrink-0">
             Exemplo interativo
           </h3>
-          <div className="flex-1 min-h-0 max-h-full overflow-hidden">
+          <div className="flex-1 min-h-0 max-h-full overflow-hidden pointer-events-auto">
             <TerminalSimulator scenarios={scenarios} title={`/${name}`} />
           </div>
         </motion.div>

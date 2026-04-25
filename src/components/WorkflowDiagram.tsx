@@ -206,12 +206,12 @@ export default function WorkflowDiagram() {
   return (
     <div
       id="workflow-diagram"
-      className="w-full overflow-x-auto"
+      className="w-full overflow-x-auto pointer-events-none"
       style={{ minHeight: diagramHeight + 40 }}
     >
       <div
         style={{ width: Math.max(diagramWidth + 80, 800), height: diagramHeight + 40 }}
-        className="mx-auto"
+        className="mx-auto react-flow-pass-wheel pointer-events-none"
       >
         <ReactFlow
           nodes={nodes}

@@ -108,10 +108,10 @@ export default function StickyContextRot({ localProgress }: StickyContextRotProp
   );
 
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-4">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-4 pointer-events-none">
       <motion.div
         style={{ opacity: titleLock }}
-        className="shrink-0 text-center mb-2"
+        className="shrink-0 text-center mb-2 pointer-events-auto"
       >
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">
           A Ciência por Trás
@@ -122,7 +122,7 @@ export default function StickyContextRot({ localProgress }: StickyContextRotProp
         </p>
       </motion.div>
 
-      <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto">
+      <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto pointer-events-auto">
         <motion.div
           style={{ opacity: beat0Opacity, y: beat0Y }}
           className="absolute inset-0 flex flex-col justify-center will-change-transform overflow-hidden"
