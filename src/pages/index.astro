@@ -1,8 +1,7 @@
 ---
 import '../styles/global.css'
 import WorkflowDiagram from '../components/WorkflowDiagram'
-import ContextRot from '../components/ContextRot'
-import SkillSection from '../components/SkillSection'
+import StickyContextRot from '../components/StickyContextRot'
 import StickyHero from '../components/StickyHero'
 import StickySkillSection from '../components/StickySkillSection'
 import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseArchitecture, handleCoderabbit } from '../data/skills'
@@ -33,36 +32,36 @@ import { grillMe, writeAPrd, prdToPlan, planToTracker, doWork, improveCodebaseAr
 			<WorkflowDiagram client:only="react" />
 		</section>
 
-		<section id="context-rot" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<ContextRot client:visible />
+		<section id="context-rot">
+			<StickyContextRot client:visible />
 		</section>
 
 		<section id="skill-grill-me">
 			<StickySkillSection {...grillMe} client:visible />
 		</section>
 
-		<section id="skill-write-a-prd" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<SkillSection {...writeAPrd} client:visible />
+		<section id="skill-write-a-prd">
+			<StickySkillSection {...writeAPrd} client:visible />
 		</section>
 
-		<section id="skill-prd-to-plan" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<SkillSection {...prdToPlan} client:visible />
+		<section id="skill-prd-to-plan">
+			<StickySkillSection {...prdToPlan} client:visible />
 		</section>
 
-		<section id="skill-plan-to-tracker" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<SkillSection {...planToTracker} client:visible />
+		<section id="skill-plan-to-tracker">
+			<StickySkillSection {...planToTracker} client:visible />
 		</section>
 
-		<section id="skill-do-work" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<SkillSection {...doWork} client:visible />
+		<section id="skill-do-work">
+			<StickySkillSection {...doWork} client:visible />
 		</section>
 
-		<section id="skill-improve-codebase-architecture" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<SkillSection {...improveCodebaseArchitecture} client:visible />
+		<section id="skill-improve-codebase-architecture">
+			<StickySkillSection {...improveCodebaseArchitecture} client:visible />
 		</section>
 
-		<section id="skill-handle-coderabbit" class="px-4 sm:px-6 py-16 sm:py-24 max-w-4xl mx-auto">
-			<SkillSection {...handleCoderabbit} client:visible />
+		<section id="skill-handle-coderabbit">
+			<StickySkillSection {...handleCoderabbit} client:visible />
 		</section>
 
 		<footer class="px-4 sm:px-6 py-12 sm:py-16 border-t border-neutral-800">
