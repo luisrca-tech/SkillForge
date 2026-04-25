@@ -70,7 +70,7 @@ function buildInitialNodes(): Node[] {
       type: "skill",
       position: { x, y },
       style: { width: NODE_WIDTH },
-      data: { label: skill.label, anchor: skill.anchor, optional: false, description: SKILL_DESCRIPTIONS[skill.id] },
+      data: { label: skill.label, anchor: skill.anchor, optional: false, description: SKILL_DESCRIPTIONS[skill.id], descriptionPosition: DESCRIPTION_POSITION[skill.id] },
     };
   });
 
@@ -99,11 +99,22 @@ function buildInitialNodes(): Node[] {
       anchor: OPTIONAL_SKILL.anchor,
       optional: true,
       description: SKILL_DESCRIPTIONS[OPTIONAL_SKILL.id],
+      descriptionPosition: DESCRIPTION_POSITION[OPTIONAL_SKILL.id],
     },
   });
 
   return nodes;
 }
+
+const DESCRIPTION_POSITION: Record<string, "top" | "bottom"> = {
+  "grill-me": "bottom",
+  "write-a-prd": "bottom",
+  "prd-to-plan": "top",
+  "plan-to-tracker": "top",
+  "do-work": "bottom",
+  "improve-codebase-architecture": "top",
+  "handle-coderabbit": "bottom",
+};
 
 const SKILL_DESCRIPTIONS: Record<string, string> = {
   "grill-me": "Entrevista técnica antes de codar — valida escopo e edge cases",
@@ -191,12 +202,14 @@ function SkillNode({ data }: NodeProps) {
 }
 
 function SkillNodeWithCard(props: NodeProps) {
-  const { description, optional, visible } = props.data as {
+  const { description, optional, visible, descriptionPosition } = props.data as {
     description?: string;
     optional: boolean;
     visible?: boolean;
+    descriptionPosition?: "top" | "bottom";
   };
   const reducedMotion = useReducedMotion();
+  const isTop = descriptionPosition === "top";
 
   return (
     <div style={{ position: "relative" }}>
@@ -205,13 +218,14 @@ function SkillNodeWithCard(props: NodeProps) {
         <div
           style={{
             position: "absolute",
-            bottom: "100%",
+            ...(isTop
+              ? { bottom: "100%", marginBottom: 6 }
+              : { top: "100%", marginTop: 6 }),
             left: 0,
             right: 0,
-            marginBottom: 6,
             zIndex: 1,
             opacity: visible ? 1 : 0,
-            transform: `translateY(${visible ? 0 : -4}px)`,
+            transform: `translateY(${visible ? 0 : isTop ? 4 : -4}px)`,
             transition: reducedMotion
               ? "opacity 0.1s"
               : "opacity 0.4s ease, transform 0.4s ease",
