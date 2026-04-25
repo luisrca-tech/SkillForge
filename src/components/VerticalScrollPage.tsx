@@ -1,21 +1,17 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { motion, useMotionValue, useTransform } from "motion/react";
-import { ScrollStoryProvider, useScrollStory } from "../context/ScrollStoryContext";
+import { useCallback, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useMotionValue, animate } from "motion/react";
+import { NuqsAdapter } from "nuqs/adapters/react";
+import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
-  applyWheelToScrollRoot,
-  shouldDelegateWheelToInner,
-} from "../lib/rootWheelScroll";
-import {
-  STORY_SECTIONS,
-  TOTAL_STORY_VH,
-  type StorySection,
-} from "../lib/scrollSections";
-import {
-  contentLocalAt,
-  sectionOpacity,
-  sectionScale,
-  sectionZIndex,
-} from "../lib/sectionTransition";
+  SECTIONS,
+  type SectionId,
+  DEFAULT_SECTION,
+  findSection,
+  advance,
+  retreat,
+  beatToLocalProgress,
+} from "../lib/sections";
+import { SectionNavProvider } from "../context/SectionNavContext";
 import {
   grillMe,
   writeAPrd,
@@ -40,10 +36,13 @@ const SKILL_PROPS = {
   "skill-handle-coderabbit": handleCoderabbit,
 } as const;
 
+const WHEEL_COOLDOWN_MS = 700;
+const TOUCH_THRESHOLD_PX = 50;
+
 function WorkflowLayer() {
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center px-4 sm:px-6 py-4 pointer-events-none">
-      <div className="w-full max-w-6xl mx-auto shrink-0 pointer-events-auto">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center px-4 sm:px-6 py-4">
+      <div className="w-full max-w-6xl mx-auto shrink-0">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1">
           O Workflow
         </h2>
@@ -59,214 +58,163 @@ function WorkflowLayer() {
   );
 }
 
-function StackedSection({
-  storyProgress,
-  s,
-  sectionIndex,
+function SectionBody({
+  sectionId,
+  contentLocal,
 }: {
-  storyProgress: MotionValue<number>;
-  s: StorySection;
-  sectionIndex: number;
+  sectionId: SectionId;
+  contentLocal: ReturnType<typeof useMotionValue<number>>;
 }) {
-  const contentLocal = useTransform(storyProgress, (p) =>
-    contentLocalAt(p, sectionIndex),
-  );
-  const opacity = useTransform(storyProgress, (p) =>
-    sectionOpacity(p, sectionIndex),
-  );
-  const scale = useTransform(storyProgress, (p) => sectionScale(p, sectionIndex));
-  const zIndex = useTransform(storyProgress, (p) => sectionZIndex(p, sectionIndex));
-
-  let body: ReactNode;
-  if (s.id === "hero") {
-    body = <StickyHero />;
-  } else if (s.id === "workflow") {
-    body = <WorkflowLayer />;
-  } else if (s.id === "context-rot") {
-    body = <StickyContextRot contentLocal={contentLocal} />;
-  } else {
-    const data = SKILL_PROPS[s.id as keyof typeof SKILL_PROPS];
-    body = data ? (
-      <StickySkillSection {...data} contentLocal={contentLocal} />
-    ) : null;
+  if (sectionId === "hero") {
+    return <StickyHero />;
+  }
+  if (sectionId === "workflow") {
+    return <WorkflowLayer />;
+  }
+  if (sectionId === "context-rot") {
+    return <StickyContextRot contentLocal={contentLocal} />;
   }
 
-  return (
-    <motion.div
-      className="absolute inset-0 w-full h-dvh max-h-dvh pointer-events-none will-change-transform"
-      style={{
-        opacity,
-        scale,
-        zIndex,
-        transformOrigin: "50% 50%",
-      }}
-    >
-      {body}
-    </motion.div>
+  const data = SKILL_PROPS[sectionId as keyof typeof SKILL_PROPS];
+  if (!data) return null;
+  return <StickySkillSection {...data} contentLocal={contentLocal} />;
+}
+
+function SectionNavigator() {
+  const [params, setParams] = useQueryStates({
+    s: parseAsString.withDefault(DEFAULT_SECTION),
+    b: parseAsInteger.withDefault(0),
+  });
+
+  const rawSectionId = params.s;
+  const beat = params.b;
+  const sectionId = (findSection(rawSectionId) ? rawSectionId : DEFAULT_SECTION) as SectionId;
+  const section = findSection(sectionId)!;
+  const clampedBeat = Math.max(0, Math.min(beat, section.beats - 1));
+
+  const contentLocal = useMotionValue(
+    beatToLocalProgress(clampedBeat, section.beats),
   );
-}
 
-function HashOnLoad() {
-  const ctx = useScrollStory();
+  const prevSectionRef = useRef(sectionId);
   useEffect(() => {
-    if (!ctx) {
-      return;
+    const target = beatToLocalProgress(clampedBeat, section.beats);
+    if (prevSectionRef.current !== sectionId) {
+      contentLocal.set(target);
+      prevSectionRef.current = sectionId;
+    } else {
+      animate(contentLocal, target, { duration: 0.45, ease: "easeInOut" });
     }
-    const { scrollToHash } = ctx;
-    const hash = window.location.hash;
-    if (hash && hash.length > 1) {
-      requestAnimationFrame(() => {
-        scrollToHash(hash);
-      });
-    }
-  }, [ctx]);
-  return null;
-}
+  }, [sectionId, clampedBeat, section.beats, contentLocal]);
 
-function HashLinkCapture() {
-  const ctx = useScrollStory();
+  const step = useCallback(
+    (direction: "forward" | "backward") => {
+      const state = { sectionId, beat: clampedBeat };
+      const next = direction === "forward" ? advance(state) : retreat(state);
+      if (next.sectionId !== sectionId || next.beat !== clampedBeat) {
+        setParams({ s: next.sectionId, b: next.beat });
+      }
+    },
+    [sectionId, clampedBeat, setParams],
+  );
+
+  const cooldownRef = useRef(false);
+
   useEffect(() => {
-    if (!ctx) {
-      return;
-    }
-    const { scrollToHash } = ctx;
-    const onClick = (e: MouseEvent) => {
-      const el = (e.target as Element | null)?.closest?.("a[href^='#']");
-      if (!el) {
-        return;
-      }
-      if ((el as HTMLAnchorElement).getAttribute("href") === "#") {
-        return;
-      }
+    const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      scrollToHash((el as HTMLAnchorElement).getAttribute("href")!);
+      if (cooldownRef.current || Math.abs(e.deltaY) < 5) return;
+      cooldownRef.current = true;
+      step(e.deltaY > 0 ? "forward" : "backward");
+      setTimeout(() => {
+        cooldownRef.current = false;
+      }, WHEEL_COOLDOWN_MS);
     };
-    document.addEventListener("click", onClick, true);
-    return () => {
-      document.removeEventListener("click", onClick, true);
-    };
-  }, [ctx]);
-  return null;
-}
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [step]);
 
-function ScrollStoryLayout() {
-  const storyProgress = useMotionValue(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const spacerRef = useRef<HTMLDivElement>(null);
-
+  const touchStartY = useRef<number | null>(null);
   useEffect(() => {
-    const root = containerRef.current;
-    const spacer = spacerRef.current;
-    if (!root || !spacer) {
-      return;
-    }
-    const update = () => {
-      const S = spacer.offsetHeight;
-      const V = root.clientHeight;
-      const t = root.scrollTop;
-      const cap = Math.max(0, S - V);
-      const p = cap === 0 ? 0 : t >= cap ? 1 : t / cap;
-      storyProgress.set(Math.min(1, Math.max(0, p)));
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0].clientY;
     };
-    update();
-    root.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(root);
-    ro.observe(spacer);
-    const onWheel: EventListener = (ev) => {
-      const e = ev as WheelEvent;
-      if (e.deltaY === 0) {
-        return;
-      }
-      if (shouldDelegateWheelToInner(e.target, root, e)) {
-        return;
-      }
-      e.preventDefault();
-      applyWheelToScrollRoot(root, e);
+    const onTouchEnd = (e: TouchEvent) => {
+      if (touchStartY.current === null) return;
+      const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+      touchStartY.current = null;
+      if (Math.abs(deltaY) < TOUCH_THRESHOLD_PX || cooldownRef.current) return;
+      cooldownRef.current = true;
+      step(deltaY > 0 ? "forward" : "backward");
+      setTimeout(() => {
+        cooldownRef.current = false;
+      }, WHEEL_COOLDOWN_MS);
     };
-    root.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
     return () => {
-      root.removeEventListener("scroll", update);
-      root.removeEventListener("wheel", onWheel);
-      ro.disconnect();
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [storyProgress]);
+  }, [step]);
+
+  const onNavigate = useCallback(
+    (id: SectionId, b = 0) => {
+      setParams({ s: id, b });
+    },
+    [setParams],
+  );
 
   return (
-    <ScrollStoryProvider
-      containerRef={containerRef}
-      storyProgress={storyProgress}
-    >
-      <HashOnLoad />
-      <HashLinkCapture />
-      <div
-        ref={containerRef}
-        id="scroll-container"
-        className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden overscroll-none touch-pan-y"
-        tabIndex={-1}
-      >
-        <div className="fixed inset-0 z-40 pointer-events-none h-dvh max-h-dvh">
-          <div className="relative w-full h-full min-h-0">
-            {STORY_SECTIONS.map((s, sectionIndex) => (
-              <StackedSection
-                key={s.id}
-                storyProgress={storyProgress}
-                s={s}
-                sectionIndex={sectionIndex}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div
-          ref={spacerRef}
-          className="relative w-full pointer-events-none"
-          style={{ minHeight: `${TOTAL_STORY_VH}vh` }}
-        >
-          {STORY_SECTIONS.map((s) => (
-            <div
-              key={s.id}
-              id={s.id}
-              className="w-full"
-              style={{ minHeight: `${s.vh}vh` }}
+    <SectionNavProvider onNavigate={onNavigate}>
+      <div className="fixed inset-0 overflow-hidden bg-neutral-950">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={sectionId}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="w-full h-dvh"
+          >
+            <SectionBody
+              sectionId={sectionId}
+              contentLocal={contentLocal}
             />
-          ))}
-        </div>
-        <footer className="relative z-[60] px-4 sm:px-6 py-12 sm:py-16 border-t border-neutral-800 bg-neutral-950">
-          <div className="max-w-4xl mx-auto text-center space-y-4">
-            <p className="text-sm uppercase tracking-widest text-emerald-400 font-mono">
-              AI Coding Workflow
-            </p>
-            <p className="text-neutral-500 text-sm">
-              Workflow profissional de desenvolvimento assistido por IA.
-            </p>
-            <nav className="flex items-center justify-center gap-6 text-sm text-neutral-600">
-              <a
-                href="#hero"
-                className="hover:text-neutral-300 transition-colors"
-              >
-                Topo
-              </a>
-              <a
-                href="#workflow"
-                className="hover:text-neutral-300 transition-colors"
-              >
-                Workflow
-              </a>
-              <a
-                href="#context-rot"
-                className="hover:text-neutral-300 transition-colors"
-              >
-                Context Rot
-              </a>
-            </nav>
-          </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <footer className="fixed bottom-0 inset-x-0 z-50 px-4 py-3 border-t border-neutral-800/50 bg-neutral-950/80 backdrop-blur-sm">
+          <nav className="flex items-center justify-center gap-6 text-xs text-neutral-600">
+            <button
+              onClick={() => setParams({ s: "hero", b: 0 })}
+              className="hover:text-neutral-300 transition-colors"
+            >
+              Topo
+            </button>
+            <button
+              onClick={() => setParams({ s: "workflow", b: 0 })}
+              className="hover:text-neutral-300 transition-colors"
+            >
+              Workflow
+            </button>
+            <button
+              onClick={() => setParams({ s: "context-rot", b: 0 })}
+              className="hover:text-neutral-300 transition-colors"
+            >
+              Context Rot
+            </button>
+          </nav>
         </footer>
       </div>
-    </ScrollStoryProvider>
+    </SectionNavProvider>
   );
 }
 
 export default function VerticalScrollPage() {
-  return <ScrollStoryLayout />;
+  return (
+    <NuqsAdapter>
+      <SectionNavigator />
+    </NuqsAdapter>
+  );
 }
