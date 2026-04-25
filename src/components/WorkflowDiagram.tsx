@@ -112,7 +112,7 @@ const DESCRIPTION_POSITION: Record<string, "top" | "bottom"> = {
   "prd-to-plan": "top",
   "plan-to-tracker": "top",
   "do-work": "bottom",
-  "improve-codebase-architecture": "top",
+  "improve-codebase-architecture": "bottom",
   "handle-coderabbit": "bottom",
 };
 
