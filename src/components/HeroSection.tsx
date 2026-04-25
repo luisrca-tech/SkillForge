@@ -24,7 +24,7 @@ export default function HeroSection() {
         transition={{ duration: 0.5 }}
         className="text-sm uppercase tracking-widest text-emerald-400 mb-4 font-mono"
       >
-        SkillForge
+        AI Coding Workflow
       </motion.p>
       <motion.h1
         variants={fadeUp}
@@ -47,7 +47,7 @@ export default function HeroSection() {
         transition={{ duration: 0.6 }}
         className="mt-4 max-w-2xl text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"
       >
-        SkillForge é um workflow completo de desenvolvimento assistido por IA —
+        Este é um workflow completo de desenvolvimento assistido por IA —
         da concepção da feature ao code review — com embasamento técnico sobre{" "}
         <strong className="text-emerald-400">por que</strong> essa abordagem
         funciona melhor.
