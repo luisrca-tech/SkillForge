@@ -17,7 +17,7 @@ export type Section = {
 
 export const SECTIONS: Section[] = [
   { id: "hero", beats: 1 },
-  { id: "workflow", beats: 7 },
+  { id: "workflow", beats: 8 },
   { id: "skill-grill-me", beats: 2 },
   { id: "skill-write-a-prd", beats: 2 },
   { id: "skill-prd-to-plan", beats: 2 },

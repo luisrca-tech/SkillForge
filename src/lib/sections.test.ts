@@ -55,7 +55,7 @@ describe("advance", () => {
   });
 
   it("advances workflow last beat to first skill", () => {
-    const result = advance({ sectionId: "workflow", beat: 6 });
+    const result = advance({ sectionId: "workflow", beat: 7 });
     expect(result).toEqual({ sectionId: "skill-grill-me", beat: 0 });
   });
 
@@ -73,7 +73,7 @@ describe("retreat", () => {
 
   it("retreats to previous section last beat when on beat 0 (skill after workflow)", () => {
     const result = retreat({ sectionId: "skill-grill-me", beat: 0 });
-    expect(result).toEqual({ sectionId: "workflow", beat: 6 });
+    expect(result).toEqual({ sectionId: "workflow", beat: 7 });
   });
 
   it("stays put on first beat of first section", () => {

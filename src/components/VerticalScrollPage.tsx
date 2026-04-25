@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useMotionValue, animate, type MotionValue } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useMotionValue, animate, useMotionValueEvent, type MotionValue } from "motion/react";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
@@ -24,6 +24,7 @@ import StickyHero from "./StickyHero";
 import StickySkillSection from "./StickySkillSection";
 import StickyContextRot from "./StickyContextRot";
 import WorkflowDiagram from "./WorkflowDiagram";
+import DownloadButton from "./DownloadButton";
 
 const SKILL_PROPS = {
   "skill-grill-me": grillMe,
@@ -38,10 +39,18 @@ const SKILL_PROPS = {
 const WHEEL_COOLDOWN_MS = 700;
 const TOUCH_THRESHOLD_PX = 50;
 
+const CTA_THRESHOLD = 0.875;
+
 function WorkflowLayer({ contentLocal }: { contentLocal: MotionValue<number> }) {
+  const [showCta, setShowCta] = useState(contentLocal.get() >= CTA_THRESHOLD);
+
+  useMotionValueEvent(contentLocal, "change", (p) => {
+    setShowCta(p >= CTA_THRESHOLD);
+  });
+
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4">
-      <div className="w-full max-w-7xl mx-auto shrink-0">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4 relative">
+      <div className="w-full max-w-7xl mx-auto shrink-0 relative">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1.5">
           O Workflow
         </h2>
@@ -49,6 +58,17 @@ function WorkflowLayer({ contentLocal }: { contentLocal: MotionValue<number> }) 
           7 skills que transformam o uso da IA em um processo disciplinado e
           reproduzível.
         </p>
+        <div
+          className="absolute right-0 -bottom-2 pointer-events-auto"
+          style={{
+            opacity: showCta ? 1 : 0,
+            transform: `translateX(${showCta ? 0 : 8}px)`,
+            transition: "opacity 0.4s ease, transform 0.4s ease",
+            pointerEvents: showCta ? "auto" : "none",
+          }}
+        >
+          <DownloadButton />
+        </div>
       </div>
       <div className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col">
         <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center pointer-events-auto">
