@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useEffect, useRef } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
 import { useNavigateTo } from "../context/SectionNavContext";
 import type { SectionId } from "../lib/sections";
@@ -190,94 +190,37 @@ function SkillNode({ data }: NodeProps) {
   );
 }
 
-const CARD_HOLD_MS = 1500;
-
-function DescriptionCard({
-  description,
-  color,
-  visible,
-}: {
-  description: string;
-  color: string;
-  visible: boolean;
-}) {
-  const [phase, setPhase] = useState<"idle" | "visible" | "exiting">("idle");
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const hasShownRef = useRef(false);
-  const reducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    if (visible && !hasShownRef.current) {
-      hasShownRef.current = true;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setPhase("visible");
-        });
-      });
-      timerRef.current = setTimeout(() => {
-        setPhase("exiting");
-      }, CARD_HOLD_MS);
-    }
-
-    if (!visible) {
-      hasShownRef.current = false;
-      clearTimeout(timerRef.current);
-      setPhase("idle");
-    }
-
-    return () => clearTimeout(timerRef.current);
-  }, [visible]);
-
-  const isShown = phase === "visible";
-  const isExiting = phase === "exiting";
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: "100%",
-        left: "50%",
-        transform: `translateX(-50%) translateY(${isShown ? -8 : isExiting ? -12 : 0}px)`,
-        opacity: isShown ? 1 : 0,
-        transition: reducedMotion
-          ? "opacity 0.1s"
-          : "opacity 0.35s ease, transform 0.35s ease",
-        pointerEvents: "none",
-        background: "rgba(24, 24, 27, 0.85)",
-        borderColor: color,
-        borderWidth: 1,
-        borderStyle: "solid",
-        borderRadius: 6,
-        padding: "5px 10px",
-        backdropFilter: "blur(12px)",
-        whiteSpace: "nowrap",
-        maxWidth: 300,
-      }}
-      className="text-[11px] leading-tight text-zinc-200"
-    >
-      {description}
-    </div>
-  );
-}
-
 function SkillNodeWithCard(props: NodeProps) {
   const { description, optional, visible } = props.data as {
     description?: string;
     optional: boolean;
     visible?: boolean;
   };
-  const color = optional ? "#22d3ee" : "#34d399";
+  const reducedMotion = useReducedMotion();
 
   return (
     <div style={{ position: "relative" }}>
-      {description && (
-        <DescriptionCard
-          description={description}
-          color={color}
-          visible={!!visible}
-        />
-      )}
       <SkillNode {...props} />
+      {description && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: 6,
+            opacity: visible ? 1 : 0,
+            transform: `translateY(${visible ? 0 : -4}px)`,
+            transition: reducedMotion
+              ? "opacity 0.1s"
+              : "opacity 0.4s ease, transform 0.4s ease",
+            pointerEvents: "none",
+          }}
+          className={`text-[11px] leading-snug ${optional ? "text-cyan-400/70" : "text-emerald-400/70"}`}
+        >
+          {description}
+        </div>
+      )}
     </div>
   );
 }
