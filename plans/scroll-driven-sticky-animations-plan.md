@@ -153,13 +153,13 @@ Transition timing values (scale amounts, fade curves, overlap percentages) are t
 
 ### Acceptance criteria
 
-- [ ] Each section has enter (fade+scale in) and exit (fade+scale out) transitions
-- [ ] Transitions crossfade smoothly — no flash of empty viewport between sections
-- [ ] Hero has exit-only transition; last section has enter-only
-- [ ] Internal beats play only during the content zone (not during enter/exit)
-- [ ] Transitions feel cinematic at 60fps on desktop and mid-range mobile
-- [ ] Scroll distance per section feels proportional to its content density
-- [ ] No jarring jumps when scrolling quickly through multiple sections
+- [x] Each section has enter (fade+scale in) and exit (fade+scale out) transitions
+- [x] Transitions crossfade smoothly — no flash of empty viewport between sections
+- [x] Hero has exit-only transition; last section has enter-only
+- [x] Internal beats play only during the content zone (not during enter/exit)
+- [x] Transitions feel cinematic at 60fps on desktop and mid-range mobile
+- [x] Scroll distance per section feels proportional to its content density
+- [x] No jarring jumps when scrolling quickly through multiple sections
 
 ---
 

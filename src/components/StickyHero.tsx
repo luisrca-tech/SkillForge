@@ -1,4 +1,4 @@
-import { motion, useTransform, type MotionValue } from "motion/react";
+import { motion } from "motion/react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -11,21 +11,13 @@ const stagger = {
   },
 };
 
-type StickyHeroProps = {
-  localProgress: MotionValue<number>;
-};
-
-export default function StickyHero({ localProgress }: StickyHeroProps) {
-  const opacity = useTransform(localProgress, [0.3, 0.8], [1, 0]);
-  const scale = useTransform(localProgress, [0.3, 0.8], [1, 0.92]);
-
+export default function StickyHero() {
   return (
     <div className="h-dvh w-full flex flex-col items-center justify-center px-4 sm:px-6 text-center pointer-events-none">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={stagger}
-        style={{ opacity, scale }}
         className="flex flex-col items-center will-change-transform pointer-events-auto"
       >
         <motion.p
@@ -47,9 +39,9 @@ export default function StickyHero({ localProgress }: StickyHeroProps) {
           transition={{ duration: 0.6 }}
           className="mt-6 max-w-2xl text-base sm:text-lg md:text-xl text-neutral-400 leading-relaxed"
         >
-          Você pede código à IA sem processo, sem rastreabilidade, sem revisão.
-          O resultado? Código frágil, débito técnico invisível e zero
-          aproveitamento do potencial real dessas ferramentas.
+          Você pede código à IA sem processo, sem rastreabilidade, sem revisão. O
+          resultado? Código frágil, débito técnico invisível e zero aproveitamento
+          do potencial real dessas ferramentas.
         </motion.p>
         <motion.p
           variants={fadeUp}

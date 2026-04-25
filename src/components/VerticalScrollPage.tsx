@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { motion, useMotionValue, useTransform, type MotionValue } from "motion/react";
+import { motion, useMotionValue, useTransform } from "motion/react";
 import { ScrollStoryProvider, useScrollStory } from "../context/ScrollStoryContext";
 import {
   applyWheelToScrollRoot,
@@ -10,6 +10,12 @@ import {
   TOTAL_STORY_VH,
   type StorySection,
 } from "../lib/scrollSections";
+import {
+  contentLocalAt,
+  sectionOpacity,
+  sectionScale,
+  sectionZIndex,
+} from "../lib/sectionTransition";
 import {
   grillMe,
   writeAPrd,
@@ -34,34 +40,6 @@ const SKILL_PROPS = {
   "skill-handle-coderabbit": handleCoderabbit,
 } as const;
 
-function useSectionLocalProgress(
-  storyProgress: MotionValue<number>,
-  s: StorySection,
-) {
-  return useTransform(
-    storyProgress,
-    [s.startProgress, s.endProgress],
-    [0, 1],
-    { clamp: true },
-  );
-}
-
-function useSectionVisibility(
-  storyProgress: MotionValue<number>,
-  s: StorySection,
-) {
-  return useTransform(storyProgress, (v) => {
-    if (v < s.startProgress) {
-      return 0;
-    }
-    const last = s.id === "skill-handle-coderabbit";
-    if (last) {
-      return v <= 1 + 1e-9 ? 1 : 0;
-    }
-    return v < s.endProgress ? 1 : 0;
-  });
-}
-
 function WorkflowLayer() {
   return (
     <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center px-4 sm:px-6 py-4 pointer-events-none">
@@ -84,34 +62,43 @@ function WorkflowLayer() {
 function StackedSection({
   storyProgress,
   s,
+  sectionIndex,
 }: {
   storyProgress: MotionValue<number>;
   s: StorySection;
+  sectionIndex: number;
 }) {
-  const local = useSectionLocalProgress(storyProgress, s);
-  const vis = useSectionVisibility(storyProgress, s);
-  const z = useTransform(vis, (x) => (x < 0.5 ? 0 : 10));
+  const contentLocal = useTransform(storyProgress, (p) =>
+    contentLocalAt(p, sectionIndex),
+  );
+  const opacity = useTransform(storyProgress, (p) =>
+    sectionOpacity(p, sectionIndex),
+  );
+  const scale = useTransform(storyProgress, (p) => sectionScale(p, sectionIndex));
+  const zIndex = useTransform(storyProgress, (p) => sectionZIndex(p, sectionIndex));
 
   let body: ReactNode;
   if (s.id === "hero") {
-    body = <StickyHero localProgress={local} />;
+    body = <StickyHero />;
   } else if (s.id === "workflow") {
     body = <WorkflowLayer />;
   } else if (s.id === "context-rot") {
-    body = <StickyContextRot localProgress={local} />;
+    body = <StickyContextRot contentLocal={contentLocal} />;
   } else {
     const data = SKILL_PROPS[s.id as keyof typeof SKILL_PROPS];
     body = data ? (
-      <StickySkillSection {...data} localProgress={local} />
+      <StickySkillSection {...data} contentLocal={contentLocal} />
     ) : null;
   }
 
   return (
     <motion.div
-      className="absolute inset-0 w-full h-dvh max-h-dvh pointer-events-none"
+      className="absolute inset-0 w-full h-dvh max-h-dvh pointer-events-none will-change-transform"
       style={{
-        opacity: vis,
-        zIndex: z,
+        opacity,
+        scale,
+        zIndex,
+        transformOrigin: "50% 50%",
       }}
     >
       {body}
@@ -220,11 +207,12 @@ function ScrollStoryLayout() {
       >
         <div className="fixed inset-0 z-40 pointer-events-none h-dvh max-h-dvh">
           <div className="relative w-full h-full min-h-0">
-            {STORY_SECTIONS.map((s) => (
+            {STORY_SECTIONS.map((s, sectionIndex) => (
               <StackedSection
                 key={s.id}
                 storyProgress={storyProgress}
                 s={s}
+                sectionIndex={sectionIndex}
               />
             ))}
           </div>

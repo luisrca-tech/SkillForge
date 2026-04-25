@@ -65,43 +65,43 @@ const references = [
 const TOTAL_BEATS = 5;
 
 type StickyContextRotProps = {
-  localProgress: MotionValue<number>;
+  contentLocal: MotionValue<number>;
 };
 
-export default function StickyContextRot({ localProgress }: StickyContextRotProps) {
+export default function StickyContextRot({ contentLocal }: StickyContextRotProps) {
   const beat0Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     0,
     TOTAL_BEATS,
   );
-  const beat0Y = useSubstitutiveBeatY(localProgress, 0, TOTAL_BEATS);
+  const beat0Y = useSubstitutiveBeatY(contentLocal, 0, TOTAL_BEATS);
   const beat1Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     1,
     TOTAL_BEATS,
   );
-  const beat1Y = useSubstitutiveBeatY(localProgress, 1, TOTAL_BEATS);
+  const beat1Y = useSubstitutiveBeatY(contentLocal, 1, TOTAL_BEATS);
   const beat2Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     2,
     TOTAL_BEATS,
   );
-  const beat2Y = useSubstitutiveBeatY(localProgress, 2, TOTAL_BEATS);
+  const beat2Y = useSubstitutiveBeatY(contentLocal, 2, TOTAL_BEATS);
   const beat3Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     3,
     TOTAL_BEATS,
   );
-  const beat3Y = useSubstitutiveBeatY(localProgress, 3, TOTAL_BEATS);
+  const beat3Y = useSubstitutiveBeatY(contentLocal, 3, TOTAL_BEATS);
   const beat4Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     4,
     TOTAL_BEATS,
   );
-  const beat4Y = useSubstitutiveBeatY(localProgress, 4, TOTAL_BEATS);
+  const beat4Y = useSubstitutiveBeatY(contentLocal, 4, TOTAL_BEATS);
 
   const titleLock = useTransform(
-    localProgress,
+    contentLocal,
     [0, 0.02],
     [0.96, 1],
     { clamp: true },

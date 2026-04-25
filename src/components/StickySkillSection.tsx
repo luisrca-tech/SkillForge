@@ -32,7 +32,7 @@ export interface StickySkillSectionProps {
   };
   scenarios: Scenario[];
   variant?: "default" | "optional";
-  localProgress: MotionValue<number>;
+  contentLocal: MotionValue<number>;
 }
 
 const TOTAL_BEATS = 3;
@@ -44,28 +44,28 @@ export default function StickySkillSection({
   howItWorks,
   scenarios,
   variant = "default",
-  localProgress,
+  contentLocal,
 }: StickySkillSectionProps) {
   const beat0Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     0,
     TOTAL_BEATS,
   );
-  const beat0Y = useSubstitutiveBeatY(localProgress, 0, TOTAL_BEATS);
+  const beat0Y = useSubstitutiveBeatY(contentLocal, 0, TOTAL_BEATS);
 
   const beat1Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     1,
     TOTAL_BEATS,
   );
-  const beat1Y = useSubstitutiveBeatY(localProgress, 1, TOTAL_BEATS);
+  const beat1Y = useSubstitutiveBeatY(contentLocal, 1, TOTAL_BEATS);
 
   const beat2Opacity = useSubstitutiveBeatOpacity(
-    localProgress,
+    contentLocal,
     2,
     TOTAL_BEATS,
   );
-  const beat2Y = useSubstitutiveBeatY(localProgress, 2, TOTAL_BEATS);
+  const beat2Y = useSubstitutiveBeatY(contentLocal, 2, TOTAL_BEATS);
 
   const accentText =
     variant === "optional" ? "text-cyan-400" : "text-emerald-400";
@@ -76,7 +76,7 @@ export default function StickySkillSection({
   const stepDot = variant === "optional" ? "bg-cyan-400" : "bg-emerald-400";
 
   const titleLock = useTransform(
-    localProgress,
+    contentLocal,
     [0, 0.02],
     [0.96, 1],
     { clamp: true },
