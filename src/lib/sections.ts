@@ -18,14 +18,14 @@ export type Section = {
 export const SECTIONS: Section[] = [
   { id: "hero", beats: 1 },
   { id: "workflow", beats: 7 },
+  { id: "skill-grill-me", beats: 2 },
+  { id: "skill-write-a-prd", beats: 2 },
+  { id: "skill-prd-to-plan", beats: 2 },
+  { id: "skill-plan-to-tracker", beats: 2 },
+  { id: "skill-do-work", beats: 2 },
+  { id: "skill-improve-codebase-architecture", beats: 2 },
+  { id: "skill-handle-coderabbit", beats: 2 },
   { id: "context-rot", beats: 5 },
-  { id: "skill-grill-me", beats: 3 },
-  { id: "skill-write-a-prd", beats: 3 },
-  { id: "skill-prd-to-plan", beats: 3 },
-  { id: "skill-plan-to-tracker", beats: 3 },
-  { id: "skill-do-work", beats: 3 },
-  { id: "skill-improve-codebase-architecture", beats: 3 },
-  { id: "skill-handle-coderabbit", beats: 3 },
 ];
 
 export const DEFAULT_SECTION: SectionId = "hero";

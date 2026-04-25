@@ -35,7 +35,7 @@ export interface StickySkillSectionProps {
   contentLocal: MotionValue<number>;
 }
 
-const TOTAL_BEATS = 3;
+const TOTAL_BEATS = 2;
 
 export default function StickySkillSection({
   name,
@@ -60,13 +60,6 @@ export default function StickySkillSection({
   );
   const beat1Y = useSubstitutiveBeatY(contentLocal, 1, TOTAL_BEATS);
 
-  const beat2Opacity = useSubstitutiveBeatOpacity(
-    contentLocal,
-    2,
-    TOTAL_BEATS,
-  );
-  const beat2Y = useSubstitutiveBeatY(contentLocal, 2, TOTAL_BEATS);
-
   const accentText =
     variant === "optional" ? "text-cyan-400" : "text-emerald-400";
   const accentBg =
@@ -86,10 +79,12 @@ export default function StickySkillSection({
     <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 py-6 pointer-events-none">
       <motion.div
         style={{ opacity: titleLock }}
-        className="shrink-0 flex items-center gap-3 mb-3 flex-wrap pointer-events-auto"
+        className="shrink-0 flex items-center gap-3 mb-2 sm:mb-3 flex-wrap pointer-events-auto"
       >
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-          <span className={`${accentText} font-mono text-xl sm:text-2xl md:text-3xl`}>
+          <span
+            className={`${accentText} font-mono text-xl sm:text-2xl md:text-3xl`}
+          >
             /{name}
           </span>
         </h2>
@@ -103,59 +98,58 @@ export default function StickySkillSection({
       <div className="flex-1 min-h-0 relative w-full max-w-4xl mx-auto pointer-events-auto">
         <motion.div
           style={{ opacity: beat0Opacity, y: beat0Y }}
-          className="absolute inset-0 flex flex-col gap-3 min-h-0 will-change-transform"
+          className="absolute inset-0 flex flex-col gap-2 sm:gap-3 min-h-0 will-change-transform"
         >
-          <div className="grid md:grid-cols-2 gap-3 min-h-0">
-            <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-4 sm:p-6 min-h-0">
-              <h3 className="text-base font-semibold text-red-400 mb-2">
-                {problem.title}
-              </h3>
-              <p className="text-neutral-300 text-sm leading-relaxed line-clamp-6 md:line-clamp-8">
-                {problem.description}
-              </p>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5 -mr-0.5">
+            <div className="grid md:grid-cols-2 gap-2 sm:gap-3">
+              <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-3 sm:p-4 md:p-6 min-h-0">
+                <h3 className="text-sm sm:text-base font-semibold text-red-400 mb-1.5 sm:mb-2">
+                  {problem.title}
+                </h3>
+                <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed line-clamp-4 sm:line-clamp-5 md:line-clamp-6">
+                  {problem.description}
+                </p>
+              </div>
+              <div
+                className={`${accentBg} border ${accentBorder} rounded-2xl p-3 sm:p-4 md:p-6 min-h-0`}
+              >
+                <h3 className={`text-sm sm:text-base font-semibold ${accentText} mb-1.5 sm:mb-2`}>
+                  {skill.title}
+                </h3>
+                <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed line-clamp-4 sm:line-clamp-5 md:line-clamp-6">
+                  {skill.description}
+                </p>
+              </div>
             </div>
-            <div
-              className={`${accentBg} border ${accentBorder} rounded-2xl p-4 sm:p-6 min-h-0`}
-            >
-              <h3 className={`text-base font-semibold ${accentText} mb-2`}>
-                {skill.title}
-              </h3>
-              <p className="text-neutral-300 text-sm leading-relaxed line-clamp-6 md:line-clamp-8">
-                {skill.description}
-              </p>
-            </div>
+            <h3 className="text-sm sm:text-base font-semibold text-neutral-200 mt-2 sm:mt-3 mb-1.5 sm:mb-2">
+              {howItWorks.title}
+            </h3>
+            <ol className="space-y-1 sm:space-y-1.5 pb-1">
+              {howItWorks.steps.map((step, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2 text-xs sm:text-sm"
+                >
+                  <span
+                    className={`${stepDot} text-neutral-950 text-[10px] sm:text-xs font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="text-neutral-400 leading-snug sm:leading-relaxed">
+                    {step}
+                  </span>
+                </li>
+              ))}
+            </ol>
           </div>
         </motion.div>
 
         <motion.div
           style={{ opacity: beat1Opacity, y: beat1Y }}
-          className="absolute inset-0 flex flex-col min-h-0 justify-center will-change-transform"
-        >
-          <h3 className="text-base sm:text-lg font-semibold text-neutral-200 mb-3 shrink-0">
-            {howItWorks.title}
-          </h3>
-          <ol className="space-y-2 min-h-0">
-            {howItWorks.steps.map((step, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm sm:text-base">
-                <span
-                  className={`${stepDot} text-neutral-950 text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5`}
-                >
-                  {i + 1}
-                </span>
-                <span className="text-neutral-400 leading-relaxed">
-                  {step}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </motion.div>
-
-        <motion.div
-          style={{ opacity: beat2Opacity, y: beat2Y }}
           className="absolute inset-0 flex flex-col min-h-0 will-change-transform"
         >
-          <h3 className="text-base sm:text-lg font-semibold text-neutral-200 mb-2 shrink-0">
-            Exemplo interativo
+          <h3 className="text-sm sm:text-base font-semibold text-neutral-200 mb-1.5 sm:mb-2 shrink-0">
+            Exemplo prático
           </h3>
           <div className="flex-1 min-h-0 max-h-full overflow-hidden pointer-events-auto">
             <TerminalSimulator scenarios={scenarios} title={`/${name}`} />

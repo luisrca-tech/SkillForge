@@ -29,7 +29,7 @@ describe("sectionIndex", () => {
   });
 
   it("returns correct index for last section", () => {
-    expect(sectionIndex("skill-handle-coderabbit")).toBe(SECTIONS.length - 1);
+    expect(sectionIndex("context-rot")).toBe(SECTIONS.length - 1);
   });
 });
 
@@ -39,14 +39,9 @@ describe("advance", () => {
     expect(result).toEqual({ sectionId: "context-rot", beat: 1 });
   });
 
-  it("advances to next section when on last beat", () => {
+  it("stays put on last beat of last section (context-rot)", () => {
     const result = advance({ sectionId: "context-rot", beat: 4 });
-    expect(result).toEqual({ sectionId: "skill-grill-me", beat: 0 });
-  });
-
-  it("stays put on last beat of last section", () => {
-    const result = advance({ sectionId: "skill-handle-coderabbit", beat: 2 });
-    expect(result).toEqual({ sectionId: "skill-handle-coderabbit", beat: 2 });
+    expect(result).toEqual({ sectionId: "context-rot", beat: 4 });
   });
 
   it("advances single-beat section to next section", () => {
@@ -59,8 +54,13 @@ describe("advance", () => {
     expect(result).toEqual({ sectionId: "workflow", beat: 1 });
   });
 
-  it("advances workflow last beat to context-rot", () => {
+  it("advances workflow last beat to first skill", () => {
     const result = advance({ sectionId: "workflow", beat: 6 });
+    expect(result).toEqual({ sectionId: "skill-grill-me", beat: 0 });
+  });
+
+  it("advances last skill beat to context-rot", () => {
+    const result = advance({ sectionId: "skill-handle-coderabbit", beat: 1 });
     expect(result).toEqual({ sectionId: "context-rot", beat: 0 });
   });
 });
@@ -71,9 +71,9 @@ describe("retreat", () => {
     expect(result).toEqual({ sectionId: "context-rot", beat: 2 });
   });
 
-  it("retreats to previous section last beat when on beat 0", () => {
+  it("retreats to previous section last beat when on beat 0 (skill after workflow)", () => {
     const result = retreat({ sectionId: "skill-grill-me", beat: 0 });
-    expect(result).toEqual({ sectionId: "context-rot", beat: 4 });
+    expect(result).toEqual({ sectionId: "workflow", beat: 6 });
   });
 
   it("stays put on first beat of first section", () => {
@@ -84,6 +84,11 @@ describe("retreat", () => {
   it("retreats from workflow to hero last beat", () => {
     const result = retreat({ sectionId: "workflow", beat: 0 });
     expect(result).toEqual({ sectionId: "hero", beat: 0 });
+  });
+
+  it("retreats from context-rot beat 0 to last skill last beat", () => {
+    const result = retreat({ sectionId: "context-rot", beat: 0 });
+    expect(result).toEqual({ sectionId: "skill-handle-coderabbit", beat: 1 });
   });
 });
 
@@ -102,6 +107,14 @@ describe("beatToLocalProgress", () => {
 
   it("maps beat 2 of 3 to 5/6", () => {
     expect(beatToLocalProgress(2, 3)).toBeCloseTo(5 / 6);
+  });
+
+  it("maps beat 0 of 2 to 1/4", () => {
+    expect(beatToLocalProgress(0, 2)).toBeCloseTo(1 / 4);
+  });
+
+  it("maps beat 1 of 2 to 3/4", () => {
+    expect(beatToLocalProgress(1, 2)).toBeCloseTo(3 / 4);
   });
 
   it("maps beat 0 of 5 to 1/10", () => {
