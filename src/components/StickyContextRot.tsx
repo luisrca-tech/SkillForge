@@ -11,70 +11,70 @@ const references: {
   date: string;
   url: string;
 }[] = [
-  {
-    id: 1,
-    author: "Chroma",
-    title: "Context Rot: How Increasing Input Tokens Impacts LLM Performance",
-    date: "Jul 2025",
-    url: "https://www.trychroma.com/research/context-rot",
-  },
-  {
-    id: 2,
-    author: "ZenML",
-    title: "LLMOps Database — Resumo do estudo da Chroma",
-    date: "2025",
-    url: "https://www.zenml.io/llmops-database/context-rot-evaluating-llm-performance-degradation-with-increasing-input-tokens",
-  },
-  {
-    id: 3,
-    author: "Timothy B. Lee",
-    title: "Understanding AI — Análise de degradação em janelas longas",
-    date: "Nov 2025",
-    url: "https://www.understandingai.org/p/why-large-language-models-struggle",
-  },
-  {
-    id: 4,
-    author: "Morph",
-    title: "Context Rot — Guia completo de prevenção e mitigação",
-    date: "Mar 2026",
-    url: "https://www.morphllm.com/context-rot",
-  },
-  {
-    id: 5,
-    author: "Redis",
-    title: "Estratégias de prevenção de Context Rot em produção",
-    date: "Jan 2026",
-    url: "https://redis.io/en/blog/context-rot/",
-  },
-  {
-    id: 6,
-    author: "Cobus Greyling",
-    title: "Análise prática de Context Rot em aplicações LLM",
-    date: "2025",
-    url: "https://cobusgreyling.medium.com/llm-context-rot-28a6d0399655",
-  },
-  {
-    id: 7,
-    author: "Adaline Labs (Nilesh Barla)",
-    title: "Impacto do context length na qualidade de outputs",
-    date: "Ago 2025",
-    url: "https://labs.adaline.ai/p/context-rot-why-llms-are-getting",
-  },
-  {
-    id: 8,
-    author: "arXiv (Liu et al.)",
-    title: "Lost in the Middle: How LMs Use Long Contexts",
-    date: "2023",
-    url: "https://arxiv.org/abs/2307.03172",
-  },
-  {
-    id: 9,
-    author: "Anthropic / AWS / Azure",
-    title: "Claude Opus 4.7 — Janela de 1M tokens e boas práticas",
-    date: "2026",
-    url: "https://www.anthropic.com/news/1m-context",
-  },
-];
+    {
+      id: 1,
+      author: "Chroma",
+      title: "Context Rot: How Increasing Input Tokens Impacts LLM Performance",
+      date: "Jul 2025",
+      url: "https://www.trychroma.com/research/context-rot",
+    },
+    {
+      id: 2,
+      author: "ZenML",
+      title: "LLMOps Database — Resumo do estudo da Chroma",
+      date: "2025",
+      url: "https://www.zenml.io/llmops-database/context-rot-evaluating-llm-performance-degradation-with-increasing-input-tokens",
+    },
+    {
+      id: 3,
+      author: "Timothy B. Lee",
+      title: "Understanding AI — Análise de degradação em janelas longas",
+      date: "Nov 2025",
+      url: "https://www.understandingai.org/p/why-large-language-models-struggle",
+    },
+    {
+      id: 4,
+      author: "Morph",
+      title: "Context Rot — Guia completo de prevenção e mitigação",
+      date: "Mar 2026",
+      url: "https://www.morphllm.com/context-rot",
+    },
+    {
+      id: 5,
+      author: "Redis",
+      title: "Estratégias de prevenção de Context Rot em produção",
+      date: "Jan 2026",
+      url: "https://redis.io/en/blog/context-rot/",
+    },
+    {
+      id: 6,
+      author: "Cobus Greyling",
+      title: "Análise prática de Context Rot em aplicações LLM",
+      date: "2025",
+      url: "https://cobusgreyling.medium.com/llm-context-rot-28a6d0399655",
+    },
+    {
+      id: 7,
+      author: "Adaline Labs (Nilesh Barla)",
+      title: "Impacto do context length na qualidade de outputs",
+      date: "Ago 2025",
+      url: "https://labs.adaline.ai/p/context-rot-why-llms-are-getting",
+    },
+    {
+      id: 8,
+      author: "arXiv (Liu et al.)",
+      title: "Lost in the Middle: How LMs Use Long Contexts",
+      date: "2023",
+      url: "https://arxiv.org/abs/2307.03172",
+    },
+    {
+      id: 9,
+      author: "Anthropic / AWS / Azure",
+      title: "Claude Opus 4.7 — Janela de 1M tokens e boas práticas",
+      date: "2026",
+      url: "https://www.anthropic.com/news/1m-context",
+    },
+  ];
 
 const TOTAL_BEATS = 3;
 
