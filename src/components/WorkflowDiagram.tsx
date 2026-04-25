@@ -7,6 +7,7 @@ import {
   type Node,
   type Edge,
   type NodeTypes,
+  type EdgeTypes,
   type NodeProps,
   Handle,
   Position,
@@ -15,6 +16,7 @@ import {
   useReactFlow,
   useStore,
 } from "@xyflow/react";
+import AnimatedBeamEdge from "./AnimatedBeamEdge";
 import "@xyflow/react/dist/style.css";
 
 const SKILLS = [
@@ -102,19 +104,35 @@ function buildInitialNodes(): Node[] {
   return nodes;
 }
 
+const SKILL_DESCRIPTIONS: Record<string, string> = {
+  "grill-me": "Entrevista técnica antes de codar — valida escopo e edge cases",
+  "write-a-prd": "Gera PRD completo com problem statement, user stories e escopo",
+  "prd-to-plan": "Transforma PRD em plano técnico com fases e critérios de aceite",
+  "plan-to-tracker": "Sincroniza stories do plano para ClickUp, Jira ou Linear",
+  "do-work": "Implementa story com TDD rigoroso — red, green, refactor, commit",
+  "improve-codebase-architecture": "Review arquitetural automatizado — detecta gaps estruturais",
+  "handle-coderabbit": "Processa feedback de code review e aplica correções no PR",
+};
+
 function buildEdges(): Edge[] {
   const edges: Edge[] = [];
 
   for (let i = 0; i < SKILLS.length - 1; i++) {
     const isEndOfRow = (i + 1) % NODES_PER_ROW === 0;
+    const targetId = SKILLS[i + 1].id;
     edges.push({
-      id: `e-${SKILLS[i].id}-${SKILLS[i + 1].id}`,
+      id: `e-${SKILLS[i].id}-${targetId}`,
       source: SKILLS[i].id,
-      target: SKILLS[i + 1].id,
+      target: targetId,
       sourceHandle: isEndOfRow ? "bottom" : "right",
       targetHandle: isEndOfRow ? "top" : "left",
-      animated: true,
-      style: { stroke: "#34d399", strokeWidth: 2 },
+      type: "animatedBeam",
+      style: { strokeWidth: 2 },
+      data: {
+        beamColor: "#6ee7b7",
+        baseColor: "#34d399",
+        targetDescription: SKILL_DESCRIPTIONS[targetId],
+      },
     });
   }
 
@@ -124,8 +142,13 @@ function buildEdges(): Edge[] {
     target: "write-a-prd",
     sourceHandle: "bottom",
     targetHandle: "top",
-    animated: true,
-    style: { stroke: "#22d3ee", strokeWidth: 2, strokeDasharray: "6 4" },
+    type: "animatedBeam",
+    style: { strokeWidth: 2 },
+    data: {
+      beamColor: "#67e8f9",
+      baseColor: "#22d3ee",
+      targetDescription: SKILL_DESCRIPTIONS["write-a-prd"],
+    },
   });
 
   return edges;
@@ -175,6 +198,7 @@ function SkillNode({ data }: NodeProps) {
 }
 
 const nodeTypes: NodeTypes = { skill: SkillNode };
+const edgeTypes: EdgeTypes = { animatedBeam: AnimatedBeamEdge };
 
 const REVEAL_ORDER = [
   "grill-me",
@@ -313,6 +337,7 @@ export default function WorkflowDiagram({
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView={false}
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           onInit={(instance) => {

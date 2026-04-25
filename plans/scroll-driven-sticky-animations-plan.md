@@ -277,3 +277,187 @@ Tighten the story arc and reduce internal scrolling.
 - [x] Master scroll allocation N/A in current `VerticalScrollPage` (nuqs wheel nav, no 2800vh spacer); tests pass
 - [x] Context Rot has 3 substitutive beats (merged narrative beats); skill sections remain at 2 beats each
 - [x] Workflow diagram node → anchor links still resolve to the correct skill section (ids unchanged)
+
+---
+
+## Phase 8: Animated Beam edges on Workflow Diagram ✅
+
+**User stories**: 4, 5, 6, 7 (diagram polish; visual energy in the pipeline)
+
+### What to build
+
+Replace the default XyFlow marching-ants edge animation with custom **animated beam edges** — a luminous pulse that travels along each edge path, conveying "energy flowing through the pipeline."
+
+**A — Custom edge type**
+
+- Create an `AnimatedBeamEdge` custom edge component for XyFlow. It receives the standard edge props (`sourceX`, `sourceY`, `targetX`, `targetY`, `sourcePosition`, `targetPosition`) and uses `getBezierPath()` to compute the SVG `d` attribute.
+- The edge renders two layers:
+  1. **Base path**: the Bezier curve at 40% opacity (`stroke: #34d399` for main edges, `stroke: #22d3ee` for the optional edge), `strokeWidth: 2`.
+  2. **Beam pulse**: a `<circle r="4">` with a `<feGaussianBlur>` SVG filter for glow, animated via `<animateMotion>` along the same Bezier path. Pulse color: `#6ee7b7` (emerald-300) for main edges, `#67e8f9` (cyan-300) for the optional edge.
+- `<animateMotion>` config: `dur="3s"`, `repeatCount="indefinite"`, direction follows source → target.
+
+**B — Edge registration and wiring**
+
+- Register `AnimatedBeamEdge` in the `edgeTypes` map passed to `<ReactFlow>`.
+- Update `buildEdges()` to set `type: "animatedBeam"` on all edges (replacing the default type).
+- Pass beam color info via `edge.data` (e.g. `data: { beamColor: "#6ee7b7", baseColor: "#34d399" }`) so the custom edge component is generic.
+- Remove `animated: true` from edge definitions (no longer needed — the custom edge handles its own animation).
+- Remove `strokeDasharray` from the optional edge (line becomes solid, differentiated by cyan color only).
+
+**C — Reduced motion support**
+
+- Detect `prefers-reduced-motion: reduce` via `window.matchMedia` (or a shared hook if one exists).
+- When reduced motion is active: do not render the `<circle>` + `<animateMotion>`. Render only the base path at **full opacity** (no 40% reduction, since there's no beam to contrast against).
+
+**D — Integration with progressive reveal**
+
+- The existing scroll-driven reveal logic (fade-in at 0.45s with stagger) remains unchanged.
+- The beam pulse starts animating immediately when the edge becomes visible (opacity transitions from 0 → 1). No additional choreography needed — `<animateMotion>` runs continuously, and the fade-in naturally reveals it.
+- Hidden edges (opacity 0, `pointerEvents: none`) continue to work as today.
+
+### Constraints
+
+- **Do not modify** node layout, node styling, node constants, or JSX structure of `WorkflowDiagram` — only edge rendering changes.
+- All animated properties remain GPU-composited (`transform`, `opacity`). The SVG `<animateMotion>` is natively GPU-friendly.
+- No new dependencies — uses XyFlow's `getBezierPath()` and native SVG `<animateMotion>`.
+
+### Acceptance criteria
+
+- [x] Custom `AnimatedBeamEdge` component registered as an XyFlow edge type
+- [x] All edges use the custom edge type (no default XyFlow edges remain)
+- [x] Base path renders at 40% opacity with correct color per edge (emerald-400 main, cyan-400 optional)
+- [x] Beam pulse (gradient with glow filter) travels source → target in a loop on each edge
+- [x] Pulse color is emerald-300 for main edges, cyan-300 for optional edge
+- [x] Optional edge is solid line (no `strokeDasharray`), differentiated by cyan color only
+- [x] `prefers-reduced-motion: reduce` disables the beam pulse; edge shows as static line at full opacity
+- [x] Beam starts animating as soon as the edge fades in during progressive reveal (no delay)
+- [x] Existing stagger choreography (edge fade 0.45s, node fade 0.5s with 0.3s delay) is preserved
+- [x] No modifications to node layout, styling, constants, or JSX structure
+- [x] Animations maintain 60fps with all 7+ edges animating simultaneously
+- [x] `pointer-events` behavior unchanged (hidden edges remain non-interactive)
+
+### Files changed
+
+- `src/components/AnimatedBeamEdge.tsx` — new (custom XyFlow edge with beam gradient + glow)
+- `src/components/WorkflowDiagram.tsx` — modified (edge type registration, `buildEdges()` uses `animatedBeam` type)
+
+---
+
+## Phase 8B: Beam Skill Description Cards
+
+**User stories**: 4, 5, 6, 7 (diagram comprehension; each skill's purpose is communicated inline during the reveal)
+
+### What to build
+
+Add a transient floating card that appears above the midpoint of each edge during its scroll-driven reveal, showing a concise one-line description of the **target skill** that edge leads into. The card appears only during the reveal moment — it fades in when the edge becomes visible and fades out shortly after, so cards never stack on top of each other as the user scrolls through the full reveal sequence.
+
+**Phase 8B-1 — Card component + data**
+
+- Define a `SKILL_DESCRIPTIONS` map keyed by skill id, each value a short direct sentence describing what the skill does (e.g. `/grill-me` → "Simula entrevistas técnicas com feedback em tempo real").
+- Create a `BeamDescriptionCard` component (or extend `AnimatedBeamEdge`) that renders a small floating card positioned at the SVG midpoint of the edge path, offset upward so it doesn't overlap the line. The card shows the target skill's description text.
+- Card styling: dark glass-morphism background (`bg-zinc-900/80 backdrop-blur`), emerald or cyan border matching the edge color, small text (`text-xs`), rounded, no interactivity (`pointer-events: none`).
+
+**Phase 8B-2 — Transient reveal animation**
+
+- The card is **invisible by default** (opacity 0).
+- When the edge transitions from hidden → visible (the progressive scroll reveal), the card fades in (opacity 0→1) + slides up slightly (translateY 8→0), holds briefly (~1.5s), then fades out (opacity 1→0) + slides up further (translateY 0→−4).
+- The trigger is the same visibility signal already used by `AnimatedBeamEdge` (the `style.opacity` transition from 0 to >0).
+- On reverse scroll (edge going from visible → hidden), the card does **not** re-appear — it only shows on the forward reveal.
+- `prefers-reduced-motion`: card appears and disappears instantly (no slide, just opacity snap).
+
+### Constraints
+
+- **Do not modify** node layout, node styling, node constants, or JSX structure of `WorkflowDiagram` — only edge-related rendering changes.
+- Cards must be SVG `<foreignObject>` elements (inside the edge's `<g>`) so they participate in ReactFlow's coordinate system and zoom/pan.
+- All animated properties: `transform` and `opacity` only.
+- No new dependencies.
+
+### Acceptance criteria
+
+- [ ] `SKILL_DESCRIPTIONS` map exists with a concise direct description for each of the 7 skills
+- [ ] A floating card renders at the SVG midpoint of each edge, offset upward
+- [ ] Card shows the description of the **target** skill the edge points to
+- [ ] Card styling: dark glassmorphism, color-matched border (emerald/cyan), `text-xs`, `pointer-events: none`
+- [ ] Card fades in + slides up during forward reveal of its edge
+- [ ] Card auto-fades out after ~1.5s hold — does not persist while edge remains visible
+- [ ] Cards never visually overlap (only one card visible at a time due to staggered reveal + auto-dismiss)
+- [ ] Reverse scroll does not re-trigger the card animation
+- [ ] `prefers-reduced-motion` shows card with instant opacity, no slide
+- [ ] No modifications to node layout, styling, constants, or JSX structure
+- [ ] 60fps maintained with card animations running alongside beam pulses
+
+---
+
+## Phase 9: Skills Download CTA + Installation Dialog
+
+**User stories**: 4, 5, 6, 7 (workflow section completeness; guide users from diagram to local setup)
+
+### What to build
+
+After all 7 skill nodes are revealed on the workflow diagram, add one more scroll beat that surfaces a **Download Skills** call-to-action below the diagram. Clicking the button downloads a pre-built `skills.zip` containing all 7 skill folders. After the download triggers, a shadcn `<Dialog>` opens with OS-specific instructions for installing the skills.
+
+#### 9A — Build artifact: `public/skills.zip`
+
+- Add a `package.json` script (`"build:skills-zip"`) that zips the `skills/` directory into `public/skills.zip`.
+- Use Node's built-in `node:zlib`/`node:fs` + `archiver` (or a lightweight equivalent already in devDependencies) to produce the zip. If no zip utility is present, add `archiver` as a devDependency.
+- The zip preserves the internal folder structure: each skill is at `skills/<name>/SKILL.md` (and any other files present in its folder).
+- Wire this script to run as part of the Astro build via the `"build"` script: `"build": "npm run build:skills-zip && astro build"`.
+- The resulting `public/skills.zip` is served as a static asset at `/skills.zip`.
+
+#### 9B — Workflow section: 8th beat (download CTA)
+
+- Increment `workflow` beats from **7 → 8** in `sections.ts`.
+- In `WorkflowLayer` (or `WorkflowDiagram`), detect when `contentLocal` progress enters beat 8's range and show a CTA area **below the diagram**.
+- CTA area layout: a short headline ("O workflow completo está pronto para usar."), a subline ("Baixe os 7 skills e configure em minutos."), and a prominent `<DownloadButton>` component.
+- The CTA area fades in (opacity 0→1, translateY 16→0) using CSS transition when beat 8 becomes active, and fades out when beat 8 exits. GPU-composited only (`transform` + `opacity`).
+- The diagram remains visible throughout beat 8 (no need to hide it); the CTA appears below the diagram area inside the fixed viewport section.
+
+#### 9C — `DownloadButton` component
+
+- Renders an `<a href="/skills.zip" download>` wrapped in a styled button (use shadcn `<Button variant="default">` with an icon — a download arrow, e.g. `lucide-react`'s `Download` icon).
+- On click (before the browser initiates the download), open the installation `<Dialog>` by setting a local `open` state.
+- The anchor's `download` attribute ensures the browser saves the file rather than navigating.
+
+#### 9D — Installation `<Dialog>`
+
+- Use shadcn `<Dialog>` (already available via shadcn/ui, which was installed in Phase 1).
+- Dialog title: "Como instalar os skills".
+- Content: a `<Tabs>` component (shadcn) with three tabs — **macOS**, **Linux**, **WSL** — each tab showing the correct directory path where the user should place the unzipped skills folder:
+  - **macOS**: `~/.claude/skills/` (for Claude Code) or the equivalent path for the user's LLM tool.
+  - **Linux**: `~/.claude/skills/` (same convention; note path may vary by tool).
+  - **WSL**: `~/.claude/skills/` inside the WSL home (e.g. `/home/<user>/.claude/skills/`), with a note about Windows path differences.
+- Below the tabs, a neutral callout note: "Os caminhos podem variar dependendo da ferramenta que você usa. A própria LLM pode te ajudar a encontrar o diretório correto para o seu setup."
+- Dialog footer: a single "Fechar" button (`<DialogClose>`).
+- `prefers-reduced-motion`: dialog opens/closes without animation (shadcn handles this via Radix).
+
+### Constraints
+
+- The ZIP generation script must be idempotent (re-running it overwrites `public/skills.zip`).
+- Do not modify node layout, node styling, node constants, or the `WorkflowDiagram` JSX structure beyond adding the CTA render area and the beat count change.
+- All new animations use `transform` and `opacity` only.
+- No new runtime dependencies beyond `archiver` (devDependency only) and `lucide-react` (already likely installed; confirm before adding).
+
+### Acceptance criteria
+
+- [ ] `npm run build:skills-zip` produces `public/skills.zip` containing all 7 skill folders with their files
+- [ ] `npm run build` runs `build:skills-zip` before `astro build`
+- [ ] Workflow section has `beats: 8` in `sections.ts`
+- [ ] Beat 8 reveals a CTA area below the diagram with headline, subline, and download button
+- [ ] CTA area fades in/out with the beat using GPU-composited transitions only
+- [ ] `DownloadButton` renders as an `<a download>` with shadcn `<Button>` styling and a download icon
+- [ ] Clicking the button opens the installation `<Dialog>` and initiates the file download
+- [ ] Dialog has three tabs: macOS, Linux, WSL — each showing the correct install path
+- [ ] Dialog includes the callout note about path variations and LLM assistance
+- [ ] Dialog closes via the "Fechar" footer button or the default Radix dismiss behavior
+- [ ] `prefers-reduced-motion` is respected (no slide animation on CTA, dialog opens instantly)
+- [ ] CTA is not visible during beats 1–7 (only becomes visible at beat 8)
+- [ ] 60fps maintained; beam animations on the diagram are unaffected
+
+### Files changed
+
+- `scripts/build-skills-zip.mjs` — new (Node script that zips `skills/` → `public/skills.zip`)
+- `package.json` — modified (`build:skills-zip` script, `archiver` devDependency if needed, updated `build` script)
+- `src/lib/sections.ts` — modified (workflow `beats: 7 → 8`)
+- `src/components/WorkflowLayer.tsx` (or `WorkflowDiagram.tsx`) — modified (beat 8 CTA render area)
+- `src/components/DownloadButton.tsx` — new (anchor-wrapped shadcn Button with download icon)
+- `src/components/SkillsInstallDialog.tsx` — new (shadcn Dialog + Tabs with OS-specific install instructions)
