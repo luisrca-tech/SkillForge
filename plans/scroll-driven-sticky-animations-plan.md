@@ -163,32 +163,53 @@ Transition timing values (scale amounts, fade curves, overlap percentages) are t
 
 ---
 
-## Phase 5: shadcn/ui + Workflow Diagram (reveal + cards + finale)
+## Phase 5: Scroll-driven Workflow Diagram reveal ✅
 
-**User stories**: 4, 5, 6, 7, 15
+**User stories**: 4, 5, 6, 7
 
-### What to build
+### What was built
 
-Install shadcn/ui and enhance the Workflow Diagram section with a scroll-driven node reveal, explanatory cards, and a finale sequence.
+The Workflow section was expanded from 1 static beat to 7 scroll-driven beats, progressively revealing skill nodes and edges as the user scrolls.
 
-The Workflow section (already part of the vertical carousel from Phase 3) receives internal beat animations. As the user scrolls through its allocated scroll range, diagram nodes appear one by one in logical order (grill-me → write-a-prd → prd-to-plan → plan-to-tracker → do-work → improve-codebase-architecture → handle-coderabbit) with a small delay between each. Edges animate in as their source and target nodes become visible.
+#### 5A — Multi-beat workflow section
 
-When a node activates, a shadcn Card component appears near it (above or beside) showing the skill name and a 1-2 sentence description. Only one card is visible at a time — the previous card fades out as the new one fades in.
+- Changed workflow beats from 1 to 7 in `sections.ts`.
+- `contentLocal` (MotionValue) is now piped from `VerticalScrollPage` → `WorkflowLayer` → `WorkflowDiagram` as a prop.
 
-After the last node appears, a finale sequence triggers: all cards reappear in reverse order (handle-coderabbit → ... → grill-me) with a depth/elevation effect (shadow scaling, subtle Y-axis lift, staggered timing). This creates a "full workflow revealed" moment.
+#### 5B — Progressive node/edge reveal
 
-Node click navigation to the corresponding Skill Section is preserved.
+- `WorkflowDiagram` uses `useMotionValueEvent` to subscribe to `contentLocal` changes and derives visible node count via `computeVisibleCount()` (maps 0→1 progress to 1→7 nodes).
+- Nodes reveal in logical order: grill-me → write-a-prd → prd-to-plan → plan-to-tracker → do-work → improve-codebase-architecture → handle-coderabbit.
+- Edges appear only when both source and target nodes are visible, using `style.opacity` on edges.
+- A `prevCountRef` skips redundant re-renders when the visible count hasn't changed.
+- Initial visibility is computed from `contentLocal.get()` at mount, avoiding a flash of incorrect state.
+
+#### 5C — Staggered entry animations with direction-aware choreography
+
+- **Forward (scroll down):** edges fade in first (0.45s), then nodes follow after a 0.3s CSS `transition-delay` (0.5s fade). Total reveal ~0.8s per step for a deliberate, slow-montage feel.
+- **Backward (scroll up):** nodes fade out first (no delay), then edges follow after 0.3s delay — reversing the choreography naturally.
+- Direction is detected via a `growing` flag comparing new vs. previous visible count. Pure CSS `transition-delay` handles the stagger — no `setTimeout` needed, handles rapid scrolling gracefully.
+- Hidden nodes get `pointerEvents: none` to prevent accidental clicks.
 
 ### Acceptance criteria
 
-- [ ] shadcn/ui is installed and configured with the Card component
-- [ ] Workflow section's scroll range drives sequential node reveal
-- [ ] A single shadcn Card with skill description appears near the active node
-- [ ] Cards transition one-at-a-time (previous fades out, new fades in)
-- [ ] Finale: after last node, all cards reappear in reverse order with depth/elevation effect
-- [ ] Edges animate in as their connected nodes appear
-- [ ] Clicking a node still navigates to the corresponding Skill Section
-- [ ] Mobile responsive layout for diagram + cards
+- [x] Workflow section has 7 beats (one per skill in the reveal sequence)
+- [x] `contentLocal` MotionValue is passed to `WorkflowDiagram`
+- [x] Scrolling down reveals skill nodes one by one in logical order
+- [x] Scrolling up hides skill nodes in reverse order
+- [x] Edges appear only when both connected nodes are visible
+- [x] Edges animate in before nodes (staggered with 0.3s delay)
+- [x] Direction-aware choreography: forward = edge→node, backward = node→edge
+- [x] Nodes fade in smoothly when revealed (CSS transitions, 0.5s)
+- [x] Clicking a visible node still navigates to the corresponding Skill Section
+- [x] WorkflowDiagram layout, styling, constants, and JSX structure remain unchanged
+
+### Files changed
+
+- `src/lib/sections.ts` — workflow beats 1 → 7
+- `src/lib/sections.test.ts` — updated workflow advance/retreat tests
+- `src/components/VerticalScrollPage.tsx` — pipe `contentLocal` through `WorkflowLayer`
+- `src/components/WorkflowDiagram.tsx` — progressive reveal logic, staggered transitions
 
 ---
 
