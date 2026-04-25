@@ -205,10 +205,10 @@ function SkillNodeWithCard(props: NodeProps) {
         <div
           style={{
             position: "absolute",
-            top: "100%",
+            bottom: "100%",
             left: 0,
             right: 0,
-            marginTop: 6,
+            marginBottom: 6,
             zIndex: 1,
             opacity: visible ? 1 : 0,
             transform: `translateY(${visible ? 0 : -4}px)`,
