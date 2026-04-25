@@ -125,7 +125,7 @@ export default function TerminalSimulator({
   }, [displayedLines]);
 
   return (
-    <div className="rounded-xl overflow-hidden border border-neutral-800 bg-[#0d1117]">
+    <div className="rounded-xl overflow-hidden border border-neutral-800 bg-[#0d1117] h-full flex flex-col">
       <div className="flex items-center gap-2 px-4 py-3 bg-[#161b22] border-b border-neutral-800">
         <div className="flex gap-1.5">
           <span className="w-3 h-3 rounded-full bg-red-500/80" />
@@ -157,7 +157,8 @@ export default function TerminalSimulator({
 
       <div
         ref={containerRef}
-        className="p-4 sm:p-6 font-mono text-xs sm:text-sm leading-relaxed h-64 sm:h-80 md:h-96 overflow-y-auto"
+        data-scroll-capture
+        className="p-4 sm:p-6 font-mono text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-y-auto"
       >
         {activeScenario?.lines.map((line, index) => {
           const text = displayedLines[index];

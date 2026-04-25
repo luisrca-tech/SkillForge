@@ -141,6 +141,15 @@ function SectionNavigator() {
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      const scrollable = target?.closest("[data-scroll-capture]") as HTMLElement | null;
+      if (scrollable) {
+        const atTop = scrollable.scrollTop <= 0 && e.deltaY < 0;
+        const atBottom =
+          scrollable.scrollTop + scrollable.clientHeight >=
+            scrollable.scrollHeight - 1 && e.deltaY > 0;
+        if (!atTop && !atBottom) return;
+      }
       e.preventDefault();
       if (cooldownRef.current || Math.abs(e.deltaY) < 5) return;
       cooldownRef.current = true;
