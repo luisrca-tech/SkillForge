@@ -13,12 +13,12 @@ const stagger = {
 
 export default function StickyHero() {
   return (
-    <div className="h-dvh w-full flex flex-col items-center justify-center px-4 sm:px-6 text-center pointer-events-none">
+    <div className="h-dvh w-full flex flex-col items-center justify-center px-4 sm:px-6 text-center">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={stagger}
-        className="flex flex-col items-center will-change-transform pointer-events-auto"
+        className="flex flex-col items-center"
       >
         <motion.p
           variants={fadeUp}
@@ -53,18 +53,11 @@ export default function StickyHero() {
           <strong className="text-emerald-400">por que</strong> essa abordagem
           funciona melhor.
         </motion.p>
-        <motion.nav
-          variants={fadeUp}
-          transition={{ duration: 0.6 }}
-          className="mt-10"
-        >
-          <a
-            href="#workflow"
-            className="pointer-events-auto inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold rounded-lg transition-colors"
-          >
-            Conhecer o workflow
-          </a>
-        </motion.nav>
+        <motion.div variants={fadeUp} transition={{ duration: 0.6 }} className="mt-10">
+          <span className="inline-block px-6 py-3 bg-emerald-500/20 text-emerald-400 font-semibold rounded-lg border border-emerald-500/30">
+            Scroll para começar
+          </span>
+        </motion.div>
       </motion.div>
     </div>
   );
