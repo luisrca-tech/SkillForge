@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, type WheelEvent as ReactWheelEvent } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface TerminalLine {
   type: "prompt" | "response" | "divider";
@@ -157,16 +157,7 @@ export default function TerminalSimulator({
 
       <div
         ref={containerRef}
-        onWheel={(e: ReactWheelEvent<HTMLDivElement>) => {
-          const el = e.currentTarget;
-          const atTop = el.scrollTop <= 0 && e.deltaY < 0;
-          const atBottom =
-            el.scrollTop + el.clientHeight >= el.scrollHeight - 1 &&
-            e.deltaY > 0;
-          if (!atTop && !atBottom) {
-            e.stopPropagation();
-          }
-        }}
+        data-scroll-capture
         className="p-4 sm:p-6 font-mono text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-y-auto"
       >
         {activeScenario?.lines.map((line, index) => {
