@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useMotionValue, animate } from "motion/react";
+import { motion, AnimatePresence, useMotionValue, animate, type MotionValue } from "motion/react";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
-  SECTIONS,
   type SectionId,
   DEFAULT_SECTION,
   findSection,
@@ -39,7 +38,7 @@ const SKILL_PROPS = {
 const WHEEL_COOLDOWN_MS = 700;
 const TOUCH_THRESHOLD_PX = 50;
 
-function WorkflowLayer() {
+function WorkflowLayer({ contentLocal }: { contentLocal: MotionValue<number> }) {
   return (
     <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4">
       <div className="w-full max-w-7xl mx-auto shrink-0">
@@ -53,7 +52,7 @@ function WorkflowLayer() {
       </div>
       <div className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col">
         <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center pointer-events-auto">
-          <WorkflowDiagram />
+          <WorkflowDiagram contentLocal={contentLocal} />
         </div>
       </div>
     </div>
@@ -71,7 +70,7 @@ function SectionBody({
     return <StickyHero />;
   }
   if (sectionId === "workflow") {
-    return <WorkflowLayer />;
+    return <WorkflowLayer contentLocal={contentLocal} />;
   }
   if (sectionId === "context-rot") {
     return <StickyContextRot contentLocal={contentLocal} />;

@@ -54,8 +54,13 @@ describe("advance", () => {
     expect(result).toEqual({ sectionId: "workflow", beat: 0 });
   });
 
-  it("advances workflow to context-rot", () => {
+  it("advances workflow beat 0 to beat 1", () => {
     const result = advance({ sectionId: "workflow", beat: 0 });
+    expect(result).toEqual({ sectionId: "workflow", beat: 1 });
+  });
+
+  it("advances workflow last beat to context-rot", () => {
+    const result = advance({ sectionId: "workflow", beat: 6 });
     expect(result).toEqual({ sectionId: "context-rot", beat: 0 });
   });
 });

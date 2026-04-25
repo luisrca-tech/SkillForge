@@ -1,4 +1,5 @@
-import { useCallback, useLayoutEffect, useEffect } from "react";
+import { useCallback, useLayoutEffect, useEffect, useRef } from "react";
+import { useMotionValueEvent, type MotionValue } from "motion/react";
 import { useNavigateTo } from "../context/SectionNavContext";
 import type { SectionId } from "../lib/sections";
 import {
@@ -175,6 +176,52 @@ function SkillNode({ data }: NodeProps) {
 
 const nodeTypes: NodeTypes = { skill: SkillNode };
 
+const REVEAL_ORDER = [
+  "grill-me",
+  "write-a-prd",
+  "prd-to-plan",
+  "plan-to-tracker",
+  "do-work",
+  "improve-codebase-architecture",
+  "handle-coderabbit",
+] as const;
+
+const TOTAL_WORKFLOW_BEATS = REVEAL_ORDER.length;
+
+function computeVisibleCount(p: number): number {
+  return Math.max(1, Math.min(
+    TOTAL_WORKFLOW_BEATS,
+    Math.floor(p * TOTAL_WORKFLOW_BEATS) + 1,
+  ));
+}
+
+function applyVisibility(nodes: Node[], visibleIds: Set<string>): Node[] {
+  return nodes.map((node) => {
+    const revealed = visibleIds.has(node.id);
+    return {
+      ...node,
+      style: {
+        ...node.style,
+        opacity: revealed ? 1 : 0,
+        transition: "opacity 0.4s ease",
+        pointerEvents: (revealed ? "auto" : "none") as "auto" | "none",
+      },
+    };
+  });
+}
+
+function applyEdgeVisibility(edges: Edge[], visibleIds: Set<string>): Edge[] {
+  return edges.map((edge) => ({
+    ...edge,
+    style: {
+      ...edge.style,
+      opacity:
+        visibleIds.has(edge.source) && visibleIds.has(edge.target) ? 1 : 0,
+      transition: "opacity 0.4s ease",
+    },
+  }));
+}
+
 const FIT: { padding: number; maxZoom: number } = { padding: 0.2, maxZoom: 1.2 };
 
 /** Re-fits the graph after layout / resize so the viewport centers on the full bounding box (staggered node mount used to run fitView on an empty graph). */
@@ -205,9 +252,32 @@ function WorkflowFitView() {
   return null;
 }
 
-export default function WorkflowDiagram() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(buildInitialNodes());
-  const [edges, setEdges, onEdgesChange] = useEdgesState(buildEdges());
+export default function WorkflowDiagram({
+  contentLocal,
+}: {
+  contentLocal: MotionValue<number>;
+}) {
+  const initialCount = computeVisibleCount(contentLocal.get());
+  const initialVisible = new Set<string>(REVEAL_ORDER.slice(0, initialCount));
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    applyVisibility(buildInitialNodes(), initialVisible),
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    applyEdgeVisibility(buildEdges(), initialVisible),
+  );
+
+  const prevCountRef = useRef(initialCount);
+
+  useMotionValueEvent(contentLocal, "change", (p) => {
+    const visibleCount = computeVisibleCount(p);
+    if (visibleCount === prevCountRef.current) return;
+    prevCountRef.current = visibleCount;
+
+    const visibleIds = new Set<string>(REVEAL_ORDER.slice(0, visibleCount));
+    setNodes((prev) => applyVisibility(prev, visibleIds));
+    setEdges((prev) => applyEdgeVisibility(prev, visibleIds));
+  });
 
   return (
     <div
