@@ -106,7 +106,7 @@ export default function StickySkillSection({
                 <h3 className="text-sm sm:text-base font-semibold text-red-400 mb-0.5 sm:mb-1">
                   {problem.title}
                 </h3>
-                <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
+                <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed">
                   {problem.description}
                 </p>
               </div>
@@ -118,7 +118,7 @@ export default function StickySkillSection({
                 >
                   {skill.title}
                 </h3>
-                <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed line-clamp-3 sm:line-clamp-4 md:line-clamp-5">
+                <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed">
                   {skill.description}
                 </p>
               </div>

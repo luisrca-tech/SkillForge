@@ -81,11 +81,24 @@ function WorkflowLayer({ contentLocal }: { contentLocal: MotionValue<number> }) 
 
 function SectionBody({
   sectionId,
-  contentLocal,
+  beat,
+  totalBeats,
 }: {
   sectionId: SectionId;
-  contentLocal: ReturnType<typeof useMotionValue<number>>;
+  beat: number;
+  totalBeats: number;
 }) {
+  const contentLocal = useMotionValue(beatToLocalProgress(beat, totalBeats));
+
+  const prevBeatRef = useRef(beat);
+  useEffect(() => {
+    const target = beatToLocalProgress(beat, totalBeats);
+    if (prevBeatRef.current !== beat) {
+      animate(contentLocal, target, { duration: 0.45, ease: "easeInOut" });
+      prevBeatRef.current = beat;
+    }
+  }, [beat, totalBeats, contentLocal]);
+
   if (sectionId === "hero") {
     return <StickyHero />;
   }
@@ -112,21 +125,6 @@ function SectionNavigator() {
   const sectionId = (findSection(rawSectionId) ? rawSectionId : DEFAULT_SECTION) as SectionId;
   const section = findSection(sectionId)!;
   const clampedBeat = Math.max(0, Math.min(beat, section.beats - 1));
-
-  const contentLocal = useMotionValue(
-    beatToLocalProgress(clampedBeat, section.beats),
-  );
-
-  const prevSectionRef = useRef(sectionId);
-  useEffect(() => {
-    const target = beatToLocalProgress(clampedBeat, section.beats);
-    if (prevSectionRef.current !== sectionId) {
-      contentLocal.set(target);
-      prevSectionRef.current = sectionId;
-    } else {
-      animate(contentLocal, target, { duration: 0.45, ease: "easeInOut" });
-    }
-  }, [sectionId, clampedBeat, section.beats, contentLocal]);
 
   const step = useCallback(
     (direction: "forward" | "backward") => {
@@ -200,7 +198,8 @@ function SectionNavigator() {
           >
             <SectionBody
               sectionId={sectionId}
-              contentLocal={contentLocal}
+              beat={clampedBeat}
+              totalBeats={section.beats}
             />
           </motion.div>
         </AnimatePresence>

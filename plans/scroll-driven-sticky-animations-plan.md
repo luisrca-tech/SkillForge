@@ -432,19 +432,19 @@ After all 7 skill nodes are revealed on the workflow diagram, add one more scrol
 
 ### Acceptance criteria
 
-- [ ] `npm run build:skills-zip` produces `public/skills.zip` containing all 7 skill folders with their files
-- [ ] `npm run build` runs `build:skills-zip` before `astro build`
-- [ ] Workflow section has `beats: 8` in `sections.ts`
-- [ ] Beat 8 reveals a CTA area below the diagram with headline, subline, and download button
-- [ ] CTA area fades in/out with the beat using GPU-composited transitions only
-- [ ] `DownloadButton` renders as an `<a download>` with shadcn `<Button>` styling and a download icon
-- [ ] Clicking the button opens the installation `<Dialog>` and initiates the file download
-- [ ] Dialog has three tabs: macOS, Linux, WSL — each showing the correct install path
-- [ ] Dialog includes the callout note about path variations and LLM assistance
-- [ ] Dialog closes via the "Fechar" footer button or the default Radix dismiss behavior
-- [ ] `prefers-reduced-motion` is respected (no slide animation on CTA, dialog opens instantly)
-- [ ] CTA is not visible during beats 1–7 (only becomes visible at beat 8)
-- [ ] 60fps maintained; beam animations on the diagram are unaffected
+- [x] `npm run build:skills-zip` produces `public/skills.zip` containing all 7 skill folders with their files
+- [x] `npm run build` runs `build:skills-zip` before `astro build`
+- [x] Workflow section has `beats: 8` in `sections.ts`
+- [x] Beat 8 reveals a CTA area below the diagram with headline, subline, and download button
+- [x] CTA area fades in/out with the beat using GPU-composited transitions only
+- [x] `DownloadButton` renders as an `<a download>` with shadcn `<Button>` styling and a download icon
+- [x] Clicking the button opens the installation `<Dialog>` and initiates the file download
+- [x] Dialog has three tabs: macOS, Linux, WSL — each showing the correct install path
+- [x] Dialog includes the callout note about path variations and LLM assistance
+- [x] Dialog closes via the "Fechar" footer button or the default Radix dismiss behavior
+- [x] `prefers-reduced-motion` is respected (no slide animation on CTA, dialog opens instantly)
+- [x] CTA is not visible during beats 1–7 (only becomes visible at beat 8)
+- [x] 60fps maintained; beam animations on the diagram are unaffected
 
 ### Files changed
 
@@ -454,3 +454,67 @@ After all 7 skill nodes are revealed on the workflow diagram, add one more scrol
 - `src/components/WorkflowLayer.tsx` (or `WorkflowDiagram.tsx`) — modified (beat 8 CTA render area)
 - `src/components/DownloadButton.tsx` — new (anchor-wrapped shadcn Button with download icon)
 - `src/components/SkillsInstallDialog.tsx` — new (shadcn Dialog + Tabs with OS-specific install instructions)
+
+---
+
+## Phase 10: Responsive tall-viewport unified skill layout
+
+**User stories**: 9, 10, 11 (content density; reduced scrolling on large screens)
+
+### What to build
+
+On tall viewports (`min-height: 900px`), show all skill section content in a single unified view instead of using the 2-beat substitutive model. On shorter viewports, keep the current 2-beat layout unchanged.
+
+**Key constraint**: The navigation system (`sections.ts`, `VerticalScrollPage`, URL params, wheel nav) stays completely untouched. Beat count remains 2 for all skill sections. The change is purely visual — `StickySkillSection` adapts its rendering based on viewport height.
+
+#### 10A — Viewport height detection
+
+- Add a `useTallViewport` hook (or inline `matchMedia` check) that returns `true` when `(min-height: 900px)` matches. Must handle SSR (default to `false` — short viewport behavior — when `window` is unavailable).
+- The hook listens for viewport resize (e.g. rotating a tablet, resizing a desktop window) and updates reactively.
+
+#### 10B — Unified layout for tall viewports
+
+When `useTallViewport` returns `true`, `StickySkillSection` renders a **single scrollable column** instead of two overlapping absolute-positioned beat layers:
+
+- **Top section**: Problem card + Skill card side by side (same grid as current beat 0)
+- **Middle section**: How it Works steps
+- **Bottom section**: Terminal Simulator (allocate remaining vertical space via `flex-1`)
+
+All three areas are visible simultaneously. The substitutive beat opacity/Y transforms are **not applied** — both beat containers render at full opacity with `position: relative` (not `absolute`). The `contentLocal` MotionValue is still received but ignored for layout purposes on tall viewports.
+
+The terminal must remain interactive (`pointer-events: auto`) and should get enough vertical space to be usable (~40-50% of the remaining height after cards and steps).
+
+#### 10C — Short viewport behavior preserved
+
+When `useTallViewport` returns `false` (viewport height < 900px), the component renders exactly as it does today: two `absolute inset-0` beat layers with substitutive opacity/Y transitions. Beat 0 = cards + steps, beat 1 = terminal. No changes.
+
+#### 10D — Smooth typography and spacing adaptation
+
+On tall viewports, the content has more breathing room. Adjust spacing and typography within the unified layout:
+
+- Slightly larger gaps between cards and the How it Works section
+- Terminal Simulator gets generous height allocation
+- Cards and steps can use the standard (not compact) text sizes
+
+On short viewports, keep the existing compact spacing.
+
+### Constraints
+
+- **No changes to `sections.ts`** — beat count stays at 2 for all skill sections.
+- **No changes to `VerticalScrollPage.tsx`** or the navigation/wheel system.
+- **No changes to `substitutiveBeats.ts`** — the hooks still exist and are called, but their output is conditionally ignored on tall viewports.
+- All animated properties remain `transform` and `opacity` only.
+- GPU-composited transitions only.
+
+### Acceptance criteria
+
+- [ ] `useTallViewport` hook detects `(min-height: 900px)` and updates on resize
+- [ ] On tall viewports: all 3 content areas (cards, steps, terminal) visible simultaneously in one column
+- [ ] On tall viewports: no substitutive beat fade/slide — all content at full opacity
+- [ ] On tall viewports: Terminal Simulator is interactive and has sufficient height (~40-50% of remaining space)
+- [ ] On short viewports (< 900px): behavior is identical to current 2-beat model
+- [ ] Navigation system untouched: `sections.ts`, `VerticalScrollPage`, URL params, wheel nav all work as before
+- [ ] Resizing viewport (e.g. rotating tablet) switches between unified and 2-beat layouts
+- [ ] SSR-safe: defaults to short-viewport behavior when `window` is unavailable
+- [ ] 60fps maintained on both layout modes
+- [ ] Content does not overflow `100vh` on tall viewports (verified at 900px, 1080px, 1440px heights)
