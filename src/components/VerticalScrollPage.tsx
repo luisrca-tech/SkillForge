@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useMotionValue, animate } from "motion/react";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
+  SECTIONS,
   type SectionId,
   DEFAULT_SECTION,
   findSection,
@@ -40,8 +41,8 @@ const TOUCH_THRESHOLD_PX = 50;
 
 function WorkflowLayer() {
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4 pointer-events-none">
-      <div className="w-full max-w-7xl mx-auto shrink-0 pointer-events-auto">
+    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4">
+      <div className="w-full max-w-7xl mx-auto shrink-0">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1.5">
           O Workflow
         </h2>
@@ -50,8 +51,8 @@ function WorkflowLayer() {
           reproduzível.
         </p>
       </div>
-      <div className="w-full min-h-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col py-1">
-        <div className="w-full h-full min-h-0 flex items-center justify-start 2xl:justify-center pointer-events-auto">
+      <div className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col">
+        <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center pointer-events-auto">
           <WorkflowDiagram />
         </div>
       </div>

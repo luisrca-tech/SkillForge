@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useLayoutEffect, useEffect } from "react";
 import { useNavigateTo } from "../context/SectionNavContext";
 import type { SectionId } from "../lib/sections";
 import {
@@ -11,6 +11,8 @@ import {
   Position,
   useNodesState,
   useEdgesState,
+  useReactFlow,
+  useStore,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -146,25 +148,16 @@ function SkillNode({ data }: NodeProps) {
 
   return (
     <>
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left"
-        className="!bg-emerald-400 !w-2 !h-2 !border-0"
-      />
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top"
-        className="!bg-emerald-400 !w-2 !h-2 !border-0"
-      />
+      <Handle type="target" position={Position.Left} id="left" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
+      <Handle type="target" position={Position.Top} id="top" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
       <button
         type="button"
         onClick={handleClick}
         className={`px-3.5 py-2.5 rounded-lg font-mono text-[13px] leading-snug cursor-pointer transition-all duration-200 w-full min-w-0 text-left
-          ${optional
-            ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40 hover:border-cyan-400 hover:bg-cyan-950/80"
-            : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40 hover:border-emerald-400 hover:bg-emerald-950/80"
+          ${
+            optional
+              ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40 hover:border-cyan-400 hover:bg-cyan-950/80"
+              : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40 hover:border-emerald-400 hover:bg-emerald-950/80"
           }`}
       >
         <span className="block break-words pr-0.5 text-pretty">{label}</span>
@@ -174,73 +167,65 @@ function SkillNode({ data }: NodeProps) {
           </span>
         )}
       </button>
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
-        className="!bg-emerald-400 !w-2 !h-2 !border-0"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom"
-        className="!bg-emerald-400 !w-2 !h-2 !border-0"
-      />
+      <Handle type="source" position={Position.Right} id="right" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
+      <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-emerald-400 !w-2 !h-2 !border-0" />
     </>
   );
 }
 
 const nodeTypes: NodeTypes = { skill: SkillNode };
 
+const FIT: { padding: number; maxZoom: number } = { padding: 0.2, maxZoom: 1.2 };
+
+/** Re-fits the graph after layout / resize so the viewport centers on the full bounding box (staggered node mount used to run fitView on an empty graph). */
+function WorkflowFitView() {
+  const { fitView } = useReactFlow();
+  const nodeCount = useStore((s) => s.nodes.length);
+  const edgeCount = useStore((s) => s.edges.length);
+
+  const runFit = useCallback(() => {
+    if (nodeCount < 1) return;
+    requestAnimationFrame(() => {
+      fitView({ ...FIT, duration: 0 });
+    });
+  }, [nodeCount, fitView]);
+
+  useLayoutEffect(() => {
+    runFit();
+  }, [nodeCount, edgeCount, runFit]);
+
+  useEffect(() => {
+    const el = document.getElementById("workflow-diagram");
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => runFit());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [runFit]);
+
+  return null;
+}
+
 export default function WorkflowDiagram() {
   const [nodes, setNodes, onNodesChange] = useNodesState(buildInitialNodes());
   const [edges, setEdges, onEdgesChange] = useEdgesState(buildEdges());
 
-  useEffect(() => {
-    const allNodes = buildInitialNodes();
-    const allEdges = buildEdges();
-    const totalNodes = allNodes.length;
-
-    setNodes([]);
-    setEdges([]);
-
-    allNodes.forEach((node, i) => {
-      setTimeout(() => {
-        setNodes((prev) => [...prev, node]);
-        if (i === totalNodes - 1) {
-          setTimeout(() => setEdges(allEdges), 150);
-        }
-      }, i * 120);
-    });
-  }, []);
-
-  const diagramWidth =
-    NODES_PER_ROW * (NODE_WIDTH + GAP_X) - GAP_X + HANDLE_EXTRA_GAP_X;
-  const rows = Math.ceil((SKILLS.length + 1) / NODES_PER_ROW);
-  const optionalStack = TOP_PAD + NODE_HEIGHT + GAP_Y + OPTIONAL_ABOVE_WRITE_GAP;
-  const diagramHeight = rows * (NODE_HEIGHT + GAP_Y) + GAP_Y + optionalStack;
-
   return (
     <div
       id="workflow-diagram"
-      className="w-full overflow-x-auto pointer-events-none"
-      style={{ minHeight: Math.max(diagramHeight + 80, 640) }}
+      className="h-full w-full min-h-0 min-w-0 pointer-events-auto"
     >
-      <div
-        style={{
-          width: Math.max(diagramWidth + 100, 880),
-          height: diagramHeight + 64,
-        }}
-        className="ml-0 mr-auto 2xl:mx-auto react-flow-pass-wheel pointer-events-auto"
-      >
+      <div className="h-full w-full min-h-0 min-w-0 react-flow-pass-wheel">
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.22, maxZoom: 1.2 }}
+          fitView={false}
+          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+          onInit={(instance) => {
+            instance.fitView({ ...FIT, duration: 0 });
+          }}
           proOptions={{ hideAttribution: true }}
           panOnDrag={false}
           zoomOnScroll={false}
@@ -250,8 +235,10 @@ export default function WorkflowDiagram() {
           nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable={false}
-          className="!bg-transparent"
-        />
+          className="!h-full !w-full !bg-transparent"
+        >
+          <WorkflowFitView />
+        </ReactFlow>
       </div>
     </div>
   );
