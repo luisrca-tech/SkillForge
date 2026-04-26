@@ -272,14 +272,14 @@ const TOTAL_WORKFLOW_BEATS = REVEAL_ORDER.length;
 function computeVisibleCount(p: number): number {
   return Math.max(1, Math.min(
     TOTAL_WORKFLOW_BEATS,
-    Math.floor(p * TOTAL_WORKFLOW_BEATS) + 1,
+    Math.ceil(p * (TOTAL_WORKFLOW_BEATS + 1)),
   ));
 }
 
-const STAGGER_DELAY = 0.3;
-const NODE_FADE = "opacity 0.5s ease";
-const EDGE_FADE = "opacity 0.45s ease";
-const DRAW_SETTLE_MS = 700;
+const STAGGER_DELAY = 0.2;
+const NODE_FADE = "opacity 0.35s ease";
+const EDGE_FADE = "opacity 0.3s ease";
+const DRAW_SETTLE_MS = 500;
 
 function applyVisibility(
   nodes: Node[],
