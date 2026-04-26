@@ -653,3 +653,54 @@ Once all 7 edges are visible (all nodes revealed), transition the beam animation
 
 - `src/components/AnimatedBeamEdge.tsx` — modified (stroke-dashoffset draw animation, sequential mode support, brighter glow variant)
 - `src/components/WorkflowDiagram.tsx` — modified (pass `sequenceIndex` and `sequentialMode` via edge data; detect full-reveal state)
+
+---
+
+## Phase 13: Animation Observer — session-gated terminal playback ✅
+
+**User stories**: 9, 10 (animation polish; prevent repetitive re-animation on revisited sections)
+
+### What was built
+
+Added a session-level observer that tracks which skill sections the user has already visited. On first visit, the terminal simulator plays its typewriter animation normally. On subsequent visits (within the same session), the terminal renders all lines instantly — no re-animation. A page refresh resets everything.
+
+#### 13A — Session animation store (React context)
+
+- `AnimationObserverContext` holds a `Set<string>` of section IDs whose terminal animation has already played.
+- Exposes `hasPlayed(sectionId)` and `markPlayed(sectionId)` via `useAnimationObserver()` hook.
+- Store lives in React state only (no `localStorage`, no `sessionStorage`). Page refresh naturally resets the `Set` to empty.
+- `AnimationObserverProvider` mounted at the app root, wrapping `SectionNavigator` inside `VerticalScrollPage`.
+
+#### 13B — Terminal playback gating
+
+- `TerminalSimulator` accepts a `skipAnimation` prop. When `true`, `showAllLines()` renders all scenario lines immediately (no typewriter, no `requestAnimationFrame` loop). Final state is identical to a completed animation — all lines visible, blinking cursor at the bottom.
+- When `false` (default), the existing typewriter animation plays unchanged.
+- Tab switching respects `skipAnimation`: if `true`, every tab renders instantly via the same `showAllLines()` path.
+
+#### 13C — Observer wiring in StickySkillSection
+
+- `StickySkillSection` receives a new `sectionId` prop (e.g. `"skill-grill-me"`), passed from `SectionBody` in `VerticalScrollPage`.
+- On mount, reads `hasPlayed(sectionId)` from the observer context. If `false`, animation plays normally and `markPlayed(sectionId)` is called immediately via a `useEffect`. If `true`, `skipAnimation={true}` is passed to `TerminalSimulator`.
+- Also checks `useReducedMotion()` (reused from `AnimatedBeamEdge`) — reduced-motion users always get instant render and their sections are marked as played.
+
+### Acceptance criteria
+
+- [x] `AnimationObserverContext` provides `hasPlayed(id)` and `markPlayed(id)` functions
+- [x] Provider is mounted at the app root level
+- [x] `TerminalSimulator` accepts `skipAnimation` prop
+- [x] When `skipAnimation={true}`, all lines render instantly on mount (no typewriter, no rAF loop)
+- [x] When `skipAnimation={false}`, typewriter animation plays as before
+- [x] Tab switching with `skipAnimation={true}` shows all lines instantly for every tab
+- [x] First visit to a skill section plays the animation and marks the section as played
+- [x] Subsequent visits to the same skill section skip the animation (instant render)
+- [x] Page refresh resets all played state (animations play again on first visit)
+- [x] Terminal end-state is visually identical whether animated or skipped (all lines + blinking cursor)
+- [x] `prefers-reduced-motion` users get instant render and sections are marked as played
+- [x] No changes to `sections.ts` or navigation logic
+
+### Files changed
+
+- `src/context/AnimationObserverContext.tsx` — new (session-level `Set<string>` store with `hasPlayed`/`markPlayed`)
+- `src/components/TerminalSimulator.tsx` — modified (`skipAnimation` prop, `showAllLines()` callback)
+- `src/components/StickySkillSection.tsx` — modified (`sectionId` prop, observer wiring, reduced-motion integration)
+- `src/components/VerticalScrollPage.tsx` — modified (`AnimationObserverProvider` at root, `sectionId` passed to `StickySkillSection`)

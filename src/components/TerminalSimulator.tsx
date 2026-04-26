@@ -14,6 +14,7 @@ interface Scenario {
 interface TerminalSimulatorProps {
   scenarios: Scenario[];
   title?: string;
+  skipAnimation?: boolean;
 }
 
 const CHAR_DELAY = 12;
@@ -22,6 +23,7 @@ const LINE_DELAY = 80;
 export default function TerminalSimulator({
   scenarios,
   title = "terminal",
+  skipAnimation = false,
 }: TerminalSimulatorProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [displayedLines, setDisplayedLines] = useState<string[]>([]);
@@ -33,6 +35,18 @@ export default function TerminalSimulator({
   const lastTimeRef = useRef(0);
 
   const activeScenario = scenarios[activeTab];
+
+  const showAllLines = useCallback(() => {
+    if (!activeScenario) return;
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    setDisplayedLines(activeScenario.lines.map((l) => l.text));
+    setCurrentLineIndex(activeScenario.lines.length);
+    setCurrentCharIndex(0);
+    setIsTyping(false);
+  }, [activeScenario]);
 
   const resetAnimation = useCallback(() => {
     if (animationRef.current !== null) {
@@ -47,8 +61,12 @@ export default function TerminalSimulator({
   }, []);
 
   useEffect(() => {
-    resetAnimation();
-  }, [activeTab, resetAnimation]);
+    if (skipAnimation) {
+      showAllLines();
+    } else {
+      resetAnimation();
+    }
+  }, [activeTab, skipAnimation, resetAnimation, showAllLines]);
 
   useEffect(() => {
     if (!isTyping || !activeScenario) return;
