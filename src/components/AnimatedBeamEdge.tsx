@@ -13,6 +13,7 @@ type BeamEdgeData = {
   baseColor: string;
   sequenceIndex?: number;
   sequentialMode?: boolean;
+  skipDraw?: boolean;
 };
 
 const BASE_OPACITY = 0.4;
@@ -67,6 +68,7 @@ export default function AnimatedBeamEdge({
     baseColor,
     sequenceIndex,
     sequentialMode = false,
+    skipDraw = false,
   } = (data ?? {}) as BeamEdgeData;
   const reducedMotion = useReducedMotion();
   const beamControls = useAnimationControls();
@@ -85,11 +87,10 @@ export default function AnimatedBeamEdge({
 
   useEffect(() => {
     if (visible && !wasVisibleRef.current) {
-      setDrawComplete(false);
-
-      if (reducedMotion) {
+      if (reducedMotion || skipDraw) {
         setDrawComplete(true);
       } else {
+        setDrawComplete(false);
         const drawTimer = setTimeout(() => {
           setDrawComplete(true);
           if (!sequentialMode) {
@@ -111,7 +112,7 @@ export default function AnimatedBeamEdge({
     }
 
     wasVisibleRef.current = visible;
-  }, [visible, reducedMotion, beamControls, sequentialMode]);
+  }, [visible, reducedMotion, skipDraw, beamControls, sequentialMode]);
 
   useEffect(() => {
     if (!sequentialMode || !drawComplete || !visible || reducedMotion) return;

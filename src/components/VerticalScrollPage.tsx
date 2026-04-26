@@ -115,7 +115,7 @@ function WorkflowLayer({
         </div>
         <div className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col">
           <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center pointer-events-auto">
-            <WorkflowDiagram contentLocal={contentLocal} visibleCount={visibleCount} onNodeReveal={handleNodeReveal} />
+            <WorkflowDiagram contentLocal={contentLocal} visibleCount={visibleCount} isZoomingOut={isZoomingOut} onNodeReveal={handleNodeReveal} />
           </div>
         </div>
       </motion.div>
