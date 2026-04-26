@@ -109,7 +109,7 @@ export default function StickySkillSection({
           </div>
         </div>
 
-        <div className="shrink-0">
+        <div className="shrink-0 ml-auto md:w-1/2">
           <h3 className="text-sm sm:text-base font-semibold text-neutral-200 mb-1.5 sm:mb-2">
             {howItWorks.title}
           </h3>

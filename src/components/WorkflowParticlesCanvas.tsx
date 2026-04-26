@@ -2,7 +2,6 @@ import { useRef, useMemo, useCallback, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { MotionValue } from "motion/react";
-import { useReducedMotion } from "./AnimatedBeamEdge";
 
 const PARTICLE_COUNT = 850;
 const X_RANGE = 12;
@@ -56,10 +55,9 @@ function Particles({ contentLocal }: { contentLocal: MotionValue<number> }) {
   const pointsRef = useRef<THREE.Points>(null);
   const { positions, colors, velocities } = useMemo(buildParticleData, []);
   const velocitiesRef = useRef(velocities);
-  const reducedMotion = useReducedMotion();
 
   useFrame((_, delta) => {
-    if (!pointsRef.current || reducedMotion) return;
+    if (!pointsRef.current) return;
     const posAttr = pointsRef.current.geometry.attributes
       .position as THREE.BufferAttribute;
     const arr = posAttr.array as Float32Array;
@@ -96,7 +94,6 @@ function Particles({ contentLocal }: { contentLocal: MotionValue<number> }) {
 function CameraController() {
   const { camera } = useThree();
   const targetRotation = useRef({ x: 0, y: 0 });
-  const reducedMotion = useReducedMotion();
 
   const onPointerMove = useCallback((e: PointerEvent) => {
     const nx = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -112,7 +109,6 @@ function CameraController() {
   }, []);
 
   useFrame(() => {
-    if (reducedMotion) return;
     camera.rotation.x +=
       (targetRotation.current.x - camera.rotation.x) * CAMERA_LERP;
     camera.rotation.y +=
@@ -120,14 +116,13 @@ function CameraController() {
   });
 
   useEffect(() => {
-    if (reducedMotion) return;
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerleave", onPointerLeave);
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerleave", onPointerLeave);
     };
-  }, [onPointerMove, onPointerLeave, reducedMotion]);
+  }, [onPointerMove, onPointerLeave]);
 
   return null;
 }
