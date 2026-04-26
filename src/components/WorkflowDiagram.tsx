@@ -1,7 +1,5 @@
 import { useCallback, useLayoutEffect, useEffect, useRef } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
-import { useNavigateTo } from "../context/SectionNavContext";
-import type { SectionId } from "../lib/sections";
 import {
   ReactFlow,
   type Node,
@@ -170,21 +168,11 @@ function buildEdges(): Edge[] {
 }
 
 function SkillNode({ data }: NodeProps) {
-  const { label, anchor, optional, handles } = data as {
+  const { label, optional, handles } = data as {
     label: string;
-    anchor: string;
     optional: boolean;
     handles?: Set<string>;
   };
-
-  const navigateTo = useNavigateTo();
-
-  const handleClick = useCallback(() => {
-    const id = anchor.startsWith("#") ? anchor.slice(1) : anchor;
-    if (navigateTo) {
-      navigateTo(id as SectionId);
-    }
-  }, [anchor, navigateTo]);
 
   const h = handles ?? new Set(["left", "top", "right", "bottom"]);
 
@@ -192,14 +180,12 @@ function SkillNode({ data }: NodeProps) {
     <>
       {h.has("left") && <Handle type="target" position={Position.Left} id="left" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
       {h.has("top") && <Handle type="target" position={Position.Top} id="top" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
-      <button
-        type="button"
-        onClick={handleClick}
-        className={`px-3.5 py-2.5 rounded-lg font-mono text-[13px] leading-snug cursor-pointer transition-all duration-200 w-full min-w-0 text-left
+      <div
+        className={`px-3.5 py-2.5 rounded-lg font-mono text-[13px] leading-snug cursor-default transition-all duration-200 w-full min-w-0 text-left
           ${
             optional
-              ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40 hover:border-cyan-400 hover:bg-cyan-950/80"
-              : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40 hover:border-emerald-400 hover:bg-emerald-950/80"
+              ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40"
+              : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40"
           }`}
       >
         <span className="block break-words pr-0.5 text-pretty">{label}</span>
@@ -208,7 +194,7 @@ function SkillNode({ data }: NodeProps) {
             opcional
           </span>
         )}
-      </button>
+      </div>
       {h.has("right") && <Handle type="source" position={Position.Right} id="right" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
       {h.has("bottom") && <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
     </>
@@ -266,15 +252,6 @@ const REVEAL_ORDER = [
   "improve-codebase-architecture",
   "handle-coderabbit",
 ] as const;
-
-const TOTAL_WORKFLOW_BEATS = REVEAL_ORDER.length;
-
-function computeVisibleCount(p: number): number {
-  return Math.max(1, Math.min(
-    TOTAL_WORKFLOW_BEATS,
-    Math.ceil(p * (TOTAL_WORKFLOW_BEATS + 1)),
-  ));
-}
 
 const STAGGER_DELAY = 0.2;
 const NODE_FADE = "opacity 0.35s ease";
@@ -365,61 +342,61 @@ function WorkflowFitView() {
 
 export default function WorkflowDiagram({
   contentLocal,
+  visibleCount,
 }: {
   contentLocal: MotionValue<number>;
+  visibleCount: number;
 }) {
-  const initialCount = computeVisibleCount(contentLocal.get());
-  const initialVisible = new Set<string>(REVEAL_ORDER.slice(0, initialCount));
-  const initialSeqMode = initialCount >= TOTAL_WORKFLOW_BEATS;
+  const count = Math.max(1, Math.min(REVEAL_ORDER.length, visibleCount));
+  const newestId = REVEAL_ORDER[count - 1];
+  const instantIds = new Set<string>(REVEAL_ORDER.slice(0, count - 1));
 
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    applyVisibility(buildInitialNodes(), initialVisible, 0),
+    applyVisibility(buildInitialNodes(), instantIds, 0),
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState(
-    applyEdgeVisibility(buildEdges(), initialVisible, 0, initialSeqMode),
+    applyEdgeVisibility(buildEdges(), instantIds, 0, false),
   );
 
-  const prevCountRef = useRef(initialCount);
   const seqTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useMotionValueEvent(contentLocal, "change", (p) => {
-    const visibleCount = computeVisibleCount(p);
-    if (visibleCount === prevCountRef.current) return;
+  useEffect(() => {
+    const allVisible = new Set<string>(REVEAL_ORDER.slice(0, count));
+    const full = count >= REVEAL_ORDER.length;
+    const frame = requestAnimationFrame(() => {
+      setNodes((prev) => applyVisibility(prev, allVisible, STAGGER_DELAY));
+      setEdges((prev) => applyEdgeVisibility(prev, allVisible, STAGGER_DELAY, false));
 
-    const growing = visibleCount > prevCountRef.current;
-    prevCountRef.current = visibleCount;
-
-    const visibleIds = new Set<string>(REVEAL_ORDER.slice(0, visibleCount));
-
-    if (seqTimerRef.current) {
-      clearTimeout(seqTimerRef.current);
-      seqTimerRef.current = null;
-    }
-
-    const isFullReveal = visibleCount >= TOTAL_WORKFLOW_BEATS;
-
-    if (growing) {
-      setEdges((prev) => applyEdgeVisibility(prev, visibleIds, 0, false));
-      setNodes((prev) => applyVisibility(prev, visibleIds, STAGGER_DELAY));
-
-      if (isFullReveal) {
+      if (full) {
         seqTimerRef.current = setTimeout(() => {
           setEdges((prev) =>
-            applyEdgeVisibility(
-              prev,
-              new Set<string>(REVEAL_ORDER),
-              0,
-              true,
-            ),
+            applyEdgeVisibility(prev, allVisible, 0, true),
           );
         }, DRAW_SETTLE_MS);
       }
-    } else {
-      setNodes((prev) => applyVisibility(prev, visibleIds, 0));
-      setEdges((prev) =>
-        applyEdgeVisibility(prev, visibleIds, STAGGER_DELAY, false),
-      );
-    }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (seqTimerRef.current) clearTimeout(seqTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count]);
+
+  useMotionValueEvent(contentLocal, "change", (p) => {
+    setNodes((prev) =>
+      prev.map((node) => {
+        if (node.id !== newestId) return node;
+        return {
+          ...node,
+          data: { ...node.data, visible: p > 0 },
+          style: {
+            ...node.style,
+            opacity: Math.max(0, Math.min(1, p)),
+            pointerEvents: (p > 0 ? "auto" : "none") as "auto" | "none",
+          },
+        };
+      }),
+    );
   });
 
   return (

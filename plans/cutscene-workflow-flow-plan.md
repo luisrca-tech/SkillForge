@@ -35,13 +35,13 @@ Write tests covering:
 
 ### Acceptance criteria
 
-- [ ] `SECTIONS` array contains 17 sections in the correct interleaved order
-- [ ] `SectionId` type includes `workflow-1` through `workflow-7` (the old `workflow` ID is removed)
-- [ ] All `workflow-N` sections have `beats: 1` and `hidden: true`
-- [ ] `advance()` and `retreat()` traverse all 17 sections linearly
-- [ ] Footer renders only non-hidden sections (~10 dots)
-- [ ] Footer click on a skill dot navigates to that skill section (not the preceding workflow section)
-- [ ] Existing tests updated and new boundary tests pass
+- [x] `SECTIONS` array contains 17 sections in the correct interleaved order
+- [x] `SectionId` type includes `workflow-1` through `workflow-7` (the old `workflow` ID is removed)
+- [x] All `workflow-N` sections have `beats: 1` and `hidden: true`
+- [x] `advance()` and `retreat()` traverse all 17 sections linearly
+- [x] Footer renders only non-hidden sections (~10 dots)
+- [x] Footer click on a skill dot navigates to that skill section (not the preceding workflow section)
+- [x] Existing tests updated and new boundary tests pass
 
 ---
 
