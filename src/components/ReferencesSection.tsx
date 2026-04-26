@@ -73,7 +73,7 @@ function ReferenceCard({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col w-56 sm:w-64 shrink-0 rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3 transition-colors hover:border-emerald-800/60 hover:bg-emerald-950/20"
+      className="group flex flex-col w-64 sm:w-80 shrink-0 rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3.5 transition-colors hover:border-emerald-800/60 hover:bg-emerald-950/20"
     >
       <p className="mb-1 font-mono text-[11px] text-neutral-500 line-clamp-1">
         {author}
