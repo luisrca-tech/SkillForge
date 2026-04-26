@@ -166,6 +166,39 @@ function SectionNavigator() {
     return () => window.removeEventListener("wheel", onWheel);
   }, [step]);
 
+  useEffect(() => {
+    const NAVIGABLE_KEYS: Record<string, "forward" | "backward"> = {
+      ArrowDown: "forward",
+      PageDown: "forward",
+      ArrowUp: "backward",
+      PageUp: "backward",
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const direction = NAVIGABLE_KEYS[e.key];
+      if (!direction) return;
+
+      const active = document.activeElement as HTMLElement | null;
+      if (!active) return;
+
+      const tag = active.tagName.toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
+      if (active.isContentEditable) return;
+      if (active.closest("[data-scroll-capture]")) return;
+
+      e.preventDefault();
+      if (cooldownRef.current) return;
+      cooldownRef.current = true;
+      step(direction);
+      setTimeout(() => {
+        cooldownRef.current = false;
+      }, WHEEL_COOLDOWN_MS);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [step]);
+
   const touchStartY = useRef<number | null>(null);
   useEffect(() => {
     const onTouchStart = (e: TouchEvent) => {
