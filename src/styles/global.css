@@ -25,6 +25,12 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* Marquee is content-bearing — restore infinite scroll despite reduced-motion */
+  .animate-marquee,
+  .animate-marquee-vertical {
+    animation-duration: var(--duration) !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 /* Scroll: let page wheel pass through the panes; node buttons stay clickable */
@@ -76,6 +82,24 @@ html {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+    }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+    }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
 }
 
 :root {

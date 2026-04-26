@@ -4,79 +4,7 @@ import {
   useSubstitutiveBeatY,
 } from "../lib/substitutiveBeats";
 
-const references: {
-  id: number;
-  author: string;
-  title: string;
-  date: string;
-  url: string;
-}[] = [
-    {
-      id: 1,
-      author: "Chroma",
-      title: "Context Rot: How Increasing Input Tokens Impacts LLM Performance",
-      date: "Jul 2025",
-      url: "https://www.trychroma.com/research/context-rot",
-    },
-    {
-      id: 2,
-      author: "ZenML",
-      title: "LLMOps Database — Resumo do estudo da Chroma",
-      date: "2025",
-      url: "https://www.zenml.io/llmops-database/context-rot-evaluating-llm-performance-degradation-with-increasing-input-tokens",
-    },
-    {
-      id: 3,
-      author: "Timothy B. Lee",
-      title: "Understanding AI — Análise de degradação em janelas longas",
-      date: "Nov 2025",
-      url: "https://www.understandingai.org/p/why-large-language-models-struggle",
-    },
-    {
-      id: 4,
-      author: "Morph",
-      title: "Context Rot — Guia completo de prevenção e mitigação",
-      date: "Mar 2026",
-      url: "https://www.morphllm.com/context-rot",
-    },
-    {
-      id: 5,
-      author: "Redis",
-      title: "Estratégias de prevenção de Context Rot em produção",
-      date: "Jan 2026",
-      url: "https://redis.io/en/blog/context-rot/",
-    },
-    {
-      id: 6,
-      author: "Cobus Greyling",
-      title: "Análise prática de Context Rot em aplicações LLM",
-      date: "2025",
-      url: "https://cobusgreyling.medium.com/llm-context-rot-28a6d0399655",
-    },
-    {
-      id: 7,
-      author: "Adaline Labs (Nilesh Barla)",
-      title: "Impacto do context length na qualidade de outputs",
-      date: "Ago 2025",
-      url: "https://labs.adaline.ai/p/context-rot-why-llms-are-getting",
-    },
-    {
-      id: 8,
-      author: "arXiv (Liu et al.)",
-      title: "Lost in the Middle: How LMs Use Long Contexts",
-      date: "2023",
-      url: "https://arxiv.org/abs/2307.03172",
-    },
-    {
-      id: 9,
-      author: "Anthropic / AWS / Azure",
-      title: "Claude Opus 4.7 — Janela de 1M tokens e boas práticas",
-      date: "2026",
-      url: "https://www.anthropic.com/news/1m-context",
-    },
-  ];
-
-const TOTAL_BEATS = 3;
+const TOTAL_BEATS = 2;
 
 type StickyContextRotProps = {
   contentLocal: MotionValue<number>;
@@ -95,12 +23,6 @@ export default function StickyContextRot({ contentLocal }: StickyContextRotProps
     TOTAL_BEATS,
   );
   const beat1Y = useSubstitutiveBeatY(contentLocal, 1, TOTAL_BEATS);
-  const beat2Opacity = useSubstitutiveBeatOpacity(
-    contentLocal,
-    2,
-    TOTAL_BEATS,
-  );
-  const beat2Y = useSubstitutiveBeatY(contentLocal, 2, TOTAL_BEATS);
 
   const titleLock = useTransform(
     contentLocal,
@@ -271,41 +193,6 @@ export default function StickyContextRot({ contentLocal }: StickyContextRotProps
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          style={{ opacity: beat2Opacity, y: beat2Y }}
-          className="absolute inset-0 flex flex-col min-h-0 will-change-transform gap-1"
-        >
-          <h3 className="text-sm sm:text-base font-semibold text-center mb-0 sm:mb-0.5 shrink-0">
-            Referências & Estudos
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0.5 -mr-0.5">
-            {references.map((ref) => (
-              <div
-                key={ref.id}
-                className="group flex flex-col rounded-md border px-2 sm:px-2.5 py-1.5 sm:py-2 bg-neutral-900/50 border-neutral-800 transition-colors hover:bg-emerald-950/30 hover:border-emerald-800/50"
-              >
-                <p className="text-[11px] sm:text-xs text-neutral-500 mb-0.5 font-mono line-clamp-1">
-                  {ref.author}
-                </p>
-                <p className="text-xs sm:text-sm leading-snug line-clamp-2 min-h-0 text-neutral-300 transition-colors group-hover:text-emerald-300">
-                  {ref.title}
-                </p>
-                <p className="text-[10px] sm:text-xs text-neutral-600 mt-0.5 shrink-0">
-                  {ref.date}
-                </p>
-                <a
-                  href={ref.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-auto pt-1 text-xs sm:text-sm font-medium text-neutral-500 transition-colors underline-offset-2 hover:underline group-hover:text-emerald-400/90 hover:text-emerald-300"
-                >
-                  Consulte o estudo ↗
-                </a>
-              </div>
-            ))}
           </div>
         </motion.div>
       </div>

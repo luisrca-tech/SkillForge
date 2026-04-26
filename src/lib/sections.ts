@@ -8,6 +8,7 @@ export type SectionId =
   | "workflow-6"
   | "workflow-7"
   | "context-rot"
+  | "references"
   | "skill-grill-me"
   | "skill-write-a-prd"
   | "skill-prd-to-plan"
@@ -38,7 +39,8 @@ export const SECTIONS: Section[] = [
   { id: "skill-improve-codebase-architecture", beats: 1 },
   { id: "workflow-7", beats: 1, hidden: true },
   { id: "skill-handle-coderabbit", beats: 1 },
-  { id: "context-rot", beats: 3 },
+  { id: "context-rot", beats: 2 },
+  { id: "references", beats: 1 },
 ];
 
 export const SECTION_LABELS: Record<SectionId, string> = {
@@ -58,6 +60,7 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   "skill-improve-codebase-architecture": "Arch",
   "skill-handle-coderabbit": "CR",
   "context-rot": "Context Rot",
+  references: "Referências",
 };
 
 export const SECTION_GROUP: Record<SectionId, number> = {
@@ -77,6 +80,7 @@ export const SECTION_GROUP: Record<SectionId, number> = {
   "workflow-7": 2,
   "skill-handle-coderabbit": 2,
   "context-rot": 3,
+  references: 4,
 };
 
 export const DEFAULT_SECTION: SectionId = "hero";

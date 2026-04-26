@@ -10,13 +10,13 @@ import {
 } from "./sections";
 
 describe("section array structure", () => {
-  it("contains 16 sections in total", () => {
-    expect(SECTIONS).toHaveLength(16);
+  it("contains 17 sections in total", () => {
+    expect(SECTIONS).toHaveLength(17);
   });
 
-  it("starts with hero and ends with context-rot", () => {
+  it("starts with hero and ends with references", () => {
     expect(SECTIONS[0].id).toBe("hero");
-    expect(SECTIONS[SECTIONS.length - 1].id).toBe("context-rot");
+    expect(SECTIONS[SECTIONS.length - 1].id).toBe("references");
   });
 
   it("interleaves workflow-N before each skill section", () => {
@@ -37,6 +37,7 @@ describe("section array structure", () => {
       "workflow-7",
       "skill-handle-coderabbit",
       "context-rot",
+      "references",
     ];
     expect(SECTIONS.map((s) => s.id)).toEqual(expected);
   });
@@ -50,22 +51,26 @@ describe("section array structure", () => {
     }
   });
 
-  it("skill sections and hero/context-rot are not hidden", () => {
+  it("skill sections and hero/context-rot/references are not hidden", () => {
     const visible = SECTIONS.filter((s) => !s.id.startsWith("workflow-"));
     for (const s of visible) {
       expect(s.hidden).toBeUndefined();
     }
   });
 
-  it("context-rot has 3 beats", () => {
-    expect(findSection("context-rot")).toEqual({ id: "context-rot", beats: 3 });
+  it("context-rot has 2 beats", () => {
+    expect(findSection("context-rot")).toEqual({ id: "context-rot", beats: 2 });
+  });
+
+  it("references has 1 beat", () => {
+    expect(findSection("references")).toEqual({ id: "references", beats: 1 });
   });
 });
 
 describe("findSection", () => {
   it("returns the section for a valid id", () => {
     const s = findSection("context-rot");
-    expect(s).toMatchObject({ id: "context-rot", beats: 3 });
+    expect(s).toMatchObject({ id: "context-rot", beats: 2 });
   });
 
   it("finds workflow-4", () => {
@@ -92,7 +97,7 @@ describe("sectionIndex", () => {
   });
 
   it("returns correct index for last section", () => {
-    expect(sectionIndex("context-rot")).toBe(SECTIONS.length - 1);
+    expect(sectionIndex("references")).toBe(SECTIONS.length - 1);
   });
 
   it("returns 1 for workflow-1", () => {
@@ -154,10 +159,17 @@ describe("advance", () => {
     });
   });
 
+  it("advances context-rot beat 1 to references", () => {
+    expect(advance({ sectionId: "context-rot", beat: 1 })).toEqual({
+      sectionId: "references",
+      beat: 0,
+    });
+  });
+
   it("stays put on last beat of last section", () => {
-    expect(advance({ sectionId: "context-rot", beat: 2 })).toEqual({
-      sectionId: "context-rot",
-      beat: 2,
+    expect(advance({ sectionId: "references", beat: 0 })).toEqual({
+      sectionId: "references",
+      beat: 0,
     });
   });
 });
@@ -223,7 +235,14 @@ describe("retreat", () => {
   });
 
   it("retreats within context-rot multi-beat", () => {
-    expect(retreat({ sectionId: "context-rot", beat: 2 })).toEqual({
+    expect(retreat({ sectionId: "context-rot", beat: 1 })).toEqual({
+      sectionId: "context-rot",
+      beat: 0,
+    });
+  });
+
+  it("retreats references to context-rot last beat", () => {
+    expect(retreat({ sectionId: "references", beat: 0 })).toEqual({
       sectionId: "context-rot",
       beat: 1,
     });
