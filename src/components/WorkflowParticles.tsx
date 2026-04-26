@@ -11,7 +11,14 @@ export default function WorkflowParticles({
   if (typeof window === "undefined") return null;
 
   return (
-    <div className="absolute inset-0" style={{ pointerEvents: "none" }}>
+    <div
+      className="absolute inset-0"
+      style={{
+        pointerEvents: "none",
+        animation: "particles-fade-in 0.6s ease-out forwards",
+        opacity: 0,
+      }}
+    >
       <Suspense fallback={null}>
         <WorkflowParticlesCanvas contentLocal={contentLocal} />
       </Suspense>

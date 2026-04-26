@@ -122,10 +122,10 @@ Verify and fix edge cases across the full cutscene flow:
 
 ### Acceptance criteria
 
-- [ ] Reduced motion preference disables all node/edge animations and particle effects
-- [ ] No visible flicker or white flash when transitioning between workflow sections
-- [ ] Touch swipe navigates through all 17 sections without getting stuck
-- [ ] Keyboard navigation (Arrow Up/Down, Page Up/Down) traverses all sections
-- [ ] Direct URL `?s=workflow-4&b=0` renders correctly with 4 skills visible
-- [ ] Terminal animations in skill pages respect the animation observer (play once, skip on revisit)
-- [ ] Scrolling through the entire flow (hero to context-rot) completes without errors or visual glitches
+- [x] Reduced motion preference disables all node/edge animations and particle effects
+- [x] No visible flicker or white flash when transitioning between workflow sections
+- [x] Touch swipe navigates through all 17 sections without getting stuck
+- [x] Keyboard navigation (Arrow Up/Down, Page Up/Down) traverses all sections
+- [x] Direct URL `?s=workflow-4&b=0` renders correctly with 4 skills visible
+- [x] Terminal animations in skill pages respect the animation observer (play once, skip on revisit)
+- [x] Scrolling through the entire flow (hero to context-rot) completes without errors or visual glitches

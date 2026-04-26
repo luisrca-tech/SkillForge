@@ -14,7 +14,7 @@ import {
   useReactFlow,
   useStore,
 } from "@xyflow/react";
-import AnimatedBeamEdge, { useReducedMotion } from "./AnimatedBeamEdge";
+import AnimatedBeamEdge from "./AnimatedBeamEdge";
 import "@xyflow/react/dist/style.css";
 
 const SKILLS = [
@@ -68,7 +68,7 @@ function buildInitialNodes(): Node[] {
       type: "skill",
       position: { x, y },
       style: { width: NODE_WIDTH },
-      data: { label: skill.label, anchor: skill.anchor, optional: false, description: SKILL_DESCRIPTIONS[skill.id], descriptionPosition: DESCRIPTION_POSITION[skill.id], handles: SKILL_HANDLES[skill.id] },
+      data: { label: skill.label, anchor: skill.anchor, optional: false, handles: SKILL_HANDLES[skill.id] },
     };
   });
 
@@ -96,24 +96,12 @@ function buildInitialNodes(): Node[] {
       label: OPTIONAL_SKILL.label,
       anchor: OPTIONAL_SKILL.anchor,
       optional: true,
-      description: SKILL_DESCRIPTIONS[OPTIONAL_SKILL.id],
-      descriptionPosition: DESCRIPTION_POSITION[OPTIONAL_SKILL.id],
       handles: SKILL_HANDLES[OPTIONAL_SKILL.id],
     },
   });
 
   return nodes;
 }
-
-const DESCRIPTION_POSITION: Record<string, "top" | "bottom"> = {
-  "grill-me": "top",
-  "write-a-prd": "bottom",
-  "prd-to-plan": "top",
-  "plan-to-tracker": "top",
-  "do-work": "bottom",
-  "improve-codebase-architecture": "bottom",
-  "handle-coderabbit": "bottom",
-};
 
 const SKILL_HANDLES: Record<string, Set<string>> = {
   "grill-me": new Set(["right"]),
@@ -123,16 +111,6 @@ const SKILL_HANDLES: Record<string, Set<string>> = {
   "do-work": new Set(["top", "right"]),
   "improve-codebase-architecture": new Set(["left", "right"]),
   "handle-coderabbit": new Set(["left"]),
-};
-
-const SKILL_DESCRIPTIONS: Record<string, string> = {
-  "grill-me": "Entrevista técnica antes de codar — valida escopo e edge cases",
-  "write-a-prd": "Gera PRD completo com problem statement, user stories e escopo",
-  "prd-to-plan": "Transforma PRD em plano técnico com fases e critérios de aceite",
-  "plan-to-tracker": "Sincroniza stories do plano para ClickUp, Jira ou Linear",
-  "do-work": "Implementa story com TDD rigoroso — red, green, refactor, commit",
-  "improve-codebase-architecture": "Review arquitetural automatizado — detecta gaps estruturais",
-  "handle-coderabbit": "Processa feedback de code review e aplica correções no PR",
 };
 
 function buildEdges(): Edge[] {
@@ -201,46 +179,7 @@ function SkillNode({ data }: NodeProps) {
   );
 }
 
-function SkillNodeWithCard(props: NodeProps) {
-  const { description, optional, visible, descriptionPosition } = props.data as {
-    description?: string;
-    optional: boolean;
-    visible?: boolean;
-    descriptionPosition?: "top" | "bottom";
-  };
-  const reducedMotion = useReducedMotion();
-  const isTop = descriptionPosition === "top";
-
-  return (
-    <div style={{ position: "relative" }}>
-      <SkillNode {...props} />
-      {description && (
-        <div
-          style={{
-            position: "absolute",
-            ...(isTop
-              ? { bottom: "100%", marginBottom: 6 }
-              : { top: "100%", marginTop: 6 }),
-            left: 0,
-            right: 0,
-            zIndex: 1,
-            opacity: visible ? 1 : 0,
-            transform: `translateY(${visible ? 0 : isTop ? 4 : -4}px)`,
-            transition: reducedMotion
-              ? "opacity 0.1s"
-              : "opacity 0.4s ease, transform 0.4s ease",
-            pointerEvents: "none",
-          }}
-          className={`text-[11px] leading-snug ${optional ? "text-cyan-400/70" : "text-emerald-400/70"}`}
-        >
-          {description}
-        </div>
-      )}
-    </div>
-  );
-}
-
-const nodeTypes: NodeTypes = { skill: SkillNodeWithCard };
+const nodeTypes: NodeTypes = { skill: SkillNode };
 const edgeTypes: EdgeTypes = { animatedBeam: AnimatedBeamEdge };
 
 const REVEAL_ORDER = [
