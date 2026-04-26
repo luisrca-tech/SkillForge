@@ -28,6 +28,7 @@ import {
 import StickyHero from "./StickyHero";
 import StickySkillSection from "./StickySkillSection";
 import StickyContextRot from "./StickyContextRot";
+import ReferencesSection from "./ReferencesSection";
 import WorkflowDiagram from "./WorkflowDiagram";
 import DownloadButton from "./DownloadButton";
 import WorkflowParticles from "./WorkflowParticles";
@@ -109,6 +110,9 @@ function SectionBody({
   }
   if (sectionId === "context-rot") {
     return <StickyContextRot contentLocal={contentLocal} />;
+  }
+  if (sectionId === "references") {
+    return <ReferencesSection />;
   }
 
   const data = SKILL_PROPS[sectionId as keyof typeof SKILL_PROPS];
