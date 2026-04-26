@@ -231,7 +231,7 @@ function SectionNavigator() {
                   key={sec.id}
                   onClick={() => setParams({ s: sec.id, b: 0 })}
                   className={[
-                    "transition-colors",
+                    "cursor-pointer transition-colors",
                     isGroupStart && i > 0 ? "ml-4 md:ml-5" : "ml-1.5 md:ml-2",
                     isActive
                       ? "text-emerald-400"
