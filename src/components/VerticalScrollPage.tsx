@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, animate, type MotionValue } from "motion/react";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
@@ -29,7 +29,7 @@ import StickyHero from "./StickyHero";
 import StickySkillSection from "./StickySkillSection";
 import StickyContextRot from "./StickyContextRot";
 import ReferencesSection from "./ReferencesSection";
-import WorkflowDiagram from "./WorkflowDiagram";
+import WorkflowDiagram, { type NodeScreenPosition } from "./WorkflowDiagram";
 import DownloadButton from "./DownloadButton";
 import WorkflowParticles from "./WorkflowParticles";
 
@@ -45,38 +45,73 @@ const SKILL_PROPS = {
 
 const WHEEL_COOLDOWN_MS = 700;
 const TOUCH_THRESHOLD_PX = 50;
+const ZOOM_DURATION_MS = 500;
+const ZOOM_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-function WorkflowLayer({ contentLocal, visibleCount }: { contentLocal: MotionValue<number>; visibleCount: number }) {
+function WorkflowLayer({
+  contentLocal,
+  visibleCount,
+  isZooming,
+  onNodeReveal,
+}: {
+  contentLocal: MotionValue<number>;
+  visibleCount: number;
+  isZooming: boolean;
+  onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
+}) {
   const showCta = visibleCount === 7;
+  const nodePositionRef = useRef<NodeScreenPosition | null>(null);
+
+  const handleNodeReveal = useCallback(
+    (nodeId: string, position: NodeScreenPosition) => {
+      nodePositionRef.current = position;
+      onNodeReveal?.(nodeId, position);
+    },
+    [onNodeReveal],
+  );
+
+  const origin = nodePositionRef.current;
+  const transformOrigin = origin ? `${origin.x}px ${origin.y}px` : "50% 50%";
 
   return (
-    <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4 relative">
-      <WorkflowParticles contentLocal={contentLocal} />
-      <div className="w-full max-w-7xl mx-auto shrink-0 relative">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1.5">
-          O Workflow
-        </h2>
-        <p className="text-neutral-400 text-sm text-center max-w-2xl mx-auto">
-          7 skills que transformam o uso da IA em um processo disciplinado e
-          reproduzível.
-        </p>
-        <div
-          className="absolute right-0 -bottom-2 pointer-events-auto"
-          style={{
-            opacity: showCta ? 1 : 0,
-            transform: `translateX(${showCta ? 0 : 8}px)`,
-            transition: "opacity 0.4s ease, transform 0.4s ease",
-            pointerEvents: showCta ? "auto" : "none",
-          }}
-        >
-          <DownloadButton />
+    <div className="h-dvh max-h-dvh w-full relative overflow-hidden">
+      <WorkflowParticles contentLocal={contentLocal} warp={isZooming} />
+      <motion.div
+        animate={
+          isZooming
+            ? { scale: 3, filter: "blur(12px)", opacity: 0 }
+            : { scale: 1, filter: "blur(0px)", opacity: 1 }
+        }
+        transition={{ duration: ZOOM_DURATION_MS / 1000, ease: ZOOM_EASE }}
+        style={{ transformOrigin, willChange: isZooming ? "transform, filter, opacity" : "auto" }}
+        className="absolute inset-0 flex flex-col items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4"
+      >
+        <div className="w-full max-w-7xl mx-auto shrink-0 relative">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1.5">
+            O Workflow
+          </h2>
+          <p className="text-neutral-400 text-sm text-center max-w-2xl mx-auto">
+            7 skills que transformam o uso da IA em um processo disciplinado e
+            reproduzível.
+          </p>
+          <div
+            className="absolute right-0 -bottom-2 pointer-events-auto"
+            style={{
+              opacity: showCta ? 1 : 0,
+              transform: `translateX(${showCta ? 0 : 8}px)`,
+              transition: "opacity 0.4s ease, transform 0.4s ease",
+              pointerEvents: showCta ? "auto" : "none",
+            }}
+          >
+            <DownloadButton />
+          </div>
         </div>
-      </div>
-      <div className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col">
-        <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center pointer-events-auto">
-          <WorkflowDiagram contentLocal={contentLocal} visibleCount={visibleCount} />
+        <div className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col">
+          <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center pointer-events-auto">
+            <WorkflowDiagram contentLocal={contentLocal} visibleCount={visibleCount} onNodeReveal={handleNodeReveal} />
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -85,10 +120,14 @@ function SectionBody({
   sectionId,
   beat,
   totalBeats,
+  isZooming,
+  onNodeReveal,
 }: {
   sectionId: SectionId;
   beat: number;
   totalBeats: number;
+  isZooming: boolean;
+  onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
 }) {
   const contentLocal = useMotionValue(beatToLocalProgress(beat, totalBeats));
 
@@ -106,7 +145,7 @@ function SectionBody({
   }
   if (sectionId.startsWith("workflow-")) {
     const n = parseInt(sectionId.split("-")[1], 10);
-    return <WorkflowLayer contentLocal={contentLocal} visibleCount={n} />;
+    return <WorkflowLayer contentLocal={contentLocal} visibleCount={n} isZooming={isZooming} onNodeReveal={onNodeReveal} />;
   }
   if (sectionId === "context-rot") {
     return <StickyContextRot contentLocal={contentLocal} />;
@@ -132,16 +171,38 @@ function SectionNavigator() {
   const section = findSection(sectionId)!;
   const clampedBeat = Math.max(0, Math.min(beat, section.beats - 1));
 
+  const [isZooming, setIsZooming] = useState(false);
+  const zoomTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const step = useCallback(
     (direction: "forward" | "backward") => {
+      if (isZooming) return;
+
       const state = { sectionId, beat: clampedBeat };
       const next = direction === "forward" ? advance(state) : retreat(state);
-      if (next.sectionId !== sectionId || next.beat !== clampedBeat) {
+      if (next.sectionId === sectionId && next.beat === clampedBeat) return;
+
+      const leavingWorkflow = sectionId.startsWith("workflow-");
+      const enteringSkill = next.sectionId.startsWith("skill-");
+
+      if (leavingWorkflow && enteringSkill && direction === "forward") {
+        setIsZooming(true);
+        zoomTimerRef.current = setTimeout(() => {
+          setParams({ s: next.sectionId, b: next.beat });
+          setIsZooming(false);
+        }, ZOOM_DURATION_MS);
+      } else {
         setParams({ s: next.sectionId, b: next.beat });
       }
     },
-    [sectionId, clampedBeat, setParams],
+    [sectionId, clampedBeat, setParams, isZooming],
   );
+
+  useEffect(() => {
+    return () => {
+      if (zoomTimerRef.current) clearTimeout(zoomTimerRef.current);
+    };
+  }, []);
 
   const cooldownRef = useRef(false);
 
@@ -248,6 +309,7 @@ function SectionNavigator() {
               sectionId={sectionId}
               beat={clampedBeat}
               totalBeats={section.beats}
+              isZooming={isZooming}
             />
           </motion.div>
         </AnimatePresence>

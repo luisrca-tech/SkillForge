@@ -14,6 +14,10 @@ const MIN_OPACITY = 0.15;
 const MAX_OPACITY = 0.35;
 const SPEED_MIN = 0.3;
 const SPEED_MAX = 1.0;
+const WARP_SPEED = 2.5;
+const WARP_SIZE = 10;
+const DEFAULT_SIZE = 4;
+const WARP_LERP = 0.08;
 const CAMERA_TILT_DEG = 3;
 const CAMERA_LERP = 0.05;
 
@@ -51,10 +55,12 @@ function buildParticleData() {
   return { positions, colors, velocities };
 }
 
-function Particles({ contentLocal }: { contentLocal: MotionValue<number> }) {
+function Particles({ contentLocal, warp }: { contentLocal: MotionValue<number>; warp: boolean }) {
   const pointsRef = useRef<THREE.Points>(null);
   const { positions, colors, velocities } = useMemo(buildParticleData, []);
   const velocitiesRef = useRef(velocities);
+  const currentSize = useRef(DEFAULT_SIZE);
+  const currentSpeed = useRef(SPEED_MIN);
 
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
@@ -62,10 +68,18 @@ function Particles({ contentLocal }: { contentLocal: MotionValue<number> }) {
       .position as THREE.BufferAttribute;
     const arr = posAttr.array as Float32Array;
     const progress = contentLocal.get();
-    const speedMul = lerp(SPEED_MIN, SPEED_MAX, progress);
+    const baseSpeed = lerp(SPEED_MIN, SPEED_MAX, progress);
+
+    const targetSpeed = warp ? WARP_SPEED : baseSpeed;
+    const targetSize = warp ? WARP_SIZE : DEFAULT_SIZE;
+    currentSpeed.current = lerp(currentSpeed.current, targetSpeed, WARP_LERP);
+    currentSize.current = lerp(currentSize.current, targetSize, WARP_LERP);
+
+    const mat = pointsRef.current.material as THREE.PointsMaterial;
+    mat.size = currentSize.current;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      arr[i * 3] += velocitiesRef.current[i] * speedMul * delta;
+      arr[i * 3] += velocitiesRef.current[i] * currentSpeed.current * delta;
       if (arr[i * 3] > X_RANGE) {
         arr[i * 3] = -X_RANGE;
       }
@@ -84,7 +98,7 @@ function Particles({ contentLocal }: { contentLocal: MotionValue<number> }) {
         transparent
         depthWrite={false}
         sizeAttenuation={false}
-        size={4}
+        size={DEFAULT_SIZE}
         blending={THREE.AdditiveBlending}
       />
     </points>
@@ -129,8 +143,10 @@ function CameraController() {
 
 export default function WorkflowParticlesCanvas({
   contentLocal,
+  warp = false,
 }: {
   contentLocal: MotionValue<number>;
+  warp?: boolean;
 }) {
   return (
     <Canvas
@@ -145,7 +161,7 @@ export default function WorkflowParticlesCanvas({
       gl={{ antialias: false, alpha: true }}
       dpr={[1, 1.5]}
     >
-      <Particles contentLocal={contentLocal} />
+      <Particles contentLocal={contentLocal} warp={warp} />
       <CameraController />
     </Canvas>
   );

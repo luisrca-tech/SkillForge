@@ -279,12 +279,39 @@ function WorkflowFitView() {
   return null;
 }
 
+export type NodeScreenPosition = { x: number; y: number };
+
+function NodePositionReporter({
+  nodeId,
+  onNodeReveal,
+}: {
+  nodeId: string;
+  onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
+}) {
+  const { getNode, flowToScreenPosition } = useReactFlow();
+
+  useEffect(() => {
+    if (!onNodeReveal) return;
+    const node = getNode(nodeId);
+    if (!node) return;
+
+    const centerX = node.position.x + (node.measured?.width ?? NODE_WIDTH) / 2;
+    const centerY = node.position.y + (node.measured?.height ?? NODE_HEIGHT) / 2;
+    const screen = flowToScreenPosition({ x: centerX, y: centerY });
+    onNodeReveal(nodeId, screen);
+  }, [nodeId, onNodeReveal, getNode, flowToScreenPosition]);
+
+  return null;
+}
+
 export default function WorkflowDiagram({
   contentLocal,
   visibleCount,
+  onNodeReveal,
 }: {
   contentLocal: MotionValue<number>;
   visibleCount: number;
+  onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
 }) {
   const count = Math.max(1, Math.min(REVEAL_ORDER.length, visibleCount));
   const newestId = REVEAL_ORDER[count - 1];
@@ -368,6 +395,7 @@ export default function WorkflowDiagram({
           className="!h-full !w-full !bg-transparent"
         >
           <WorkflowFitView />
+          <NodePositionReporter nodeId={newestId} onNodeReveal={onNodeReveal} />
         </ReactFlow>
       </div>
     </div>
