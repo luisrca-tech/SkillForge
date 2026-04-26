@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface TerminalLine {
   type: "prompt" | "response" | "divider";
@@ -33,40 +33,33 @@ export default function TerminalSimulator({
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef(0);
+  const skipRef = useRef(skipAnimation);
 
   const activeScenario = scenarios[activeTab];
 
-  const showAllLines = useCallback(() => {
-    if (!activeScenario) return;
-    if (animationRef.current !== null) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
-    setDisplayedLines(activeScenario.lines.map((l) => l.text));
-    setCurrentLineIndex(activeScenario.lines.length);
-    setCurrentCharIndex(0);
-    setIsTyping(false);
-  }, [activeScenario]);
-
-  const resetAnimation = useCallback(() => {
-    if (animationRef.current !== null) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
-    setDisplayedLines([]);
-    setCurrentLineIndex(0);
-    setCurrentCharIndex(0);
-    setIsTyping(true);
-    lastTimeRef.current = 0;
-  }, []);
-
   useEffect(() => {
-    if (skipAnimation) {
-      showAllLines();
-    } else {
-      resetAnimation();
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
-  }, [activeTab, skipAnimation, resetAnimation, showAllLines]);
+
+    const scenario = scenarios[activeTab];
+    if (!scenario) return;
+
+    if (skipRef.current) {
+      setDisplayedLines(scenario.lines.map((l) => l.text));
+      setCurrentLineIndex(scenario.lines.length);
+      setCurrentCharIndex(0);
+      setIsTyping(false);
+    } else {
+      setDisplayedLines([]);
+      setCurrentLineIndex(0);
+      setCurrentCharIndex(0);
+      setIsTyping(true);
+      lastTimeRef.current = 0;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   useEffect(() => {
     if (!isTyping || !activeScenario) return;

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
 import TerminalSimulator from "./TerminalSimulator";
 import { useAnimationObserver } from "../context/AnimationObserverContext";
-import { useReducedMotion } from "./AnimatedBeamEdge";
 
 interface TerminalLine {
   type: "prompt" | "response" | "divider";
@@ -46,14 +45,11 @@ export default function StickySkillSection({
   contentLocal,
 }: StickySkillSectionProps) {
   const { hasPlayed, markPlayed } = useAnimationObserver();
-  const reducedMotion = useReducedMotion();
-  const skipAnimation = hasPlayed(sectionId) || reducedMotion;
+  const skipAnimation = hasPlayed(sectionId);
 
   useEffect(() => {
-    if (!skipAnimation) {
-      markPlayed(sectionId);
-    }
-  }, [sectionId, skipAnimation, markPlayed]);
+    markPlayed(sectionId);
+  }, [sectionId, markPlayed]);
   const accentText =
     variant === "optional" ? "text-cyan-400" : "text-emerald-400";
   const accentBg =

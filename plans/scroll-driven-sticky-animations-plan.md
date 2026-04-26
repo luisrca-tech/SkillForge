@@ -512,13 +512,13 @@ When none of those conditions are true, call `e.preventDefault()` and `step()`.
 
 ### Acceptance criteria
 
-- [ ] `ArrowDown` and `PageDown` advance one beat/section (same as scrolling down)
-- [ ] `ArrowUp` and `PageUp` retreat one beat/section (same as scrolling up)
-- [ ] Same `WHEEL_COOLDOWN_MS` throttle and `cooldownRef` shared with wheel/touch — rapid key presses don't skip multiple beats
-- [ ] Arrow keys are a no-op when `document.activeElement` is inside `[data-scroll-capture]` (terminal remains fully usable)
-- [ ] Arrow keys are a no-op when `document.activeElement` is `<input>`, `<textarea>`, or `[contenteditable]`
-- [ ] `e.preventDefault()` called only when navigation fires (not when focus is in an interactive element)
-- [ ] No changes to `sections.ts`, `advance()`, `retreat()`, `step()`, or any section component
+- [x] `ArrowDown` and `PageDown` advance one beat/section (same as scrolling down)
+- [x] `ArrowUp` and `PageUp` retreat one beat/section (same as scrolling up)
+- [x] Same `WHEEL_COOLDOWN_MS` throttle and `cooldownRef` shared with wheel/touch — rapid key presses don't skip multiple beats
+- [x] Arrow keys are a no-op when `document.activeElement` is inside `[data-scroll-capture]` (terminal remains fully usable)
+- [x] Arrow keys are a no-op when `document.activeElement` is `<input>`, `<textarea>`, or `[contenteditable]`
+- [x] `e.preventDefault()` called only when navigation fires (not when focus is in an interactive element)
+- [x] No changes to `sections.ts`, `advance()`, `retreat()`, `step()`, or any section component
 
 ### Files changed
 
@@ -577,16 +577,16 @@ On short viewports, keep the existing compact spacing.
 
 ### Acceptance criteria
 
-- [ ] `useTallViewport` hook detects `(min-height: 900px)` and updates on resize
-- [ ] On tall viewports: all 3 content areas (cards, steps, terminal) visible simultaneously in one column
-- [ ] On tall viewports: no substitutive beat fade/slide — all content at full opacity
-- [ ] On tall viewports: Terminal Simulator is interactive and has sufficient height (~40-50% of remaining space)
-- [ ] On short viewports (< 900px): behavior is identical to current 2-beat model
-- [ ] Navigation system untouched: `sections.ts`, `VerticalScrollPage`, URL params, wheel nav all work as before
-- [ ] Resizing viewport (e.g. rotating tablet) switches between unified and 2-beat layouts
-- [ ] SSR-safe: defaults to short-viewport behavior when `window` is unavailable
-- [ ] 60fps maintained on both layout modes
-- [ ] Content does not overflow `100vh` on tall viewports (verified at 900px, 1080px, 1440px heights)
+- [x] `useTallViewport` hook detects `(min-height: 900px)` and updates on resize
+- [x] On tall viewports: all 3 content areas (cards, steps, terminal) visible simultaneously in one column
+- [x] On tall viewports: no substitutive beat fade/slide — all content at full opacity
+- [x] On tall viewports: Terminal Simulator is interactive and has sufficient height (~40-50% of remaining space)
+- [x] On short viewports (< 900px): behavior is identical to current 2-beat model
+- [x] Navigation system untouched: `sections.ts`, `VerticalScrollPage`, URL params, wheel nav all work as before
+- [x] Resizing viewport (e.g. rotating tablet) switches between unified and 2-beat layouts
+- [x] SSR-safe: defaults to short-viewport behavior when `window` is unavailable
+- [x] 60fps maintained on both layout modes
+- [x] Content does not overflow `100vh` on tall viewports (verified at 900px, 1080px, 1440px heights)
 
 ---
 
@@ -634,25 +634,91 @@ Once all 7 edges are visible (all nodes revealed), transition the beam animation
 
 ### Acceptance criteria
 
-- [ ] Edge reveal uses stroke-dashoffset "draw" animation (line grows from source to target) instead of flat opacity fade
-- [ ] Draw duration is ~0.6s per edge with custom easing `[0.16, 1, 0.3, 1]`
-- [ ] Beam gradient starts only after the path finishes drawing (sequenced, not simultaneous)
-- [ ] Scroll reverse "un-draws" the edge (dashoffset returns to totalLength)
-- [ ] Existing stagger choreography preserved: edges draw before their target node fades in
-- [ ] After all 7 nodes are revealed, beams transition to sequential mode (one beam traveling the chain at a time)
-- [ ] Sequential beam travels edges in workflow order with ~0.1s overlap between consecutive edges
-- [ ] Sequential beam has a longer gradient trail and brighter glow than reveal-phase beams
-- [ ] Total sequential cycle is ~4.9s before looping
-- [ ] Optional feedback edge (cyan) keeps its own independent loop, not part of the sequential cycle
-- [ ] `prefers-reduced-motion: reduce` shows instant path draw and no beam pulse
-- [ ] No modifications to node layout, styling, constants, descriptions, or WorkflowDiagram JSX structure
-- [ ] 60fps maintained with all animations running simultaneously
-- [ ] `pointer-events` behavior unchanged (hidden edges remain non-interactive)
+- [x] Edge reveal uses stroke-dashoffset "draw" animation (line grows from source to target) instead of flat opacity fade
+- [x] Draw duration is ~0.6s per edge with custom easing `[0.16, 1, 0.3, 1]`
+- [x] Beam gradient starts only after the path finishes drawing (sequenced, not simultaneous)
+- [x] Scroll reverse "un-draws" the edge (dashoffset returns to totalLength)
+- [x] Existing stagger choreography preserved: edges draw before their target node fades in
+- [x] After all 7 nodes are revealed, beams transition to sequential mode (one beam traveling the chain at a time)
+- [x] Sequential beam travels edges in workflow order with ~0.1s overlap between consecutive edges
+- [x] Sequential beam has a longer gradient trail and brighter glow than reveal-phase beams
+- [x] Total sequential cycle is ~4.9s before looping
+- [x] Optional feedback edge (cyan) keeps its own independent loop, not part of the sequential cycle
+- [x] `prefers-reduced-motion: reduce` shows instant path draw and no beam pulse
+- [x] No modifications to node layout, styling, constants, descriptions, or WorkflowDiagram JSX structure
+- [x] 60fps maintained with all animations running simultaneously
+- [x] `pointer-events` behavior unchanged (hidden edges remain non-interactive)
 
 ### Files changed
 
 - `src/components/AnimatedBeamEdge.tsx` — modified (stroke-dashoffset draw animation, sequential mode support, brighter glow variant)
 - `src/components/WorkflowDiagram.tsx` — modified (pass `sequenceIndex` and `sequentialMode` via edge data; detect full-reveal state)
+
+---
+
+## Phase 13: 3D Particle Field Background on Workflow Section ✅
+
+**User stories**: 4, 5, 6, 7 (diagram immersion; spatial depth that reinforces the "pipeline in motion" narrative)
+
+### What was built
+
+Add a directional 3D particle field rendered via `@react-three/fiber` as an ambient background layer behind the workflow diagram. Particles drift left-to-right at varying depths, with subtle mouse parallax (camera tilt) and scroll-driven speed acceleration as skill nodes reveal.
+
+#### 13A — Dependencies
+
+- Add `@react-three/fiber` and `@react-three/drei` as runtime dependencies.
+- No other new packages.
+
+#### 13B — `WorkflowParticles` component
+
+Create `src/components/WorkflowParticles.tsx`:
+
+- **SSR guard**: first line `if (typeof window === "undefined") return null;` — no `useEffect`, no state, avoids double-mount issues.
+- **Reduced motion guard**: check `window.matchMedia("(prefers-reduced-motion: reduce)").matches` on mount; if true, return `null` (no canvas, zero GPU overhead).
+- **Canvas**: R3F `<Canvas>` with `style={{ position: "absolute", inset: 0, zIndex: 0 }}` and `camera={{ position: [0, 0, 5], fov: 60 }}`. `frameloop="always"`.
+- **Particles geometry**: 150–200 `<Points>` using `BufferGeometry` with randomized positions (`x: -12→12`, `y: -7→7`, `z: -4→0`). Point sizes proportional to Z depth (closer = larger, 2–5px range) to simulate perspective. Per-point vertex colors: ~80% emerald-400 (`#34d399`), ~20% cyan-400 (`#22d3ee`), opacity 15–25%.
+- **Drift animation**: in `useFrame`, each particle's X position increments by `velocity * speedMultiplier * delta`. When `x > 12`, wrap to `x = -12` (seamless loop). Base velocity per particle is randomized (0.5–1.5 units/s) so depth layers drift at different rates naturally.
+- **Scroll-driven speed**: accept `contentLocal: MotionValue<number>` as prop. In `useFrame`, read `contentLocal.get()` and map it to `speedMultiplier = lerp(0.3, 1.0, progress)`. No subscription needed — polling per frame is correct here.
+- **Mouse parallax**: a `useRef` on camera rotation. `onPointerMove` on the canvas parent div updates a target rotation (±3° on both axes). In `useFrame`, lerp camera rotation toward target at factor 0.05 (lazy follow). When pointer leaves, lerp back to `[0, 0, 0]`.
+
+#### 13C — Integration in `WorkflowLayer`
+
+In `VerticalScrollPage.tsx`, inside `WorkflowLayer`:
+
+- The outer `div` already has `className="... relative"` — no layout changes needed.
+- Add `<WorkflowParticles contentLocal={contentLocal} />` as the **first child** inside that outer div. It will sit at `z-0` (absolute, inset-0).
+- The existing content (title, diagram, CTA) retains its natural stacking above the canvas.
+- Pass the pointer move/leave handlers from `WorkflowLayer` down to the `WorkflowParticles` wrapper — or let `WorkflowParticles` attach its own `pointermove` listener to `window` (simpler, avoids prop drilling).
+
+### Constraints
+
+- **Do not modify** `WorkflowDiagram.tsx`, node layout, node styling, beam edge logic, or `sections.ts`.
+- All existing beam animations (Phase 8/12) and progressive reveal (Phase 5) remain unchanged.
+- The particle canvas must not intercept pointer events from the diagram — `pointer-events: none` on the canvas element; `pointer-events` restored only on the wrapper for mouse tracking.
+- GPU-composited only: R3F renders via WebGL, no CSS animations on the canvas element.
+
+### Acceptance criteria
+
+- [x] `@react-three/fiber` and `@react-three/drei` added to `package.json` dependencies
+- [x] `WorkflowParticles` component exists and renders a `<Canvas>` behind the workflow diagram (`z-0`)
+- [x] 150–200 particles visible, drifting left-to-right with depth variation (size + opacity by Z)
+- [x] ~80% emerald / ~20% cyan particle color distribution at 15–25% opacity
+- [x] Particles wrap seamlessly when exiting the right edge (no flicker)
+- [x] `contentLocal` progress maps drift speed from 0.3× (0 nodes revealed) → 1.0× (all nodes revealed)
+- [x] Mouse movement causes subtle camera tilt (≤3° on each axis) that lazy-follows the cursor
+- [x] Camera returns to neutral when pointer leaves the section
+- [x] `prefers-reduced-motion: reduce` → component returns `null` (no canvas rendered)
+- [x] SSR-safe: `typeof window === "undefined"` guard prevents server-side rendering of the canvas
+- [x] Canvas has `pointer-events: none` — diagram nodes and edges remain fully interactive
+- [x] Beam animations (Phase 8/12) and node reveals (Phase 5) are visually unaffected
+- [x] 60fps maintained with particles + beams + sequential mode running simultaneously
+- [x] No modifications to `WorkflowDiagram.tsx`, `sections.ts`, or any other existing component
+
+### Files changed
+
+- `src/components/WorkflowParticles.tsx` — new (R3F canvas, `<Points>`, drift animation, mouse parallax, scroll-driven speed)
+- `src/components/VerticalScrollPage.tsx` — modified (`WorkflowLayer` adds `<WorkflowParticles>` as first child, passes `contentLocal`)
+- `package.json` — modified (adds `@react-three/fiber`, `@react-three/drei`)
 
 ---
 

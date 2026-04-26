@@ -30,6 +30,7 @@ import StickySkillSection from "./StickySkillSection";
 import StickyContextRot from "./StickyContextRot";
 import WorkflowDiagram from "./WorkflowDiagram";
 import DownloadButton from "./DownloadButton";
+import WorkflowParticles from "./WorkflowParticles";
 
 const SKILL_PROPS = {
   "skill-grill-me": grillMe,
@@ -55,6 +56,7 @@ function WorkflowLayer({ contentLocal }: { contentLocal: MotionValue<number> }) 
 
   return (
     <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4 relative">
+      <WorkflowParticles contentLocal={contentLocal} />
       <div className="w-full max-w-7xl mx-auto shrink-0 relative">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1.5">
           O Workflow
