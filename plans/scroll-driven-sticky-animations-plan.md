@@ -216,29 +216,64 @@ The Workflow section was expanded from 1 static beat to 7 scroll-driven beats, p
 
 ---
 
-## Phase 6: Polish — progress indicator, mobile tuning, performance
+## Phase 6: Footer step navigation — progress dots + labels
 
 **User stories**: 11, 12, 13
 
 ### What to build
 
-Add a scroll progress indicator, tune mobile scroll distances, and optimize performance across all pinned sections.
+Replace the current 3-button footer nav (Topo / Workflow / Context Rot) with a full **step navigation bar** spanning all 10 sections. The bar serves as both a progress indicator and a quick-jump navigation.
 
-A subtle scroll progress bar (thin line at the top or side of the viewport) shows the user's overall position through the page. This is especially important during pinned sections where the browser's native scrollbar may not provide clear feedback.
+#### 6A — Step indicator component
 
-Mobile scroll distances (outer container heights) are reviewed and adjusted per section — some sections may need shorter scroll ranges on small screens to avoid excessive scrolling for the same content. Content that uses side-by-side layouts stacks vertically on mobile.
+- Render one clickable indicator per section in the footer `<nav>`, in section order (`hero` → `workflow` → 7 skills → `context-rot`).
+- The **active section** is visually highlighted (brighter color, e.g. `text-neutral-100` or a subtle emerald accent). Visited/past sections use a medium tone (`text-neutral-500`). Future sections are dimmed (`text-neutral-700`).
+- Clicking any indicator calls `setParams({ s: sectionId, b: 0 })` to jump to that section's first beat.
 
-Performance is audited: ensure all animations use GPU-composited properties only, `will-change: transform` is applied to pinned containers, ReactFlow diagram doesn't re-render during scroll, and Motion's scroll tracking is RAF-throttled. Target is consistent 60fps on mid-range mobile devices.
+#### 6B — Responsive rendering: labels on desktop, dots on mobile
+
+- **Desktop (`md:` breakpoint and up)**: Each indicator shows a short text label. Use abbreviated names to keep the bar compact:
+  - `hero` → "Topo"
+  - `workflow` → "Workflow"
+  - `skill-grill-me` → "Grill Me"
+  - `skill-write-a-prd` → "PRD"
+  - `skill-prd-to-plan` → "Plan"
+  - `skill-plan-to-tracker` → "Tracker"
+  - `skill-do-work` → "Do Work"
+  - `skill-improve-codebase-architecture` → "Arch"
+  - `skill-handle-coderabbit` → "CR"
+  - `context-rot` → "Context Rot"
+- **Mobile (below `md:`)**: Each indicator renders as a small dot (`w-2 h-2 rounded-full`). Active dot is larger or brighter. No text labels.
+- Labels and dots share the same click handler and active-state logic — only the visual rendering differs.
+
+#### 6C — Visual grouping
+
+- Add subtle spacing gaps to group related sections visually: `hero` | `workflow` | skills cluster | `context-rot`. Use slightly wider `gap` between groups (e.g. `gap-4` between groups, `gap-2` within the skills cluster on desktop; proportional on mobile).
+
+#### 6D — Footer styling adjustments
+
+- The footer retains its current styling: `fixed bottom-0`, `bg-neutral-950/80 backdrop-blur-sm`, `border-t border-neutral-800/50`.
+- Center the indicators horizontally. On mobile, ensure the dot row doesn't exceed viewport width (10 dots at `w-2` + gaps fits comfortably).
+- Active indicator transition uses `transition-colors` (GPU-friendly, no layout shifts).
+
+### Constraints
+
+- No changes to `sections.ts`, the navigation system, or wheel/touch scroll behavior.
+- No new dependencies — built with existing Tailwind classes + the `SECTIONS` array from `sections.ts`.
+- All transitions use `opacity` and `color` only (GPU-composited, no layout shifts).
+- The component reads the current `sectionId` from the existing `nuqs` params (already available in `SectionNavigator`).
 
 ### Acceptance criteria
 
-- [ ] Scroll progress indicator is visible and accurately reflects position through the full page
-- [ ] Mobile scroll distances are tuned (not excessive per section)
-- [ ] Side-by-side layouts stack on mobile
-- [ ] Animations maintain 60fps on desktop and mid-range mobile
-- [ ] `will-change: transform` applied to pinned containers
-- [ ] No unnecessary React re-renders during scroll (verified via React DevTools profiler)
-- [ ] ReactFlow diagram does not re-render during scroll-driven node reveal
+- [ ] Footer shows one indicator per section (10 total), in correct order
+- [ ] Active section indicator is visually distinct (highlighted color)
+- [ ] Clicking any indicator navigates to that section (beat 0)
+- [ ] Desktop (`md:+`): indicators show abbreviated text labels
+- [ ] Mobile (`< md`): indicators render as small dots (no text)
+- [ ] Visual grouping separates hero, workflow, skills cluster, and context-rot
+- [ ] Footer does not overflow on any viewport width
+- [ ] No layout shifts or jank during section transitions
+- [ ] Existing footer styling (fixed, blur, border) preserved
 
 ---
 
@@ -454,6 +489,40 @@ After all 7 skill nodes are revealed on the workflow diagram, add one more scrol
 - `src/components/WorkflowLayer.tsx` (or `WorkflowDiagram.tsx`) — modified (beat 8 CTA render area)
 - `src/components/DownloadButton.tsx` — new (anchor-wrapped shadcn Button with download icon)
 - `src/components/SkillsInstallDialog.tsx` — new (shadcn Dialog + Tabs with OS-specific install instructions)
+
+---
+
+## Phase 11: Keyboard arrow key navigation
+
+**User stories**: 11, 12 (accessibility; power-user navigation)
+
+### What to build
+
+Add `ArrowDown` / `ArrowUp` (and `PageDown` / `PageUp`) keyboard support to `SectionNavigator` so keyboard users can advance and retreat through sections and beats — exactly like the wheel and touch handlers already do.
+
+**Implementation**: add a single `keydown` listener inside `SectionNavigator`, alongside the existing `wheel` and `touch` listeners. Reuse the same `step()` function and `cooldownRef` — no new throttle logic needed.
+
+**Focus-aware guard (Option A)**: the handler must be a no-op when keyboard focus is inside an interactive element, so the terminal simulator and any future text inputs keep their native arrow-key behavior. Block navigation when `document.activeElement` is:
+
+- An `<input>` or `<textarea>`
+- An element with `[contenteditable]`
+- Any element that is a descendant of a `[data-scroll-capture]` container (covers the terminal simulator and any future scrollable widgets)
+
+When none of those conditions are true, call `e.preventDefault()` and `step()`.
+
+### Acceptance criteria
+
+- [ ] `ArrowDown` and `PageDown` advance one beat/section (same as scrolling down)
+- [ ] `ArrowUp` and `PageUp` retreat one beat/section (same as scrolling up)
+- [ ] Same `WHEEL_COOLDOWN_MS` throttle and `cooldownRef` shared with wheel/touch — rapid key presses don't skip multiple beats
+- [ ] Arrow keys are a no-op when `document.activeElement` is inside `[data-scroll-capture]` (terminal remains fully usable)
+- [ ] Arrow keys are a no-op when `document.activeElement` is `<input>`, `<textarea>`, or `[contenteditable]`
+- [ ] `e.preventDefault()` called only when navigation fires (not when focus is in an interactive element)
+- [ ] No changes to `sections.ts`, `advance()`, `retreat()`, `step()`, or any section component
+
+### Files changed
+
+- `src/components/VerticalScrollPage.tsx` — add `keydown` listener in `SectionNavigator`
 
 ---
 

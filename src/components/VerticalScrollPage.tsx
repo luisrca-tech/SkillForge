@@ -4,8 +4,12 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
   type SectionId,
+  SECTIONS,
+  SECTION_LABELS,
+  SECTION_GROUP,
   DEFAULT_SECTION,
   findSection,
+  sectionIndex,
   advance,
   retreat,
   beatToLocalProgress,
@@ -214,25 +218,44 @@ function SectionNavigator() {
         </AnimatePresence>
 
         <footer className="fixed bottom-0 inset-x-0 z-50 px-4 py-3 border-t border-neutral-800/50 bg-neutral-950/80 backdrop-blur-sm">
-          <nav className="flex items-center justify-center gap-6 text-xs text-neutral-600">
-            <button
-              onClick={() => setParams({ s: "hero", b: 0 })}
-              className="hover:text-neutral-300 transition-colors"
-            >
-              Topo
-            </button>
-            <button
-              onClick={() => setParams({ s: "workflow", b: 0 })}
-              className="hover:text-neutral-300 transition-colors"
-            >
-              Workflow
-            </button>
-            <button
-              onClick={() => setParams({ s: "context-rot", b: 0 })}
-              className="hover:text-neutral-300 transition-colors"
-            >
-              Context Rot
-            </button>
+          <nav className="flex items-center justify-center text-xs">
+            {SECTIONS.map((sec, i) => {
+              const activeIdx = sectionIndex(sectionId);
+              const isActive = sec.id === sectionId;
+              const isPast = i < activeIdx;
+              const prevGroup = i > 0 ? SECTION_GROUP[SECTIONS[i - 1].id] : SECTION_GROUP[sec.id];
+              const isGroupStart = SECTION_GROUP[sec.id] !== prevGroup;
+
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => setParams({ s: sec.id, b: 0 })}
+                  className={[
+                    "transition-colors",
+                    isGroupStart && i > 0 ? "ml-4 md:ml-5" : "ml-1.5 md:ml-2",
+                    isActive
+                      ? "text-emerald-400"
+                      : isPast
+                        ? "text-neutral-500 hover:text-neutral-300"
+                        : "text-neutral-700 hover:text-neutral-400",
+                  ].join(" ")}
+                  aria-current={isActive ? "step" : undefined}
+                  title={SECTION_LABELS[sec.id]}
+                >
+                  <span className="md:hidden flex items-center justify-center">
+                    <span
+                      className={[
+                        "block rounded-full transition-all",
+                        isActive ? "w-2.5 h-2.5 bg-emerald-400" : "w-1.5 h-1.5 bg-current",
+                      ].join(" ")}
+                    />
+                  </span>
+                  <span className="hidden md:inline">
+                    {SECTION_LABELS[sec.id]}
+                  </span>
+                </button>
+              );
+            })}
           </nav>
         </footer>
       </div>

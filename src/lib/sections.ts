@@ -28,6 +28,32 @@ export const SECTIONS: Section[] = [
   { id: "context-rot", beats: 3 },
 ];
 
+export const SECTION_LABELS: Record<SectionId, string> = {
+  hero: "Topo",
+  workflow: "Workflow",
+  "skill-grill-me": "Grill Me",
+  "skill-write-a-prd": "PRD",
+  "skill-prd-to-plan": "Plan",
+  "skill-plan-to-tracker": "Tracker",
+  "skill-do-work": "Do Work",
+  "skill-improve-codebase-architecture": "Arch",
+  "skill-handle-coderabbit": "CR",
+  "context-rot": "Context Rot",
+};
+
+export const SECTION_GROUP: Record<SectionId, number> = {
+  hero: 0,
+  workflow: 1,
+  "skill-grill-me": 2,
+  "skill-write-a-prd": 2,
+  "skill-prd-to-plan": 2,
+  "skill-plan-to-tracker": 2,
+  "skill-do-work": 2,
+  "skill-improve-codebase-architecture": 2,
+  "skill-handle-coderabbit": 2,
+  "context-rot": 3,
+};
+
 export const DEFAULT_SECTION: SectionId = "hero";
 
 export function findSection(id: string): Section | undefined {
