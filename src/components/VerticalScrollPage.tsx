@@ -83,7 +83,7 @@ function WorkflowLayer({
     <div className="h-dvh max-h-dvh w-full relative overflow-hidden">
       <WorkflowParticles contentLocal={contentLocal} warp={animating} />
       <motion.div
-        initial={isZoomingOut ? { scale: 3, filter: "blur(12px)", opacity: 1 } : false}
+        {...(isZoomingOut && { initial: { scale: 3, filter: "blur(12px)", opacity: 1 } })}
         animate={
           isZooming
             ? { scale: 3, filter: "blur(12px)", opacity: 0 }
