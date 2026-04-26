@@ -109,7 +109,7 @@ function SectionBody({
   if (sectionId === "hero") {
     return <StickyHero />;
   }
-  if (sectionId === "workflow") {
+  if (sectionId.startsWith("workflow-")) {
     return <WorkflowLayer contentLocal={contentLocal} />;
   }
   if (sectionId === "context-rot") {
@@ -255,11 +255,12 @@ function SectionNavigator() {
 
         <footer className="fixed bottom-0 inset-x-0 z-50 px-4 py-3 border-t border-neutral-800/50 bg-neutral-950/80 backdrop-blur-sm">
           <nav className="flex items-center justify-center text-xs">
-            {SECTIONS.map((sec, i) => {
+            {SECTIONS.filter((s) => !s.hidden).map((sec, i, visible) => {
               const activeIdx = sectionIndex(sectionId);
-              const isActive = sec.id === sectionId;
-              const isPast = i < activeIdx;
-              const prevGroup = i > 0 ? SECTION_GROUP[SECTIONS[i - 1].id] : SECTION_GROUP[sec.id];
+              const secIdx = sectionIndex(sec.id);
+              const isActive = sec.id === sectionId || (secIdx > 0 && SECTIONS[secIdx - 1]?.id === sectionId && SECTIONS[secIdx - 1]?.hidden);
+              const isPast = secIdx < activeIdx;
+              const prevGroup = i > 0 ? SECTION_GROUP[visible[i - 1].id] : SECTION_GROUP[sec.id];
               const isGroupStart = SECTION_GROUP[sec.id] !== prevGroup;
 
               return (

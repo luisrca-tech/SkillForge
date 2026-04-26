@@ -1,6 +1,12 @@
 export type SectionId =
   | "hero"
-  | "workflow"
+  | "workflow-1"
+  | "workflow-2"
+  | "workflow-3"
+  | "workflow-4"
+  | "workflow-5"
+  | "workflow-6"
+  | "workflow-7"
   | "context-rot"
   | "skill-grill-me"
   | "skill-write-a-prd"
@@ -13,24 +19,37 @@ export type SectionId =
 export type Section = {
   id: SectionId;
   beats: number;
+  hidden?: boolean;
 };
 
 export const SECTIONS: Section[] = [
   { id: "hero", beats: 1 },
-  { id: "workflow", beats: 8 },
+  { id: "workflow-1", beats: 1, hidden: true },
   { id: "skill-grill-me", beats: 1 },
+  { id: "workflow-2", beats: 1, hidden: true },
   { id: "skill-write-a-prd", beats: 1 },
+  { id: "workflow-3", beats: 1, hidden: true },
   { id: "skill-prd-to-plan", beats: 1 },
+  { id: "workflow-4", beats: 1, hidden: true },
   { id: "skill-plan-to-tracker", beats: 1 },
+  { id: "workflow-5", beats: 1, hidden: true },
   { id: "skill-do-work", beats: 1 },
+  { id: "workflow-6", beats: 1, hidden: true },
   { id: "skill-improve-codebase-architecture", beats: 1 },
+  { id: "workflow-7", beats: 1, hidden: true },
   { id: "skill-handle-coderabbit", beats: 1 },
   { id: "context-rot", beats: 3 },
 ];
 
 export const SECTION_LABELS: Record<SectionId, string> = {
   hero: "Topo",
-  workflow: "Workflow",
+  "workflow-1": "Workflow",
+  "workflow-2": "Workflow",
+  "workflow-3": "Workflow",
+  "workflow-4": "Workflow",
+  "workflow-5": "Workflow",
+  "workflow-6": "Workflow",
+  "workflow-7": "Workflow",
   "skill-grill-me": "Grill Me",
   "skill-write-a-prd": "PRD",
   "skill-prd-to-plan": "Plan",
@@ -43,13 +62,19 @@ export const SECTION_LABELS: Record<SectionId, string> = {
 
 export const SECTION_GROUP: Record<SectionId, number> = {
   hero: 0,
-  workflow: 1,
-  "skill-grill-me": 2,
+  "workflow-1": 1,
+  "skill-grill-me": 1,
+  "workflow-2": 2,
   "skill-write-a-prd": 2,
+  "workflow-3": 2,
   "skill-prd-to-plan": 2,
+  "workflow-4": 2,
   "skill-plan-to-tracker": 2,
+  "workflow-5": 2,
   "skill-do-work": 2,
+  "workflow-6": 2,
   "skill-improve-codebase-architecture": 2,
+  "workflow-7": 2,
   "skill-handle-coderabbit": 2,
   "context-rot": 3,
 };
