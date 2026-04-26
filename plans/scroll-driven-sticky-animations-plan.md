@@ -587,3 +587,69 @@ On short viewports, keep the existing compact spacing.
 - [ ] SSR-safe: defaults to short-viewport behavior when `window` is unavailable
 - [ ] 60fps maintained on both layout modes
 - [ ] Content does not overflow `100vh` on tall viewports (verified at 900px, 1080px, 1440px heights)
+
+---
+
+## Phase 12: Smooth Beam Reveal + Sequential Traveling Light
+
+**User stories**: 4, 5, 6, 7 (diagram polish; cinematic energy in the pipeline)
+
+### What to build
+
+Improve the workflow diagram's edge reveal to feel smooth and cinematic (matching the rest of the app), and add a sequential traveling light beam that visually communicates "energy flowing through the entire pipeline" after all nodes are revealed.
+
+#### 12A — Path-drawing edge reveal (replace opacity fade)
+
+The current edge reveal uses a flat `opacity 0.45s ease` CSS transition — the entire edge line appears at once, which feels abrupt compared to the app's Motion-driven animations elsewhere.
+
+Replace this with a **stroke-dasharray + stroke-dashoffset** "draw itself" animation: when an edge becomes visible, the line grows progressively from source to target along the Bezier path, as if being drawn in real-time.
+
+- Compute total path length via `SVGPathElement.getTotalLength()` (measured once on mount/path change).
+- Set `stroke-dasharray` to the total length and animate `stroke-dashoffset` from `totalLength → 0` using Motion's `animate` controls. The beam gradient reveal (existing `linearGradient` animation) starts only **after** the path has fully drawn itself — sequenced via `controls.start()` chaining or a `delay` equal to the draw duration.
+- Draw duration: **0.6s** per edge with easing `[0.16, 1, 0.3, 1]` (same custom ease used elsewhere in the component).
+- The stagger between edge and node reveal is preserved: edges still start drawing before their target node fades in (the existing `STAGGER_DELAY` timing in `WorkflowDiagram` stays the same). The difference is visual — the edge *draws* instead of *fading*.
+- On scroll reverse (shrinking), the edge "un-draws" (dashoffset animates from `0 → totalLength`) before fading out completely, matching the forward choreography in reverse.
+
+#### 12B — Sequential traveling beam after full reveal
+
+Once all 7 edges are visible (all nodes revealed), transition the beam animation from independent per-edge loops to a **single sequential pulse** that travels the entire workflow chain in order:
+
+- **Reveal mode** (during progressive reveal): Each edge runs its own beam gradient animation independently, starting when that edge finishes drawing. Same as today but sequenced after the draw animation from 12A.
+- **Sequential mode** (after full reveal): A coordinator detects when `visibleCount === 7` (all nodes revealed). It then orchestrates beams so that only one edge's beam is active at a time, firing in workflow order: `grill-me→write-a-prd` → `write-a-prd→prd-to-plan` → ... → `improve-arch→handle-coderabbit`, then loops from the beginning.
+- Coordination approach: each `AnimatedBeamEdge` receives a `sequenceIndex` (0–6) and a `sequentialMode` flag via `edge.data`. When `sequentialMode` is true, each edge calculates its active window within a shared cycle (e.g. total cycle = 7 × single-edge-duration). The beam gradient animates only during its window, stays invisible otherwise.
+- **Cycle timing**: each edge's beam traversal takes **0.8s**, with a **0.1s** overlap between consecutive edges (the next edge's beam starts slightly before the previous one finishes, creating a continuous "handoff" feel). Total cycle ≈ 7 × 0.7s = ~4.9s before looping.
+- The sequential beam should have a **longer gradient trail** (wider stop spread in the `linearGradient`) and a **brighter glow** (`stdDeviation: 6` instead of 4) to distinguish it from the reveal-phase beams.
+- The optional feedback edge (`plan-to-tracker → write-a-prd`) does **not** participate in the sequential cycle — it keeps its own independent cyan beam loop at a slower pace (current behavior).
+
+#### 12C — Reduced motion support
+
+- When `prefers-reduced-motion: reduce` is active: edges still draw themselves (stroke-dashoffset animation) but at **instant** speed (duration 0). No beam pulse in either mode. Base path renders at full opacity (existing behavior preserved).
+
+### Constraints
+
+- **Do not modify** node layout, node styling, node constants, description labels, or the `WorkflowDiagram` JSX structure — only edge rendering and animation orchestration change.
+- The progressive reveal logic (`computeVisibleCount`, `applyEdgeVisibility`, `applyNodeVisibility`, stagger delays) in `WorkflowDiagram` stays unchanged except for passing new data props (`sequenceIndex`, `sequentialMode`) to edges.
+- All animated properties remain GPU-composited (`transform`, `opacity`, `stroke-dashoffset`).
+- No new runtime dependencies — uses existing Motion controls and native SVG properties.
+
+### Acceptance criteria
+
+- [ ] Edge reveal uses stroke-dashoffset "draw" animation (line grows from source to target) instead of flat opacity fade
+- [ ] Draw duration is ~0.6s per edge with custom easing `[0.16, 1, 0.3, 1]`
+- [ ] Beam gradient starts only after the path finishes drawing (sequenced, not simultaneous)
+- [ ] Scroll reverse "un-draws" the edge (dashoffset returns to totalLength)
+- [ ] Existing stagger choreography preserved: edges draw before their target node fades in
+- [ ] After all 7 nodes are revealed, beams transition to sequential mode (one beam traveling the chain at a time)
+- [ ] Sequential beam travels edges in workflow order with ~0.1s overlap between consecutive edges
+- [ ] Sequential beam has a longer gradient trail and brighter glow than reveal-phase beams
+- [ ] Total sequential cycle is ~4.9s before looping
+- [ ] Optional feedback edge (cyan) keeps its own independent loop, not part of the sequential cycle
+- [ ] `prefers-reduced-motion: reduce` shows instant path draw and no beam pulse
+- [ ] No modifications to node layout, styling, constants, descriptions, or WorkflowDiagram JSX structure
+- [ ] 60fps maintained with all animations running simultaneously
+- [ ] `pointer-events` behavior unchanged (hidden edges remain non-interactive)
+
+### Files changed
+
+- `src/components/AnimatedBeamEdge.tsx` — modified (stroke-dashoffset draw animation, sequential mode support, brighter glow variant)
+- `src/components/WorkflowDiagram.tsx` — modified (pass `sequenceIndex` and `sequentialMode` via edge data; detect full-reveal state)

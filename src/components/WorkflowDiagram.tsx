@@ -279,6 +279,7 @@ function computeVisibleCount(p: number): number {
 const STAGGER_DELAY = 0.3;
 const NODE_FADE = "opacity 0.5s ease";
 const EDGE_FADE = "opacity 0.45s ease";
+const DRAW_SETTLE_MS = 700;
 
 function applyVisibility(
   nodes: Node[],
@@ -301,14 +302,28 @@ function applyVisibility(
   });
 }
 
+const MAIN_EDGE_IDS_ORDERED = SKILLS.slice(0, -1).map(
+  (s, i) => `e-${s.id}-${SKILLS[i + 1].id}`,
+);
+const EDGE_SEQUENCE_INDEX: Record<string, number> = {};
+MAIN_EDGE_IDS_ORDERED.forEach((id, i) => {
+  EDGE_SEQUENCE_INDEX[id] = i;
+});
+
 function applyEdgeVisibility(
   edges: Edge[],
   visibleIds: Set<string>,
   delaySec: number,
+  sequentialMode: boolean,
 ): Edge[] {
   const transition = delaySec > 0 ? `${EDGE_FADE} ${delaySec}s` : EDGE_FADE;
   return edges.map((edge) => ({
     ...edge,
+    data: {
+      ...edge.data,
+      sequentialMode,
+      sequenceIndex: EDGE_SEQUENCE_INDEX[edge.id],
+    },
     style: {
       ...edge.style,
       opacity:
@@ -355,15 +370,17 @@ export default function WorkflowDiagram({
 }) {
   const initialCount = computeVisibleCount(contentLocal.get());
   const initialVisible = new Set<string>(REVEAL_ORDER.slice(0, initialCount));
+  const initialSeqMode = initialCount >= TOTAL_WORKFLOW_BEATS;
 
   const [nodes, setNodes, onNodesChange] = useNodesState(
     applyVisibility(buildInitialNodes(), initialVisible, 0),
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState(
-    applyEdgeVisibility(buildEdges(), initialVisible, 0),
+    applyEdgeVisibility(buildEdges(), initialVisible, 0, initialSeqMode),
   );
 
   const prevCountRef = useRef(initialCount);
+  const seqTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useMotionValueEvent(contentLocal, "change", (p) => {
     const visibleCount = computeVisibleCount(p);
@@ -374,12 +391,34 @@ export default function WorkflowDiagram({
 
     const visibleIds = new Set<string>(REVEAL_ORDER.slice(0, visibleCount));
 
+    if (seqTimerRef.current) {
+      clearTimeout(seqTimerRef.current);
+      seqTimerRef.current = null;
+    }
+
+    const isFullReveal = visibleCount >= TOTAL_WORKFLOW_BEATS;
+
     if (growing) {
-      setEdges((prev) => applyEdgeVisibility(prev, visibleIds, 0));
+      setEdges((prev) => applyEdgeVisibility(prev, visibleIds, 0, false));
       setNodes((prev) => applyVisibility(prev, visibleIds, STAGGER_DELAY));
+
+      if (isFullReveal) {
+        seqTimerRef.current = setTimeout(() => {
+          setEdges((prev) =>
+            applyEdgeVisibility(
+              prev,
+              new Set<string>(REVEAL_ORDER),
+              0,
+              true,
+            ),
+          );
+        }, DRAW_SETTLE_MS);
+      }
     } else {
       setNodes((prev) => applyVisibility(prev, visibleIds, 0));
-      setEdges((prev) => applyEdgeVisibility(prev, visibleIds, STAGGER_DELAY));
+      setEdges((prev) =>
+        applyEdgeVisibility(prev, visibleIds, STAGGER_DELAY, false),
+      );
     }
   });
 
