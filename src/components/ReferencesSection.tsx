@@ -90,7 +90,6 @@ function ReferenceCard({
 
 export default function ReferencesSection() {
   const fullSpeed = useMotionValue(1);
-
   return (
     <div className="relative h-dvh max-h-dvh w-full flex flex-col items-center justify-center overflow-hidden">
       <WorkflowParticles contentLocal={fullSpeed} />
