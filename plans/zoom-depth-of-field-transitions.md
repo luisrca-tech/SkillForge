@@ -29,12 +29,12 @@ Wire a callback from `WorkflowDiagram` that reports the screen-space coordinates
 
 ### Acceptance criteria
 
-- [ ] `WorkflowDiagram` exposes an `onNodeReveal(nodeId, screenPosition)` callback
-- [ ] `transformOrigin` is set to the node's screen coordinates (responsive — works at any viewport size)
-- [ ] Zoom-in animates scale 1→3 + blur 0→12px over 0.5s with `cubicBezier(0.16, 1, 0.3, 1)`
-- [ ] Particles accelerate to 2.0x+ speed and grow in size during the zoom-in
-- [ ] Animation triggers only after the beam for that node completes its draw
-- [ ] No visual glitch at the transition boundary (no flash of unstyled content)
+- [x] `WorkflowDiagram` exposes an `onNodeReveal(nodeId, screenPosition)` callback
+- [x] `transformOrigin` is set to the node's screen coordinates (responsive — works at any viewport size)
+- [x] Zoom-in animates scale 1→3 + blur 0→12px over 0.5s with `cubicBezier(0.16, 1, 0.3, 1)`
+- [x] Particles accelerate to 2.0x+ speed and grow in size during the zoom-in
+- [x] Animation triggers only after the beam for that node completes its draw
+- [x] No visual glitch at the transition boundary (no flash of unstyled content)
 
 ---
 
@@ -48,12 +48,12 @@ Replace the current `whileInView` fade-up animations in `StickySkillSection` wit
 
 ### Acceptance criteria
 
-- [ ] Each content block (title, problem card, skill card, how-it-works, terminal) enters independently with stagger
-- [ ] Entry animation: scale 1.1→1, blur 4px→0, opacity 0→1, ~80ms stagger
-- [ ] Total stagger sequence completes within ~0.5s
-- [ ] Curve matches the zoom curve: `cubicBezier(0.16, 1, 0.3, 1)`
-- [ ] Animation plays once per section visit (respects existing `hasPlayed` / `markPlayed` pattern)
-- [ ] Content is fully interactive after animation completes
+- [x] Each content block (title, problem card, skill card, how-it-works, terminal) enters independently with stagger
+- [x] Entry animation: scale 1.1→1, blur 4px→0, opacity 0→1, ~80ms stagger
+- [x] Total stagger sequence completes within ~0.5s
+- [x] Curve matches the zoom curve: `cubicBezier(0.16, 1, 0.3, 1)`
+- [x] Animation plays once per section visit (respects existing `hasPlayed` / `markPlayed` pattern)
+- [x] Content is fully interactive after animation completes
 
 ---
 
@@ -67,12 +67,12 @@ When navigating from `skill-*` to the next `workflow-N+1`, the skill content fad
 
 ### Acceptance criteria
 
-- [ ] Skill section exit is a single uniform fade (~0.2s), no reverse stagger
-- [ ] Workflow section enters from zoomed state and animates out to normal over 0.5s
-- [ ] Zoom-out `transformOrigin` matches the last zoom-in origin (same node coordinates)
-- [ ] Particles decelerate and shrink back to default during zoom-out
-- [ ] Rapid navigation (user scrolls quickly through multiple sections) cancels in-progress animations gracefully
-- [ ] No layout shift or flicker between exit and entry
+- [x] Skill section exit is a single uniform fade (~0.2s), no reverse stagger
+- [x] Workflow section enters from zoomed state and animates out to normal over 0.5s
+- [x] Zoom-out `transformOrigin` matches the last zoom-in origin (same node coordinates)
+- [x] Particles decelerate and shrink back to default during zoom-out
+- [x] Rapid navigation (user scrolls quickly through multiple sections) cancels in-progress animations gracefully
+- [x] No layout shift or flicker between exit and entry
 
 ---
 

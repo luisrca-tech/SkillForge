@@ -46,17 +46,22 @@ const SKILL_PROPS = {
 const WHEEL_COOLDOWN_MS = 700;
 const TOUCH_THRESHOLD_PX = 50;
 const ZOOM_DURATION_MS = 500;
+const ZOOM_OUT_EXIT_MS = 200;
 const ZOOM_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 function WorkflowLayer({
   contentLocal,
   visibleCount,
   isZooming,
+  isZoomingOut,
+  nodePosition,
   onNodeReveal,
 }: {
   contentLocal: MotionValue<number>;
   visibleCount: number;
   isZooming: boolean;
+  isZoomingOut: boolean;
+  nodePosition: NodeScreenPosition | null;
   onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
 }) {
   const showCta = visibleCount === 7;
@@ -70,20 +75,22 @@ function WorkflowLayer({
     [onNodeReveal],
   );
 
-  const origin = nodePositionRef.current;
+  const origin = isZoomingOut ? nodePosition : nodePositionRef.current;
   const transformOrigin = origin ? `${origin.x}px ${origin.y}px` : "50% 50%";
+  const animating = isZooming || isZoomingOut;
 
   return (
     <div className="h-dvh max-h-dvh w-full relative overflow-hidden">
-      <WorkflowParticles contentLocal={contentLocal} warp={isZooming} />
+      <WorkflowParticles contentLocal={contentLocal} warp={animating} />
       <motion.div
+        initial={isZoomingOut ? { scale: 3, filter: "blur(12px)", opacity: 1 } : false}
         animate={
           isZooming
             ? { scale: 3, filter: "blur(12px)", opacity: 0 }
             : { scale: 1, filter: "blur(0px)", opacity: 1 }
         }
         transition={{ duration: ZOOM_DURATION_MS / 1000, ease: ZOOM_EASE }}
-        style={{ transformOrigin, willChange: isZooming ? "transform, filter, opacity" : "auto" }}
+        style={{ transformOrigin, willChange: animating ? "transform, filter, opacity" : "auto" }}
         className="absolute inset-0 flex flex-col items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4"
       >
         <div className="w-full max-w-7xl mx-auto shrink-0 relative">
@@ -121,12 +128,16 @@ function SectionBody({
   beat,
   totalBeats,
   isZooming,
+  isZoomingOut,
+  nodePosition,
   onNodeReveal,
 }: {
   sectionId: SectionId;
   beat: number;
   totalBeats: number;
   isZooming: boolean;
+  isZoomingOut: boolean;
+  nodePosition: NodeScreenPosition | null;
   onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
 }) {
   const contentLocal = useMotionValue(beatToLocalProgress(beat, totalBeats));
@@ -145,7 +156,7 @@ function SectionBody({
   }
   if (sectionId.startsWith("workflow-")) {
     const n = parseInt(sectionId.split("-")[1], 10);
-    return <WorkflowLayer contentLocal={contentLocal} visibleCount={n} isZooming={isZooming} onNodeReveal={onNodeReveal} />;
+    return <WorkflowLayer contentLocal={contentLocal} visibleCount={n} isZooming={isZooming} isZoomingOut={isZoomingOut} nodePosition={nodePosition} onNodeReveal={onNodeReveal} />;
   }
   if (sectionId === "context-rot") {
     return <StickyContextRot contentLocal={contentLocal} />;
@@ -172,11 +183,32 @@ function SectionNavigator() {
   const clampedBeat = Math.max(0, Math.min(beat, section.beats - 1));
 
   const [isZooming, setIsZooming] = useState(false);
+  const [isZoomingOut, setIsZoomingOut] = useState(false);
   const zoomTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const zoomOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const zoomOutRafRef = useRef<number | null>(null);
+  const nodePositionRef = useRef<NodeScreenPosition | null>(null);
+
+  const handleNodeReveal = useCallback(
+    (_nodeId: string, position: NodeScreenPosition) => {
+      nodePositionRef.current = position;
+    },
+    [],
+  );
 
   const step = useCallback(
     (direction: "forward" | "backward") => {
       if (isZooming) return;
+
+      if (zoomOutRafRef.current) {
+        cancelAnimationFrame(zoomOutRafRef.current);
+        zoomOutRafRef.current = null;
+      }
+      if (zoomOutTimerRef.current) {
+        clearTimeout(zoomOutTimerRef.current);
+        zoomOutTimerRef.current = null;
+        setIsZoomingOut(false);
+      }
 
       const state = { sectionId, beat: clampedBeat };
       const next = direction === "forward" ? advance(state) : retreat(state);
@@ -184,6 +216,8 @@ function SectionNavigator() {
 
       const leavingWorkflow = sectionId.startsWith("workflow-");
       const enteringSkill = next.sectionId.startsWith("skill-");
+      const leavingSkill = sectionId.startsWith("skill-");
+      const enteringWorkflow = next.sectionId.startsWith("workflow-");
 
       if (leavingWorkflow && enteringSkill && direction === "forward") {
         setIsZooming(true);
@@ -191,6 +225,16 @@ function SectionNavigator() {
           setParams({ s: next.sectionId, b: next.beat });
           setIsZooming(false);
         }, ZOOM_DURATION_MS);
+      } else if (leavingSkill && enteringWorkflow && direction === "forward") {
+        setIsZoomingOut(true);
+        zoomOutRafRef.current = requestAnimationFrame(() => {
+          zoomOutRafRef.current = null;
+          setParams({ s: next.sectionId, b: next.beat });
+          zoomOutTimerRef.current = setTimeout(() => {
+            zoomOutTimerRef.current = null;
+            setIsZoomingOut(false);
+          }, ZOOM_OUT_EXIT_MS + ZOOM_DURATION_MS);
+        });
       } else {
         setParams({ s: next.sectionId, b: next.beat });
       }
@@ -201,6 +245,8 @@ function SectionNavigator() {
   useEffect(() => {
     return () => {
       if (zoomTimerRef.current) clearTimeout(zoomTimerRef.current);
+      if (zoomOutTimerRef.current) clearTimeout(zoomOutTimerRef.current);
+      if (zoomOutRafRef.current) cancelAnimationFrame(zoomOutRafRef.current);
     };
   }, []);
 
@@ -299,10 +345,10 @@ function SectionNavigator() {
         <AnimatePresence mode="wait">
           <motion.div
             key={sectionId}
-            initial={{ opacity: 0, y: 40 }}
+            initial={isZoomingOut ? { opacity: 1 } : { opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
+            exit={isZoomingOut ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
+            transition={{ duration: isZoomingOut ? ZOOM_OUT_EXIT_MS / 1000 : 0.5, ease: "easeInOut" }}
             className="w-full h-dvh"
           >
             <SectionBody
@@ -310,6 +356,9 @@ function SectionNavigator() {
               beat={clampedBeat}
               totalBeats={section.beats}
               isZooming={isZooming}
+              isZoomingOut={isZoomingOut}
+              nodePosition={nodePositionRef.current}
+              onNodeReveal={handleNodeReveal}
             />
           </motion.div>
         </AnimatePresence>

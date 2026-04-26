@@ -3,6 +3,22 @@ import { motion, useTransform, type MotionValue } from "motion/react";
 import TerminalSimulator from "./TerminalSimulator";
 import { useAnimationObserver } from "../context/AnimationObserverContext";
 
+const RACK_FOCUS_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+function rackFocusProps(index: number, skip: boolean) {
+  return {
+    initial: skip
+      ? (false as const)
+      : { scale: 1.1, filter: "blur(4px)", opacity: 0 },
+    animate: { scale: 1, filter: "blur(0px)", opacity: 1 },
+    transition: {
+      duration: 0.5,
+      ease: RACK_FOCUS_EASE,
+      delay: index * 0.08,
+    },
+  };
+}
+
 interface TerminalLine {
   type: "prompt" | "response" | "divider";
   text: string;
@@ -67,35 +83,38 @@ export default function StickySkillSection({
 
   return (
     <div className="h-dvh max-h-dvh w-full flex flex-col min-h-0 overflow-hidden will-change-transform px-4 sm:px-6 pt-4 sm:pt-5 pb-14 pointer-events-none">
-      <motion.div
-        style={{ opacity: titleLock }}
-        className="shrink-0 flex items-center gap-3 mb-2 sm:mb-3 flex-wrap pointer-events-auto"
-      >
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-          <span
-            className={`${accentText} font-mono text-xl sm:text-2xl md:text-3xl`}
-          >
-            /{name}
-          </span>
-        </h2>
-        {variant === "optional" && (
-          <span className="text-xs uppercase tracking-wider text-cyan-400/70 border border-cyan-400/30 rounded-full px-3 py-1">
-            opcional
-          </span>
-        )}
+      <motion.div {...rackFocusProps(0, skipAnimation)} className="shrink-0">
+        <motion.div
+          style={{ opacity: titleLock }}
+          className="flex items-center gap-3 mb-2 sm:mb-3 flex-wrap pointer-events-auto"
+        >
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+            <span
+              className={`${accentText} font-mono text-xl sm:text-2xl md:text-3xl`}
+            >
+              /{name}
+            </span>
+          </h2>
+          {variant === "optional" && (
+            <span className="text-xs uppercase tracking-wider text-cyan-400/70 border border-cyan-400/30 rounded-full px-3 py-1">
+              opcional
+            </span>
+          )}
+        </motion.div>
       </motion.div>
 
       <div className="flex-1 min-h-0 flex flex-col w-full max-w-5xl mx-auto pointer-events-auto gap-3 sm:gap-4">
         <div className="shrink-0 grid md:grid-cols-2 gap-3 sm:gap-4">
-          <div className="bg-red-950/20 border border-red-900/30 rounded-xl min-h-0 overflow-hidden px-3 sm:px-4 py-2 sm:py-2.5">
+          <motion.div {...rackFocusProps(1, skipAnimation)} className="bg-red-950/20 border border-red-900/30 rounded-xl min-h-0 overflow-hidden px-3 sm:px-4 py-2 sm:py-2.5">
             <h3 className="text-sm sm:text-base font-semibold text-red-400 mb-0.5 sm:mb-1">
               {problem.title}
             </h3>
             <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed">
               {problem.description}
             </p>
-          </div>
-          <div
+          </motion.div>
+          <motion.div
+            {...rackFocusProps(2, skipAnimation)}
             className={`${accentBg} border ${accentBorder} rounded-xl min-h-0 overflow-hidden px-3 sm:px-4 py-2 sm:py-2.5`}
           >
             <h3
@@ -106,10 +125,10 @@ export default function StickySkillSection({
             <p className="text-neutral-300 text-xs sm:text-sm leading-snug sm:leading-relaxed">
               {skill.description}
             </p>
-          </div>
+          </motion.div>
         </div>
 
-        <div className="shrink-0 ml-auto md:w-1/2">
+        <motion.div {...rackFocusProps(3, skipAnimation)} className="shrink-0 ml-auto md:w-1/2">
           <h3 className="text-sm sm:text-base font-semibold text-neutral-200 mb-1.5 sm:mb-2">
             {howItWorks.title}
           </h3>
@@ -125,14 +144,16 @@ export default function StickySkillSection({
               </li>
             ))}
           </ol>
-        </div>
+        </motion.div>
 
-        <h3 className="text-sm sm:text-base font-semibold text-neutral-200 shrink-0">
-          Exemplo prático
-        </h3>
-        <div className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
-          <TerminalSimulator scenarios={scenarios} title={`/${name}`} skipAnimation={skipAnimation} />
-        </div>
+        <motion.div {...rackFocusProps(4, skipAnimation)} className="flex-1 min-h-0 flex flex-col gap-3 sm:gap-4">
+          <h3 className="text-sm sm:text-base font-semibold text-neutral-200 shrink-0">
+            Exemplo prático
+          </h3>
+          <div className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
+            <TerminalSimulator scenarios={scenarios} title={`/${name}`} skipAnimation={skipAnimation} />
+          </div>
+        </motion.div>
       </div>
     </div>
   );
