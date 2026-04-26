@@ -17,7 +17,7 @@ type BeamEdgeData = {
 
 const BASE_OPACITY = 0.4;
 const BEAM_STROKE_WIDTH = 4;
-const DRAW_DURATION = 0.6;
+const DRAW_DURATION = 0.4;
 const DRAW_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const REVEAL_BEAM_DURATION = 0.5;
