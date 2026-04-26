@@ -15,6 +15,7 @@ import {
   beatToLocalProgress,
 } from "../lib/sections";
 import { SectionNavProvider } from "../context/SectionNavContext";
+import { AnimationObserverProvider } from "../context/AnimationObserverContext";
 import {
   grillMe,
   writeAPrd,
@@ -115,7 +116,7 @@ function SectionBody({
 
   const data = SKILL_PROPS[sectionId as keyof typeof SKILL_PROPS];
   if (!data) return null;
-  return <StickySkillSection {...data} contentLocal={contentLocal} />;
+  return <StickySkillSection {...data} sectionId={sectionId} contentLocal={contentLocal} />;
 }
 
 function SectionNavigator() {
@@ -299,7 +300,9 @@ function SectionNavigator() {
 export default function VerticalScrollPage() {
   return (
     <NuqsAdapter>
-      <SectionNavigator />
+      <AnimationObserverProvider>
+        <SectionNavigator />
+      </AnimationObserverProvider>
     </NuqsAdapter>
   );
 }

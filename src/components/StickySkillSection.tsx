@@ -1,5 +1,8 @@
+import { useEffect } from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
 import TerminalSimulator from "./TerminalSimulator";
+import { useAnimationObserver } from "../context/AnimationObserverContext";
+import { useReducedMotion } from "./AnimatedBeamEdge";
 
 interface TerminalLine {
   type: "prompt" | "response" | "divider";
@@ -14,6 +17,7 @@ interface Scenario {
 
 export interface StickySkillSectionProps {
   name: string;
+  sectionId: string;
   problem: {
     title: string;
     description: string;
@@ -33,6 +37,7 @@ export interface StickySkillSectionProps {
 
 export default function StickySkillSection({
   name,
+  sectionId,
   problem,
   skill,
   howItWorks,
@@ -40,6 +45,15 @@ export default function StickySkillSection({
   variant = "default",
   contentLocal,
 }: StickySkillSectionProps) {
+  const { hasPlayed, markPlayed } = useAnimationObserver();
+  const reducedMotion = useReducedMotion();
+  const skipAnimation = hasPlayed(sectionId) || reducedMotion;
+
+  useEffect(() => {
+    if (!skipAnimation) {
+      markPlayed(sectionId);
+    }
+  }, [sectionId, skipAnimation, markPlayed]);
   const accentText =
     variant === "optional" ? "text-cyan-400" : "text-emerald-400";
   const accentBg =
@@ -121,7 +135,7 @@ export default function StickySkillSection({
           Exemplo prático
         </h3>
         <div className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
-          <TerminalSimulator scenarios={scenarios} title={`/${name}`} />
+          <TerminalSimulator scenarios={scenarios} title={`/${name}`} skipAnimation={skipAnimation} />
         </div>
       </div>
     </div>

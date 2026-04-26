@@ -653,3 +653,58 @@ Once all 7 edges are visible (all nodes revealed), transition the beam animation
 
 - `src/components/AnimatedBeamEdge.tsx` — modified (stroke-dashoffset draw animation, sequential mode support, brighter glow variant)
 - `src/components/WorkflowDiagram.tsx` — modified (pass `sequenceIndex` and `sequentialMode` via edge data; detect full-reveal state)
+
+---
+
+## Phase 13: Animation Observer — session-gated terminal playback
+
+**User stories**: 9, 10 (animation polish; prevent repetitive re-animation on revisited sections)
+
+### What to build
+
+Add a session-level observer that tracks which skill sections the user has already visited. On first visit, the terminal simulator plays its typewriter animation normally. On subsequent visits (within the same session), the terminal renders all lines instantly — no re-animation. A page refresh resets everything.
+
+#### 13A — Session animation store (React context)
+
+- Create an `AnimationObserverContext` that holds a `Set<string>` of section IDs whose terminal animation has already played.
+- Expose two functions: `hasPlayed(sectionId)` and `markPlayed(sectionId)`.
+- The store lives in React state only (no `localStorage`, no `sessionStorage`). A page refresh naturally resets the `Set` to empty.
+- Mount the provider at the app root (inside `VerticalScrollPage` or alongside `SectionNavProvider`).
+
+#### 13B — Terminal playback gating
+
+- Add a `skipAnimation` prop to `TerminalSimulator`. When `true`, the component renders all scenario lines immediately on mount (no typewriter effect, no `requestAnimationFrame` loop). The final state looks identical to what the user would see after the animation completes — all lines visible, blinking cursor at the bottom.
+- When `false` (default), behavior is unchanged — the existing typewriter animation plays.
+- Tab switching within the terminal should also respect `skipAnimation`: if `skipAnimation` is `true`, switching tabs shows all lines instantly for every tab.
+
+#### 13C — Observer wiring in StickySkillSection
+
+- `StickySkillSection` reads the animation store via `hasPlayed(sectionId)`.
+- On first render where the section becomes active (the user navigates to this section), if `hasPlayed` returns `false`:
+  - Pass `skipAnimation={false}` to `TerminalSimulator` (animation plays normally).
+  - Call `markPlayed(sectionId)` so subsequent visits skip the animation.
+- On subsequent renders where `hasPlayed` returns `true`:
+  - Pass `skipAnimation={true}` to `TerminalSimulator` (all lines render instantly).
+- The section ID (e.g. `"skill-grill-me"`) is passed as a new prop to `StickySkillSection`.
+
+### Constraints
+
+- No changes to `sections.ts`, `VerticalScrollPage.tsx` navigation logic, or the beat/substitutive system.
+- No persistent storage — session memory only (React state).
+- The terminal's visual end-state (all lines + blinking cursor) must be identical whether the animation played or was skipped.
+- `prefers-reduced-motion` users should also skip animation (instant render), and their sections should be marked as played to stay consistent.
+
+### Acceptance criteria
+
+- [ ] `AnimationObserverContext` provides `hasPlayed(id)` and `markPlayed(id)` functions
+- [ ] Provider is mounted at the app root level
+- [ ] `TerminalSimulator` accepts `skipAnimation` prop
+- [ ] When `skipAnimation={true}`, all lines render instantly on mount (no typewriter, no rAF loop)
+- [ ] When `skipAnimation={false}`, typewriter animation plays as before
+- [ ] Tab switching with `skipAnimation={true}` shows all lines instantly for every tab
+- [ ] First visit to a skill section plays the animation and marks the section as played
+- [ ] Subsequent visits to the same skill section skip the animation (instant render)
+- [ ] Page refresh resets all played state (animations play again on first visit)
+- [ ] Terminal end-state is visually identical whether animated or skipped (all lines + blinking cursor)
+- [ ] `prefers-reduced-motion` users get instant render and sections are marked as played
+- [ ] No changes to `sections.ts` or navigation logic
