@@ -2,8 +2,8 @@ import {
   useCallback,
   useLayoutEffect,
   useEffect,
+  useMemo,
   useRef,
-  useSyncExternalStore,
   type MutableRefObject,
 } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
@@ -274,42 +274,20 @@ function applyEdgeVisibility(
 /**
  * maxZoom: 1 keeps handle centers and bezier path ends aligned in screen space; repeated
  * fitView with maxZoom 1.2 caused fractional zoom and visible gaps at handles after nav.
+ *
+ * React Flow defaults to minZoom 0.5 on the pan/zoom instance — without lowering it, fitView
+ * cannot zoom out enough on narrow panes and nodes clip horizontally.
  */
-const WORKFLOW_FIT = {
-  padding: 0.2,
-  minZoom: 0.1,
-  maxZoom: 1,
-  duration: 0,
-} as const;
+const REACT_FLOW_ZOOM = { minZoom: 0.05, maxZoom: 1 } as const;
 
-/** Narrow viewports: floor zoom so nodes stay readable; user pans if graph exceeds pane. */
-const WORKFLOW_FIT_MOBILE = {
-  padding: 0.14,
-  minZoom: 0.42,
-  maxZoom: 1,
-  duration: 0,
-} as const;
-
-const MOBILE_FIT_MQ = "(max-width: 639px)";
-
-function subscribeMobileFit(callback: () => void) {
-  const mq = window.matchMedia(MOBILE_FIT_MQ);
-  mq.addEventListener("change", callback);
-  return () => mq.removeEventListener("change", callback);
-}
-
-function getWorkflowFitSnapshot() {
-  return window.matchMedia(MOBILE_FIT_MQ).matches
-    ? WORKFLOW_FIT_MOBILE
-    : WORKFLOW_FIT;
-}
-
-function useWorkflowFitOptions() {
-  return useSyncExternalStore(
-    subscribeMobileFit,
-    getWorkflowFitSnapshot,
-    () => WORKFLOW_FIT,
-  );
+function getWorkflowFitOptions(paneWidth: number) {
+  const narrow = paneWidth > 0 && paneWidth < 640;
+  return {
+    padding: narrow ? 0.1 : 0.2,
+    minZoom: REACT_FLOW_ZOOM.minZoom,
+    maxZoom: REACT_FLOW_ZOOM.maxZoom,
+    duration: 0,
+  } as const;
 }
 
 /**
@@ -331,7 +309,7 @@ function WorkflowFitWhenPaneSized({ isZoomingOut }: { isZoomingOut?: boolean }) 
   const nodesReady = useNodesInitialized({ includeHiddenNodes: true });
   const isZoomingOutRef = useRef(!!isZoomingOut);
   isZoomingOutRef.current = !!isZoomingOut;
-  const workflowFit = useWorkflowFitOptions();
+  const workflowFit = useMemo(() => getWorkflowFitOptions(w), [w]);
 
   useLayoutEffect(() => {
     if (w <= 0 || h <= 0 || isZoomingOutRef.current || !nodesReady) return;
@@ -399,7 +377,8 @@ function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
   const pendingFitAfterZoomOut = useRef(false);
   isZoomingOutRef.current = isZoomingOut;
   const nodesInitialized = useNodesInitialized({ includeHiddenNodes: true });
-  const workflowFit = useWorkflowFitOptions();
+  const w = useStore((s) => s.width);
+  const workflowFit = useMemo(() => getWorkflowFitOptions(w), [w]);
 
   const remeasureAll = useCallback(() => {
     const ids = getNodes().map((n) => n.id);
@@ -560,6 +539,8 @@ export default function WorkflowDiagram({
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView={false}
+          minZoom={REACT_FLOW_ZOOM.minZoom}
+          maxZoom={REACT_FLOW_ZOOM.maxZoom}
           defaultViewport={lastViewport ?? { x: 0, y: 0, zoom: 1 }}
           onMoveEnd={() => {
             moveEndRemeasureRef.current();
