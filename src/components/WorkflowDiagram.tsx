@@ -26,6 +26,8 @@ import {
 import AnimatedBeamEdge from "./AnimatedBeamEdge";
 import "@xyflow/react/dist/style.css";
 
+let lastViewport: { x: number; y: number; zoom: number } | null = null;
+
 const SKILLS = [
   { id: "grill-me", label: "/grill-me", anchor: "#skill-grill-me" },
   {
@@ -279,8 +281,6 @@ const WORKFLOW_FIT = {
   duration: 0,
 } as const;
 
-const ZOOM_OUT_FIT_SUPPRESS_MS = 400;
-
 /**
  * Single fit is applied in onInit (per mount). The previous runLayoutFit "else" branch
  * refit on every isZoomingOut transition and stacked with onInit, producing subpixel
@@ -295,7 +295,7 @@ const ZOOM_OUT_FIT_SUPPRESS_MS = 400;
 function WorkflowFitWhenPaneSized({ isZoomingOut }: { isZoomingOut?: boolean }) {
   const w = useStore((s) => s.width);
   const h = useStore((s) => s.height);
-  const { fitView, getNodes } = useReactFlow();
+  const { fitView, getNodes, getViewport } = useReactFlow();
   const updateNodeInternals = useUpdateNodeInternals();
   const nodesReady = useNodesInitialized({ includeHiddenNodes: true });
   const isZoomingOutRef = useRef(!!isZoomingOut);
@@ -307,18 +307,20 @@ function WorkflowFitWhenPaneSized({ isZoomingOut }: { isZoomingOut?: boolean }) 
     let cancelled = false;
     void fitView({ ...WORKFLOW_FIT }).then(() => {
       if (cancelled || isZoomingOutRef.current) return;
+      lastViewport = getViewport();
       if (ids.length) updateNodeInternals(ids);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (cancelled || isZoomingOutRef.current) return;
           if (ids.length) updateNodeInternals(ids);
+          lastViewport = getViewport();
         });
       });
     });
     return () => {
       cancelled = true;
     };
-  }, [w, h, nodesReady, isZoomingOut, fitView, getNodes, updateNodeInternals]);
+  }, [w, h, nodesReady, isZoomingOut, fitView, getNodes, getViewport, updateNodeInternals]);
 
   return null;
 }
@@ -347,88 +349,42 @@ function WorkflowMoveEndRemeasureBridge({
 }
 
 function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
-  const { fitView, getNodes } = useReactFlow();
+  const { fitView, getNodes, getViewport } = useReactFlow();
   const updateNodeInternals = useUpdateNodeInternals();
   const nodeCount = useStore((s) => s.nodes.length);
   const prevIsZoomingOut = useRef(isZoomingOut);
-  const afterZoomOutFitAt = useRef(0);
   const isZoomingOutRef = useRef(isZoomingOut);
   const pendingFitAfterZoomOut = useRef(false);
   isZoomingOutRef.current = isZoomingOut;
   const nodesInitialized = useNodesInitialized({ includeHiddenNodes: true });
-
-  const MAX_POM_WAIT_FRAMES = 50;
-  const SCALED_PARENT_MIN_WIDTH = 2000;
 
   const remeasureAll = useCallback(() => {
     const ids = getNodes().map((n) => n.id);
     if (ids.length) updateNodeInternals(ids);
   }, [getNodes, updateNodeInternals]);
 
-  const recoverEdgesAfterZoomOut = useCallback(() => {
-    const waitUnscaled = (frame: number) => {
-      if (isZoomingOutRef.current) return;
-      const el = document.getElementById("workflow-diagram");
-      const w = el?.getBoundingClientRect().width ?? 0;
-      if (w > SCALED_PARENT_MIN_WIDTH && frame < MAX_POM_WAIT_FRAMES) {
-        requestAnimationFrame(() => waitUnscaled(frame + 1));
-        return;
-      }
-      remeasureAll();
-      requestAnimationFrame(() => {
-        if (isZoomingOutRef.current) return;
-        remeasureAll();
-        requestAnimationFrame(() => {
-          if (isZoomingOutRef.current) return;
-          void fitView({ ...WORKFLOW_FIT }).then(() => {
-            if (isZoomingOutRef.current) return;
-            remeasureAll();
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                if (isZoomingOutRef.current) return;
-                remeasureAll();
-              });
-            });
-          });
-        });
-      });
-    };
-    requestAnimationFrame(() => waitUnscaled(0));
-  }, [fitView, remeasureAll]);
-
-  const runLayoutFit = useCallback(() => {
-    if (nodeCount < 1) {
+  useLayoutEffect(() => {
+    if (nodeCount < 1 || isZoomingOut) {
       prevIsZoomingOut.current = isZoomingOut;
       return;
     }
-    if (isZoomingOut) {
-      prevIsZoomingOut.current = isZoomingOut;
-      return;
-    }
-
-    const zoomOutJustEnded = prevIsZoomingOut.current === true;
-    if (zoomOutJustEnded) {
-      afterZoomOutFitAt.current = performance.now() + ZOOM_OUT_FIT_SUPPRESS_MS;
+    if (prevIsZoomingOut.current === true) {
       pendingFitAfterZoomOut.current = true;
     }
     prevIsZoomingOut.current = isZoomingOut;
   }, [nodeCount, isZoomingOut]);
 
-  useLayoutEffect(() => {
-    runLayoutFit();
-  }, [nodeCount, runLayoutFit, isZoomingOut]);
-
   useEffect(() => {
-    if (isZoomingOut) return;
-    if (!pendingFitAfterZoomOut.current) return;
-    if (!nodesInitialized) {
-      return;
-    }
+    if (isZoomingOut || !pendingFitAfterZoomOut.current || !nodesInitialized) return;
     pendingFitAfterZoomOut.current = false;
-    afterZoomOutFitAt.current = performance.now() + ZOOM_OUT_FIT_SUPPRESS_MS;
     if (isZoomingOutRef.current) return;
-    recoverEdgesAfterZoomOut();
-  }, [isZoomingOut, nodesInitialized, recoverEdgesAfterZoomOut]);
+    remeasureAll();
+    void fitView({ ...WORKFLOW_FIT }).then(() => {
+      if (isZoomingOutRef.current) return;
+      lastViewport = getViewport();
+      remeasureAll();
+    });
+  }, [isZoomingOut, nodesInitialized, remeasureAll, fitView, getViewport]);
 
   return null;
 }
@@ -554,7 +510,7 @@ export default function WorkflowDiagram({
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView={false}
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+          defaultViewport={lastViewport ?? { x: 0, y: 0, zoom: 1 }}
           onMoveEnd={() => {
             moveEndRemeasureRef.current();
           }}
