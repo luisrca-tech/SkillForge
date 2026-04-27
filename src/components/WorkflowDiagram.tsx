@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useEffect, useRef } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
 import { useAnimationObserver } from "../context/AnimationObserverContext";
 import {
@@ -14,7 +14,6 @@ import {
   useEdgesState,
   useReactFlow,
   useStore,
-  useUpdateNodeInternals,
 } from "@xyflow/react";
 import AnimatedBeamEdge from "./AnimatedBeamEdge";
 import "@xyflow/react/dist/style.css";
@@ -253,29 +252,10 @@ function applyEdgeVisibility(
 const FIT: { padding: number; maxZoom: number } = { padding: 0.2, maxZoom: 1.2 };
 
 /** Re-fits the graph after layout / resize so the viewport centers on the full bounding box (staggered node mount used to run fitView on an empty graph). */
-function WorkflowFitView({
-  isZoomingOut,
-  onEdgesReady,
-}: {
-  isZoomingOut?: boolean;
-  onEdgesReady?: () => void;
-}) {
+function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
   const { fitView } = useReactFlow();
-  const updateNodeInternals = useUpdateNodeInternals();
   const nodeCount = useStore((s) => s.nodes.length);
   const edgeCount = useStore((s) => s.edges.length);
-  const allNodeIds = useStore((s) => s.nodes.map((n) => n.id));
-  const prevIsZoomingOut = useRef(isZoomingOut);
-
-  useEffect(() => {
-    const wasZoomingOut = prevIsZoomingOut.current;
-    prevIsZoomingOut.current = isZoomingOut;
-    if (!wasZoomingOut || isZoomingOut) return;
-    // Call updateNodeInternals immediately (scale=1, viewport correct from onInit),
-    // then show edges in the next frame — total delay ~16ms after animation completes.
-    updateNodeInternals(allNodeIds);
-    requestAnimationFrame(() => onEdgesReady?.());
-  }, [isZoomingOut, updateNodeInternals, allNodeIds, onEdgesReady]);
 
   const runFit = useCallback(() => {
     if (nodeCount < 1 || isZoomingOut) return;
@@ -346,15 +326,12 @@ export default function WorkflowDiagram({
     ? new Set<string>(REVEAL_ORDER.slice(0, count))
     : new Set<string>(REVEAL_ORDER.slice(0, count - 1));
 
-  const [edgesReady, setEdgesReady] = useState(!isZoomingOut);
-
   const [nodes, setNodes, onNodesChange] = useNodesState(
     applyVisibility(buildInitialNodes(), instantIds, 0),
   );
 
-  const initialEdgeIds = isZoomingOut ? new Set<string>() : instantIds;
   const [edges, setEdges, onEdgesChange] = useEdgesState(
-    applyEdgeVisibility(buildEdges(), initialEdgeIds, 0, alreadyPlayed && full).map(
+    applyEdgeVisibility(buildEdges(), instantIds, 0, alreadyPlayed && full).map(
       (edge): Edge => ({
         ...edge,
         data: {
@@ -366,47 +343,6 @@ export default function WorkflowDiagram({
   );
 
   const seqTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const edgesReadyRef = useRef(edgesReady);
-  edgesReadyRef.current = edgesReady;
-
-  useEffect(() => {
-    if (isZoomingOut) {
-      setEdgesReady(false);
-    }
-  }, [isZoomingOut]);
-
-  useEffect(() => {
-    if (edgesReady) return;
-    setEdges((prev) =>
-      prev.map((e) => ({ ...e, style: { ...e.style, opacity: 0, transition: "none" } })),
-    );
-  }, [edgesReady, setEdges]);
-
-  const handleEdgesReady = useCallback(() => {
-    setEdgesReady(true);
-    const allVisible = new Set<string>(REVEAL_ORDER.slice(0, count));
-    const prevVisible = new Set<string>(REVEAL_ORDER.slice(0, count - 1));
-    setEdges((prev) =>
-      prev.map((edge) => {
-        const isVisible = allVisible.has(edge.source) && allVisible.has(edge.target);
-        const wasAlreadyVisible = prevVisible.has(edge.source) && prevVisible.has(edge.target);
-        return {
-          ...edge,
-          data: {
-            ...edge.data,
-            sequentialMode: full,
-            sequenceIndex: EDGE_SEQUENCE_INDEX[edge.id],
-            skipDraw: alreadyPlayed || wasAlreadyVisible,
-          },
-          style: {
-            ...edge.style,
-            opacity: isVisible ? 1 : 0,
-            transition: alreadyPlayed || wasAlreadyVisible || !isVisible ? "none" : EDGE_FADE,
-          },
-        };
-      }),
-    );
-  }, [count, full, alreadyPlayed, setEdges]);
 
   useEffect(() => {
     if (alreadyPlayed) return;
@@ -414,16 +350,14 @@ export default function WorkflowDiagram({
     const allVisible = new Set<string>(REVEAL_ORDER.slice(0, count));
     const frame = requestAnimationFrame(() => {
       setNodes((prev) => applyVisibility(prev, allVisible, STAGGER_DELAY));
-      if (edgesReadyRef.current) {
-        setEdges((prev) => applyEdgeVisibility(prev, allVisible, STAGGER_DELAY, false));
+      setEdges((prev) => applyEdgeVisibility(prev, allVisible, STAGGER_DELAY, false));
 
-        if (full) {
-          seqTimerRef.current = setTimeout(() => {
-            setEdges((prev) =>
-              applyEdgeVisibility(prev, allVisible, 0, true),
-            );
-          }, DRAW_SETTLE_MS);
-        }
+      if (full) {
+        seqTimerRef.current = setTimeout(() => {
+          setEdges((prev) =>
+            applyEdgeVisibility(prev, allVisible, 0, true),
+          );
+        }, DRAW_SETTLE_MS);
       }
       markPlayed(diagramKey);
     });
@@ -480,7 +414,7 @@ export default function WorkflowDiagram({
           elementsSelectable={false}
           className="!h-full !w-full !bg-transparent"
         >
-          <WorkflowFitView isZoomingOut={isZoomingOut} onEdgesReady={handleEdgesReady} />
+          <WorkflowFitView isZoomingOut={isZoomingOut} />
           <NodePositionReporter nodeId={newestId} onNodeReveal={onNodeReveal} />
         </ReactFlow>
       </div>
