@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useEffect,
   useRef,
+  useSyncExternalStore,
   type MutableRefObject,
 } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
@@ -170,7 +171,7 @@ function SkillNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`relative box-border w-full min-w-0 rounded-lg font-mono text-[13px] leading-snug cursor-default transition-all duration-200 text-left
+      className={`relative box-border w-full min-w-0 rounded-lg font-mono text-[15px] leading-snug md:text-[13px] cursor-default transition-all duration-200 text-left
         ${optional
           ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40"
           : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40"
@@ -182,10 +183,10 @@ function SkillNode({ data }: NodeProps) {
       {h.has("top") && (
         <Handle type="target" position={Position.Top} id="top" className={handleClass} />
       )}
-      <div className="px-3.5 py-2.5 min-w-0">
+      <div className="min-w-0 px-4 py-3 md:px-3.5 md:py-2.5">
         <span className="block break-words pr-0.5 text-pretty">{label}</span>
         {optional && (
-          <span className="mt-0.5 inline-block text-[10px] uppercase tracking-wider text-cyan-400/60">
+          <span className="mt-0.5 inline-block text-[11px] uppercase tracking-wider text-cyan-400/60 md:text-[10px]">
             opcional
           </span>
         )}
@@ -281,6 +282,36 @@ const WORKFLOW_FIT = {
   duration: 0,
 } as const;
 
+/** Narrow viewports: floor zoom so nodes stay readable; user pans if graph exceeds pane. */
+const WORKFLOW_FIT_MOBILE = {
+  padding: 0.14,
+  minZoom: 0.42,
+  maxZoom: 1,
+  duration: 0,
+} as const;
+
+const MOBILE_FIT_MQ = "(max-width: 639px)";
+
+function subscribeMobileFit(callback: () => void) {
+  const mq = window.matchMedia(MOBILE_FIT_MQ);
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getWorkflowFitSnapshot() {
+  return window.matchMedia(MOBILE_FIT_MQ).matches
+    ? WORKFLOW_FIT_MOBILE
+    : WORKFLOW_FIT;
+}
+
+function useWorkflowFitOptions() {
+  return useSyncExternalStore(
+    subscribeMobileFit,
+    getWorkflowFitSnapshot,
+    () => WORKFLOW_FIT,
+  );
+}
+
 /**
  * Single fit is applied in onInit (per mount). The previous runLayoutFit "else" branch
  * refit on every isZoomingOut transition and stacked with onInit, producing subpixel
@@ -300,12 +331,13 @@ function WorkflowFitWhenPaneSized({ isZoomingOut }: { isZoomingOut?: boolean }) 
   const nodesReady = useNodesInitialized({ includeHiddenNodes: true });
   const isZoomingOutRef = useRef(!!isZoomingOut);
   isZoomingOutRef.current = !!isZoomingOut;
+  const workflowFit = useWorkflowFitOptions();
 
   useLayoutEffect(() => {
     if (w <= 0 || h <= 0 || isZoomingOutRef.current || !nodesReady) return;
     const ids = getNodes().map((n) => n.id);
     let cancelled = false;
-    void fitView({ ...WORKFLOW_FIT }).then(() => {
+    void fitView({ ...workflowFit }).then(() => {
       if (cancelled || isZoomingOutRef.current) return;
       lastViewport = getViewport();
       if (ids.length) updateNodeInternals(ids);
@@ -320,7 +352,17 @@ function WorkflowFitWhenPaneSized({ isZoomingOut }: { isZoomingOut?: boolean }) 
     return () => {
       cancelled = true;
     };
-  }, [w, h, nodesReady, isZoomingOut, fitView, getNodes, getViewport, updateNodeInternals]);
+  }, [
+    w,
+    h,
+    nodesReady,
+    isZoomingOut,
+    workflowFit,
+    fitView,
+    getNodes,
+    getViewport,
+    updateNodeInternals,
+  ]);
 
   return null;
 }
@@ -357,6 +399,7 @@ function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
   const pendingFitAfterZoomOut = useRef(false);
   isZoomingOutRef.current = isZoomingOut;
   const nodesInitialized = useNodesInitialized({ includeHiddenNodes: true });
+  const workflowFit = useWorkflowFitOptions();
 
   const remeasureAll = useCallback(() => {
     const ids = getNodes().map((n) => n.id);
@@ -379,12 +422,19 @@ function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
     pendingFitAfterZoomOut.current = false;
     if (isZoomingOutRef.current) return;
     remeasureAll();
-    void fitView({ ...WORKFLOW_FIT }).then(() => {
+    void fitView({ ...workflowFit }).then(() => {
       if (isZoomingOutRef.current) return;
       lastViewport = getViewport();
       remeasureAll();
     });
-  }, [isZoomingOut, nodesInitialized, remeasureAll, fitView, getViewport]);
+  }, [
+    isZoomingOut,
+    nodesInitialized,
+    remeasureAll,
+    workflowFit,
+    fitView,
+    getViewport,
+  ]);
 
   return null;
 }

@@ -85,7 +85,7 @@ function WorkflowLayer({
   return (
     <div className="h-dvh max-h-dvh w-full relative overflow-hidden">
       <WorkflowParticles contentLocal={contentLocal} warp={animating} />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4">
+      <div className="absolute inset-0 flex w-full flex-col items-center justify-center gap-6 sm:gap-8 py-4 px-0">
         <motion.div
           {...(isZoomingOut && { initial: { scale: 3, filter: "blur(12px)", opacity: 1 } })}
           animate={
@@ -105,7 +105,7 @@ function WorkflowLayer({
             reproduzível.
           </p>
           <div
-            className="absolute right-0 -bottom-2 pointer-events-auto"
+            className="mt-3 w-full flex flex-col items-stretch pointer-events-auto sm:mt-0 sm:absolute sm:right-0 sm:-bottom-2 sm:w-auto sm:items-end"
             style={{
               opacity: showCta ? 1 : 0,
               transform: `translateX(${showCta ? 0 : 8}px)`,
@@ -113,7 +113,7 @@ function WorkflowLayer({
               pointerEvents: showCta ? "auto" : "none",
             }}
           >
-            <DownloadButton />
+            <DownloadButton className="w-full justify-center sm:w-auto" />
           </div>
         </motion.div>
         <motion.div
@@ -405,7 +405,7 @@ function SectionNavigator() {
       <div className="fixed inset-0 overflow-hidden bg-neutral-950">
         <AnimatePresence mode="wait">
           <motion.div
-            key={sectionId}
+            key={`${sectionId}-${clampedBeat}`}
             initial={isZoomingOut ? { opacity: 1 } : { opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={isZoomingOut ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}

@@ -94,7 +94,7 @@ export default function ReferencesSection() {
     <div className="relative h-dvh max-h-dvh w-full flex flex-col items-center justify-center overflow-hidden">
       <WorkflowParticles contentLocal={fullSpeed} />
 
-      <div className="relative z-10 w-full flex flex-col items-center gap-6 sm:gap-8 px-4 pointer-events-none">
+      <div className="relative z-10 w-full flex flex-col items-center gap-6 sm:gap-8 pointer-events-none">
         <div className="text-center">
           <h2 className="text-2xl sm:text-3xl font-bold">
             Referências &amp; Estudos
