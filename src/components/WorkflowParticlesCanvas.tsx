@@ -538,9 +538,11 @@ function CameraController() {
 export default function WorkflowParticlesCanvas({
   contentLocal,
   warp = false,
+  hoveredNodeRef,
 }: {
   contentLocal: MotionValue<number>;
   warp?: boolean;
+  hoveredNodeRef?: import("react").MutableRefObject<import("./WorkflowDiagram").HoveredNodeData>;
 }) {
   const particleData = useMemo(buildParticleData, []);
 

@@ -6,7 +6,12 @@ import {
   useRef,
   type MutableRefObject,
 } from "react";
-import { motion, useMotionValueEvent, type MotionValue } from "motion/react";
+import {
+  motion,
+  useAnimation,
+  useMotionValueEvent,
+  type MotionValue,
+} from "motion/react";
 import { useAnimationObserver } from "../context/AnimationObserverContext";
 import {
   ReactFlow,
@@ -168,6 +173,16 @@ const GLOW_EMERALD = {
     "0 0 24px 4px rgba(52,211,153,0.14)",
     "0 0 48px 8px rgba(52,211,153,0.07)",
   ].join(", "),
+  hover: [
+    "0 0 14px 2px rgba(110,231,179,0.35)",
+    "0 0 32px 8px rgba(52,211,153,0.22)",
+    "0 0 60px 14px rgba(52,211,153,0.10)",
+  ].join(", "),
+  elevated: [
+    "0 0 10px 1px rgba(110,231,179,0.28)",
+    "0 0 26px 5px rgba(52,211,153,0.16)",
+    "0 0 50px 10px rgba(52,211,153,0.08)",
+  ].join(", "),
 };
 
 const GLOW_CYAN = {
@@ -181,6 +196,16 @@ const GLOW_CYAN = {
     "0 0 24px 4px rgba(34,211,238,0.14)",
     "0 0 48px 8px rgba(34,211,238,0.07)",
   ].join(", "),
+  hover: [
+    "0 0 14px 2px rgba(103,232,249,0.35)",
+    "0 0 32px 8px rgba(34,211,238,0.22)",
+    "0 0 60px 14px rgba(34,211,238,0.10)",
+  ].join(", "),
+  elevated: [
+    "0 0 10px 1px rgba(103,232,249,0.28)",
+    "0 0 26px 5px rgba(34,211,238,0.16)",
+    "0 0 50px 10px rgba(34,211,238,0.08)",
+  ].join(", "),
 };
 
 const GLOW_PULSE_TRANSITION = {
@@ -190,11 +215,26 @@ const GLOW_PULSE_TRANSITION = {
   repeatType: "reverse" as const,
 };
 
+const HOVER_RELAX_MS = 4500;
+const X_RANGE = 12;
+const Y_RANGE = 7;
+
+function screenToThreeJS(
+  rect: DOMRect,
+): { x: number; y: number } {
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const nx = (cx / window.innerWidth - 0.5) * 2;
+  const ny = (cy / window.innerHeight - 0.5) * 2;
+  return { x: nx * X_RANGE, y: -ny * Y_RANGE };
+}
+
 function SkillNode({ data }: NodeProps) {
-  const { label, optional, handles } = data as {
+  const { label, optional, handles, hoveredNodeRef } = data as {
     label: string;
     optional: boolean;
     handles?: Set<string>;
+    hoveredNodeRef?: HoveredNodeRef;
   };
 
   const h = handles ?? new Set(["left", "top", "right", "bottom"]);
@@ -203,16 +243,83 @@ function SkillNode({ data }: NodeProps) {
     : "!bg-emerald-400 !w-2 !h-2 !border-0";
 
   const glow = optional ? GLOW_CYAN : GLOW_EMERALD;
+  const controls = useAnimation();
+  const nodeRef = useRef<HTMLDivElement>(null);
+  const relaxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isHoveredRef = useRef(false);
+
+  useEffect(() => {
+    controls.start({
+      boxShadow: [glow.dim, glow.bright],
+      transition: GLOW_PULSE_TRANSITION,
+    });
+  }, [controls, glow.dim, glow.bright]);
+
+  const onMouseEnter = useCallback(() => {
+    isHoveredRef.current = true;
+    if (relaxTimerRef.current) clearTimeout(relaxTimerRef.current);
+
+    controls.start({
+      boxShadow: glow.hover,
+      transition: { duration: 0.2, ease: "easeOut" },
+    });
+
+    if (hoveredNodeRef && nodeRef.current) {
+      const rect = nodeRef.current.getBoundingClientRect();
+      hoveredNodeRef.current = {
+        position: screenToThreeJS(rect),
+        startTime: performance.now(),
+      };
+    }
+
+    relaxTimerRef.current = setTimeout(() => {
+      if (!isHoveredRef.current) return;
+      controls.start({
+        boxShadow: glow.elevated,
+        transition: { duration: 1.2, ease: "easeInOut" },
+      });
+    }, HOVER_RELAX_MS);
+  }, [controls, glow.hover, glow.elevated, hoveredNodeRef]);
+
+  const onMouseLeave = useCallback(() => {
+    isHoveredRef.current = false;
+    if (relaxTimerRef.current) {
+      clearTimeout(relaxTimerRef.current);
+      relaxTimerRef.current = null;
+    }
+
+    if (hoveredNodeRef) {
+      hoveredNodeRef.current = { position: null, startTime: 0 };
+    }
+
+    controls.start({
+      boxShadow: [glow.dim, glow.bright],
+      transition: {
+        duration: 0.6,
+        ease: "easeInOut",
+        repeat: Infinity,
+        repeatType: "reverse" as const,
+      },
+    });
+  }, [controls, glow.dim, glow.bright, hoveredNodeRef]);
+
+  useEffect(() => {
+    return () => {
+      if (relaxTimerRef.current) clearTimeout(relaxTimerRef.current);
+    };
+  }, []);
 
   return (
     <motion.div
+      ref={nodeRef}
       className={`relative box-border w-full min-w-0 rounded-lg font-mono text-[15px] leading-snug md:text-[13px] cursor-default text-left
         ${optional
           ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40"
           : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40"
         }`}
-      animate={{ boxShadow: [glow.dim, glow.bright] }}
-      transition={GLOW_PULSE_TRANSITION}
+      animate={controls}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {h.has("left") && (
         <Handle type="target" position={Position.Left} id="left" className={handleClass} />
@@ -457,6 +564,13 @@ function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
 
 export type NodeScreenPosition = { x: number; y: number };
 
+export type HoveredNodeData = {
+  position: { x: number; y: number } | null;
+  startTime: number;
+};
+
+export type HoveredNodeRef = MutableRefObject<HoveredNodeData>;
+
 function NodePositionReporter({
   nodeId,
   onNodeReveal,
@@ -485,11 +599,13 @@ export default function WorkflowDiagram({
   visibleCount,
   isZoomingOut,
   onNodeReveal,
+  hoveredNodeRef,
 }: {
   contentLocal: MotionValue<number>;
   visibleCount: number;
   isZoomingOut?: boolean;
   onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
+  hoveredNodeRef?: HoveredNodeRef;
 }) {
   const { hasPlayed, markPlayed } = useAnimationObserver();
   const count = Math.max(1, Math.min(REVEAL_ORDER.length, visibleCount));
@@ -502,8 +618,17 @@ export default function WorkflowDiagram({
     ? new Set<string>(REVEAL_ORDER.slice(0, count))
     : new Set<string>(REVEAL_ORDER.slice(0, count - 1));
 
+  const initialNodes = useMemo(() => {
+    const built = buildInitialNodes();
+    if (!hoveredNodeRef) return built;
+    return built.map((n) => ({
+      ...n,
+      data: { ...n.data, hoveredNodeRef },
+    }));
+  }, [hoveredNodeRef]);
+
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    applyVisibility(buildInitialNodes(), instantIds, 0),
+    applyVisibility(initialNodes, instantIds, 0),
   );
 
   const [edges, setEdges, onEdgesChange] = useEdgesState(

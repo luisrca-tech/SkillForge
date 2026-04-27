@@ -30,7 +30,7 @@ import StickyHero from "./StickyHero";
 import StickySkillSection from "./StickySkillSection";
 import StickyContextRot from "./StickyContextRot";
 import ReferencesSection from "./ReferencesSection";
-import WorkflowDiagram, { type NodeScreenPosition } from "./WorkflowDiagram";
+import WorkflowDiagram, { type NodeScreenPosition, type HoveredNodeData } from "./WorkflowDiagram";
 import DownloadButton from "./DownloadButton";
 import WorkflowParticles from "./WorkflowParticles";
 
@@ -67,6 +67,7 @@ function WorkflowLayer({
 }) {
   const showCta = visibleCount === 7;
   const nodePositionRef = useRef<NodeScreenPosition | null>(null);
+  const hoveredNodeRef = useRef<HoveredNodeData>({ position: null, startTime: 0 });
 
   const handleNodeReveal = useCallback(
     (nodeId: string, position: NodeScreenPosition) => {
@@ -84,7 +85,7 @@ function WorkflowLayer({
 
   return (
     <div className="h-dvh max-h-dvh w-full relative overflow-hidden">
-      <WorkflowParticles contentLocal={contentLocal} warp={animating} />
+      <WorkflowParticles contentLocal={contentLocal} warp={animating} hoveredNodeRef={hoveredNodeRef} />
       <div className="absolute inset-0 flex w-full flex-col items-center justify-center gap-6 sm:gap-8 py-4 px-0">
         <motion.div
           {...(isZoomingOut && { initial: { scale: 3, filter: "blur(12px)", opacity: 1 } })}
@@ -132,6 +133,7 @@ function WorkflowLayer({
               visibleCount={visibleCount}
               isZoomingOut={isZoomingOut}
               onNodeReveal={handleNodeReveal}
+              hoveredNodeRef={hoveredNodeRef}
             />
           </div>
         </motion.div>
