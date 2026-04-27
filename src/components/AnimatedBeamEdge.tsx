@@ -52,12 +52,17 @@ export function useReducedMotion(): boolean {
 }
 
 export default function AnimatedBeamEdge({
+  id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
   targetY,
   sourcePosition,
   targetPosition,
+  sourceHandleId,
+  targetHandleId,
   data,
   style,
 }: EdgeProps) {
@@ -73,17 +78,9 @@ export default function AnimatedBeamEdge({
   const reducedMotion = useReducedMotion();
   const beamControls = useAnimationControls();
   const wasVisibleRef = useRef(false);
-  const pathRef = useRef<SVGPathElement>(null);
-  const [pathLength, setPathLength] = useState(0);
   const [drawComplete, setDrawComplete] = useState(false);
 
   const visible = Number(style?.opacity ?? 1) > 0;
-
-  useEffect(() => {
-    if (pathRef.current) {
-      setPathLength(pathRef.current.getTotalLength());
-    }
-  }, [sourceX, sourceY, targetX, targetY]);
 
   useEffect(() => {
     if (visible && !wasVisibleRef.current) {
@@ -174,8 +171,6 @@ export default function AnimatedBeamEdge({
 
   const strokeWidth = (style?.strokeWidth as number) ?? 2;
 
-  const isDrawing = visible && !reducedMotion && pathLength > 0;
-
   const glowStd =
     sequentialMode && sequenceIndex != null ? SEQ_GLOW_STD : REVEAL_GLOW_STD;
   const beamDuration =
@@ -191,24 +186,13 @@ export default function AnimatedBeamEdge({
       }}
     >
       <path
-        ref={pathRef}
         d={edgePath}
         fill="none"
         stroke={baseColor}
         strokeWidth={strokeWidth}
         strokeOpacity={reducedMotion ? 1 : BASE_OPACITY}
-        strokeLinecap="round"
-        style={
-          isDrawing
-            ? {
-                strokeDasharray: pathLength,
-                strokeDashoffset: drawComplete ? 0 : pathLength,
-                transition: drawComplete
-                  ? "none"
-                  : `stroke-dashoffset ${DRAW_DURATION}s cubic-bezier(${DRAW_EASE.join(",")})`,
-              }
-            : undefined
-        }
+        strokeLinecap="butt"
+        strokeLinejoin="round"
       />
 
       <path

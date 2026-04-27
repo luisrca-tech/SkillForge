@@ -1,4 +1,10 @@
-import { useCallback, useLayoutEffect, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useEffect,
+  useRef,
+  type MutableRefObject,
+} from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
 import { useAnimationObserver } from "../context/AnimationObserverContext";
 import {
@@ -14,6 +20,8 @@ import {
   useEdgesState,
   useReactFlow,
   useStore,
+  useUpdateNodeInternals,
+  useNodesInitialized,
 } from "@xyflow/react";
 import AnimatedBeamEdge from "./AnimatedBeamEdge";
 import "@xyflow/react/dist/style.css";
@@ -68,7 +76,7 @@ function buildInitialNodes(): Node[] {
       id: skill.id,
       type: "skill",
       position: { x, y },
-      style: { width: NODE_WIDTH },
+      style: { width: NODE_WIDTH, minHeight: NODE_HEIGHT },
       data: { label: skill.label, anchor: skill.anchor, optional: false, handles: SKILL_HANDLES[skill.id] },
     };
   });
@@ -78,7 +86,7 @@ function buildInitialNodes(): Node[] {
     const n = nodes[handleIdx];
     nodes[handleIdx] = {
       ...n,
-      style: { width: NODE_WIDTH },
+      style: { width: NODE_WIDTH, minHeight: NODE_HEIGHT },
       position: { x: n.position.x + HANDLE_EXTRA_GAP_X, y: n.position.y },
     };
   }
@@ -92,7 +100,7 @@ function buildInitialNodes(): Node[] {
       x: sourceNode.position.x,
       y: sourceNode.position.y - (NODE_HEIGHT + GAP_Y + OPTIONAL_ABOVE_WRITE_GAP),
     },
-    style: { width: NODE_WIDTH },
+    style: { width: NODE_WIDTH, minHeight: NODE_HEIGHT },
     data: {
       label: OPTIONAL_SKILL.label,
       anchor: OPTIONAL_SKILL.anchor,
@@ -154,18 +162,25 @@ function SkillNode({ data }: NodeProps) {
   };
 
   const h = handles ?? new Set(["left", "top", "right", "bottom"]);
+  const handleClass = optional
+    ? "!bg-cyan-400 !w-2 !h-2 !border-0"
+    : "!bg-emerald-400 !w-2 !h-2 !border-0";
 
   return (
-    <>
-      {h.has("left") && <Handle type="target" position={Position.Left} id="left" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
-      {h.has("top") && <Handle type="target" position={Position.Top} id="top" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
-      <div
-        className={`px-3.5 py-2.5 rounded-lg font-mono text-[13px] leading-snug cursor-default transition-all duration-200 w-full min-w-0 text-left
-          ${optional
-            ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40"
-            : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40"
-          }`}
-      >
+    <div
+      className={`relative box-border w-full min-w-0 rounded-lg font-mono text-[13px] leading-snug cursor-default transition-all duration-200 text-left
+        ${optional
+          ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40"
+          : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40"
+        }`}
+    >
+      {h.has("left") && (
+        <Handle type="target" position={Position.Left} id="left" className={handleClass} />
+      )}
+      {h.has("top") && (
+        <Handle type="target" position={Position.Top} id="top" className={handleClass} />
+      )}
+      <div className="px-3.5 py-2.5 min-w-0">
         <span className="block break-words pr-0.5 text-pretty">{label}</span>
         {optional && (
           <span className="mt-0.5 inline-block text-[10px] uppercase tracking-wider text-cyan-400/60">
@@ -173,9 +188,13 @@ function SkillNode({ data }: NodeProps) {
           </span>
         )}
       </div>
-      {h.has("right") && <Handle type="source" position={Position.Right} id="right" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
-      {h.has("bottom") && <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-emerald-400 !w-2 !h-2 !border-0" />}
-    </>
+      {h.has("right") && (
+        <Handle type="source" position={Position.Right} id="right" className={handleClass} />
+      )}
+      {h.has("bottom") && (
+        <Handle type="source" position={Position.Bottom} id="bottom" className={handleClass} />
+      )}
+    </div>
   );
 }
 
@@ -249,32 +268,167 @@ function applyEdgeVisibility(
   }));
 }
 
-const FIT: { padding: number; maxZoom: number } = { padding: 0.2, maxZoom: 1.2 };
+/**
+ * maxZoom: 1 keeps handle centers and bezier path ends aligned in screen space; repeated
+ * fitView with maxZoom 1.2 caused fractional zoom and visible gaps at handles after nav.
+ */
+const WORKFLOW_FIT = {
+  padding: 0.2,
+  minZoom: 0.1,
+  maxZoom: 1,
+  duration: 0,
+} as const;
 
-/** Re-fits the graph after layout / resize so the viewport centers on the full bounding box (staggered node mount used to run fitView on an empty graph). */
-function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
-  const { fitView } = useReactFlow();
-  const nodeCount = useStore((s) => s.nodes.length);
-  const edgeCount = useStore((s) => s.edges.length);
+const ZOOM_OUT_FIT_SUPPRESS_MS = 400;
 
-  const runFit = useCallback(() => {
-    if (nodeCount < 1 || isZoomingOut) return;
-    requestAnimationFrame(() => {
-      fitView({ ...FIT, duration: 0 });
-    });
-  }, [nodeCount, isZoomingOut, fitView]);
+/**
+ * Single fit is applied in onInit (per mount). The previous runLayoutFit "else" branch
+ * refit on every isZoomingOut transition and stacked with onInit, producing subpixel
+ * handle/edge gaps until full reload.
+ */
+
+/**
+ * onInit+fitView runs while the internal pane often still has width/height 0; projection and
+ * edges then disagree with getBoundingClientRect until reload. Remeasure+fit when the store
+ * first reports a non-zero size (and when size changes, e.g. after layout/parent transform settles).
+ */
+function WorkflowFitWhenPaneSized({ isZoomingOut }: { isZoomingOut?: boolean }) {
+  const w = useStore((s) => s.width);
+  const h = useStore((s) => s.height);
+  const { fitView, getNodes } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();
+  const nodesReady = useNodesInitialized({ includeHiddenNodes: true });
+  const isZoomingOutRef = useRef(!!isZoomingOut);
+  isZoomingOutRef.current = !!isZoomingOut;
 
   useLayoutEffect(() => {
-    runFit();
-  }, [nodeCount, edgeCount, runFit]);
+    if (w <= 0 || h <= 0 || isZoomingOutRef.current || !nodesReady) return;
+    const ids = getNodes().map((n) => n.id);
+    let cancelled = false;
+    void fitView({ ...WORKFLOW_FIT }).then(() => {
+      if (cancelled || isZoomingOutRef.current) return;
+      if (ids.length) updateNodeInternals(ids);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (cancelled || isZoomingOutRef.current) return;
+          if (ids.length) updateNodeInternals(ids);
+        });
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [w, h, nodesReady, isZoomingOut, fitView, getNodes, updateNodeInternals]);
+
+  return null;
+}
+
+/** onMoveEnd runs outside hook context; bridge remeasure into the flow instance. */
+function WorkflowMoveEndRemeasureBridge({
+  remeasureRef,
+}: {
+  remeasureRef: MutableRefObject<() => void>;
+}) {
+  const { getNodes } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();
+  useLayoutEffect(() => {
+    remeasureRef.current = () => {
+      const ids = getNodes().map((n) => n.id);
+      if (!ids.length) return;
+      updateNodeInternals(ids);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          updateNodeInternals(ids);
+        });
+      });
+    };
+  }, [getNodes, remeasureRef, updateNodeInternals]);
+  return null;
+}
+
+function WorkflowFitView({ isZoomingOut }: { isZoomingOut?: boolean }) {
+  const { fitView, getNodes } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();
+  const nodeCount = useStore((s) => s.nodes.length);
+  const prevIsZoomingOut = useRef(isZoomingOut);
+  const afterZoomOutFitAt = useRef(0);
+  const isZoomingOutRef = useRef(isZoomingOut);
+  const pendingFitAfterZoomOut = useRef(false);
+  isZoomingOutRef.current = isZoomingOut;
+  const nodesInitialized = useNodesInitialized({ includeHiddenNodes: true });
+
+  const MAX_POM_WAIT_FRAMES = 50;
+  const SCALED_PARENT_MIN_WIDTH = 2000;
+
+  const remeasureAll = useCallback(() => {
+    const ids = getNodes().map((n) => n.id);
+    if (ids.length) updateNodeInternals(ids);
+  }, [getNodes, updateNodeInternals]);
+
+  const recoverEdgesAfterZoomOut = useCallback(() => {
+    const waitUnscaled = (frame: number) => {
+      if (isZoomingOutRef.current) return;
+      const el = document.getElementById("workflow-diagram");
+      const w = el?.getBoundingClientRect().width ?? 0;
+      if (w > SCALED_PARENT_MIN_WIDTH && frame < MAX_POM_WAIT_FRAMES) {
+        requestAnimationFrame(() => waitUnscaled(frame + 1));
+        return;
+      }
+      remeasureAll();
+      requestAnimationFrame(() => {
+        if (isZoomingOutRef.current) return;
+        remeasureAll();
+        requestAnimationFrame(() => {
+          if (isZoomingOutRef.current) return;
+          void fitView({ ...WORKFLOW_FIT }).then(() => {
+            if (isZoomingOutRef.current) return;
+            remeasureAll();
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                if (isZoomingOutRef.current) return;
+                remeasureAll();
+              });
+            });
+          });
+        });
+      });
+    };
+    requestAnimationFrame(() => waitUnscaled(0));
+  }, [fitView, remeasureAll]);
+
+  const runLayoutFit = useCallback(() => {
+    if (nodeCount < 1) {
+      prevIsZoomingOut.current = isZoomingOut;
+      return;
+    }
+    if (isZoomingOut) {
+      prevIsZoomingOut.current = isZoomingOut;
+      return;
+    }
+
+    const zoomOutJustEnded = prevIsZoomingOut.current === true;
+    if (zoomOutJustEnded) {
+      afterZoomOutFitAt.current = performance.now() + ZOOM_OUT_FIT_SUPPRESS_MS;
+      pendingFitAfterZoomOut.current = true;
+    }
+    prevIsZoomingOut.current = isZoomingOut;
+  }, [nodeCount, isZoomingOut]);
+
+  useLayoutEffect(() => {
+    runLayoutFit();
+  }, [nodeCount, runLayoutFit, isZoomingOut]);
 
   useEffect(() => {
-    const el = document.getElementById("workflow-diagram");
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => runFit());
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [runFit]);
+    if (isZoomingOut) return;
+    if (!pendingFitAfterZoomOut.current) return;
+    if (!nodesInitialized) {
+      return;
+    }
+    pendingFitAfterZoomOut.current = false;
+    afterZoomOutFitAt.current = performance.now() + ZOOM_OUT_FIT_SUPPRESS_MS;
+    if (isZoomingOutRef.current) return;
+    recoverEdgesAfterZoomOut();
+  }, [isZoomingOut, nodesInitialized, recoverEdgesAfterZoomOut]);
 
   return null;
 }
@@ -343,6 +497,7 @@ export default function WorkflowDiagram({
   );
 
   const seqTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const moveEndRemeasureRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (alreadyPlayed) return;
@@ -400,8 +555,8 @@ export default function WorkflowDiagram({
           edgeTypes={edgeTypes}
           fitView={false}
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-          onInit={(instance) => {
-            instance.fitView({ ...FIT, duration: 0 });
+          onMoveEnd={() => {
+            moveEndRemeasureRef.current();
           }}
           proOptions={{ hideAttribution: true }}
           panOnDrag={false}
@@ -414,6 +569,8 @@ export default function WorkflowDiagram({
           elementsSelectable={false}
           className="!h-full !w-full !bg-transparent"
         >
+          <WorkflowMoveEndRemeasureBridge remeasureRef={moveEndRemeasureRef} />
+          <WorkflowFitWhenPaneSized isZoomingOut={isZoomingOut} />
           <WorkflowFitView isZoomingOut={isZoomingOut} />
           <NodePositionReporter nodeId={newestId} onNodeReveal={onNodeReveal} />
         </ReactFlow>

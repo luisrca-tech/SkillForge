@@ -79,21 +79,23 @@ function WorkflowLayer({
   const transformOrigin = origin ? `${origin.x}px ${origin.y}px` : "50% 50%";
   const animating = isZooming || isZoomingOut;
 
+  const zoomT = { duration: ZOOM_DURATION_MS / 1000, ease: ZOOM_EASE } as const;
+
   return (
     <div className="h-dvh max-h-dvh w-full relative overflow-hidden">
       <WorkflowParticles contentLocal={contentLocal} warp={animating} />
-      <motion.div
-        {...(isZoomingOut && { initial: { scale: 3, filter: "blur(12px)", opacity: 1 } })}
-        animate={
-          isZooming
-            ? { scale: 3, filter: "blur(12px)", opacity: 0 }
-            : { scale: 1, filter: "blur(0px)", opacity: 1 }
-        }
-        transition={{ duration: ZOOM_DURATION_MS / 1000, ease: ZOOM_EASE }}
-        style={{ transformOrigin, willChange: animating ? "transform, filter, opacity" : "auto" }}
-        className="absolute inset-0 flex flex-col items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4"
-      >
-        <div className="w-full max-w-7xl mx-auto shrink-0 relative">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 sm:gap-8 px-4 sm:px-6 py-4">
+        <motion.div
+          {...(isZoomingOut && { initial: { scale: 3, filter: "blur(12px)", opacity: 1 } })}
+          animate={
+            isZooming
+              ? { scale: 3, filter: "blur(12px)", opacity: 0 }
+              : { scale: 1, filter: "blur(0px)", opacity: 1 }
+          }
+          transition={zoomT}
+          style={{ transformOrigin, willChange: animating ? "transform, filter, opacity" : "auto" }}
+          className="w-full max-w-7xl mx-auto shrink-0 relative"
+        >
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1.5">
             O Workflow
           </h2>
@@ -112,13 +114,27 @@ function WorkflowLayer({
           >
             <DownloadButton />
           </div>
-        </div>
-        <div className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto will-change-transform flex flex-col">
+        </motion.div>
+        <motion.div
+          {...(isZoomingOut && { initial: { opacity: 0, filter: "blur(12px)" } })}
+          animate={
+            isZooming
+              ? { opacity: 0, filter: "blur(12px)" }
+              : { opacity: 1, filter: "blur(0px)" }
+          }
+          transition={zoomT}
+          className="w-full min-h-0 min-w-0 flex-1 max-w-7xl mx-auto flex flex-col will-change-[opacity,filter]"
+        >
           <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center pointer-events-auto">
-            <WorkflowDiagram contentLocal={contentLocal} visibleCount={visibleCount} isZoomingOut={isZoomingOut} onNodeReveal={handleNodeReveal} />
+            <WorkflowDiagram
+              contentLocal={contentLocal}
+              visibleCount={visibleCount}
+              isZoomingOut={isZoomingOut}
+              onNodeReveal={handleNodeReveal}
+            />
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }
@@ -235,6 +251,8 @@ function SectionNavigator() {
             setIsZoomingOut(false);
           }, ZOOM_OUT_EXIT_MS + ZOOM_DURATION_MS);
         });
+      } else if (leavingSkill && enteringWorkflow && direction === "backward") {
+        setParams({ s: next.sectionId, b: next.beat });
       } else {
         setParams({ s: next.sectionId, b: next.beat });
       }
