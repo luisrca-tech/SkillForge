@@ -6,6 +6,7 @@ import {
   findSection,
   sectionIndex,
   SECTIONS,
+  createSkillBeatsResolver,
   type SectionId,
 } from "./sections";
 
@@ -120,8 +121,23 @@ describe("advance", () => {
     });
   });
 
-  it("advances skill-grill-me to workflow-2", () => {
+  it("advances within skill-grill-me (beat 0 to 1)", () => {
     expect(advance({ sectionId: "skill-grill-me", beat: 0 })).toEqual({
+      sectionId: "skill-grill-me",
+      beat: 1,
+    });
+  });
+
+  it("advances skill-grill-me beat 1 to workflow-2", () => {
+    expect(advance({ sectionId: "skill-grill-me", beat: 1 })).toEqual({
+      sectionId: "workflow-2",
+      beat: 0,
+    });
+  });
+
+  it("advances skill to next workflow in one step when desktop resolver", () => {
+    const r = createSkillBeatsResolver(true);
+    expect(advance({ sectionId: "skill-grill-me", beat: 0 }, r)).toEqual({
       sectionId: "workflow-2",
       beat: 0,
     });
@@ -145,8 +161,12 @@ describe("advance", () => {
     }
   });
 
-  it("advances last skill to context-rot", () => {
+  it("advances last skill to context-rot after second beat", () => {
     expect(advance({ sectionId: "skill-handle-coderabbit", beat: 0 })).toEqual({
+      sectionId: "skill-handle-coderabbit",
+      beat: 1,
+    });
+    expect(advance({ sectionId: "skill-handle-coderabbit", beat: 1 })).toEqual({
       sectionId: "context-rot",
       beat: 0,
     });
@@ -196,14 +216,22 @@ describe("retreat", () => {
     });
   });
 
-  it("retreats workflow-2 to skill-grill-me", () => {
+  it("retreats workflow-2 to skill-grill-me last beat", () => {
     expect(retreat({ sectionId: "workflow-2", beat: 0 })).toEqual({
+      sectionId: "skill-grill-me",
+      beat: 1,
+    });
+  });
+
+  it("retreats workflow-2 to skill-grill-me beat 0 when desktop resolver", () => {
+    const r = createSkillBeatsResolver(true);
+    expect(retreat({ sectionId: "workflow-2", beat: 0 }, r)).toEqual({
       sectionId: "skill-grill-me",
       beat: 0,
     });
   });
 
-  it("retreats symmetrically for all pairs", () => {
+  it("retreats symmetrically for all pairs (skills land on last beat)", () => {
     const pairs: [SectionId, SectionId][] = [
       ["skill-grill-me", "workflow-1"],
       ["workflow-2", "skill-grill-me"],
@@ -220,17 +248,18 @@ describe("retreat", () => {
       ["skill-handle-coderabbit", "workflow-7"],
     ];
     for (const [from, to] of pairs) {
+      const expectedBeat = to.startsWith("skill-") ? 1 : 0;
       expect(retreat({ sectionId: from, beat: 0 })).toEqual({
         sectionId: to,
-        beat: 0,
+        beat: expectedBeat,
       });
     }
   });
 
-  it("retreats context-rot beat 0 to last skill", () => {
+  it("retreats context-rot beat 0 to last skill last beat", () => {
     expect(retreat({ sectionId: "context-rot", beat: 0 })).toEqual({
       sectionId: "skill-handle-coderabbit",
-      beat: 0,
+      beat: 1,
     });
   });
 

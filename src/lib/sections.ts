@@ -26,19 +26,19 @@ export type Section = {
 export const SECTIONS: Section[] = [
   { id: "hero", beats: 1 },
   { id: "workflow-1", beats: 1, hidden: true },
-  { id: "skill-grill-me", beats: 1 },
+  { id: "skill-grill-me", beats: 2 },
   { id: "workflow-2", beats: 1, hidden: true },
-  { id: "skill-write-a-prd", beats: 1 },
+  { id: "skill-write-a-prd", beats: 2 },
   { id: "workflow-3", beats: 1, hidden: true },
-  { id: "skill-prd-to-plan", beats: 1 },
+  { id: "skill-prd-to-plan", beats: 2 },
   { id: "workflow-4", beats: 1, hidden: true },
-  { id: "skill-plan-to-tracker", beats: 1 },
+  { id: "skill-plan-to-tracker", beats: 2 },
   { id: "workflow-5", beats: 1, hidden: true },
-  { id: "skill-do-work", beats: 1 },
+  { id: "skill-do-work", beats: 2 },
   { id: "workflow-6", beats: 1, hidden: true },
-  { id: "skill-improve-codebase-architecture", beats: 1 },
+  { id: "skill-improve-codebase-architecture", beats: 2 },
   { id: "workflow-7", beats: 1, hidden: true },
-  { id: "skill-handle-coderabbit", beats: 1 },
+  { id: "skill-handle-coderabbit", beats: 2 },
   { id: "context-rot", beats: 2 },
   { id: "references", beats: 1 },
 ];
@@ -89,18 +89,42 @@ export function findSection(id: string): Section | undefined {
   return SECTIONS.find((s) => s.id === id);
 }
 
+export function createSkillBeatsResolver(isLg: boolean): BeatsResolver {
+  return (sectionId: SectionId) => {
+    const s = findSection(sectionId);
+    if (!s) return 1;
+    if (isLg && sectionId.startsWith("skill-")) return 1;
+    return s.beats;
+  };
+}
+
 export function sectionIndex(id: string): number {
   return SECTIONS.findIndex((s) => s.id === id);
 }
 
 export type NavState = { sectionId: SectionId; beat: number };
 
-export function advance(state: NavState): NavState {
+export type BeatsResolver = (sectionId: SectionId) => number;
+
+function beatCount(
+  sectionId: SectionId,
+  resolveBeats: BeatsResolver | undefined,
+): number {
+  const s = findSection(sectionId);
+  if (!s) return 1;
+  return resolveBeats?.(sectionId) ?? s.beats;
+}
+
+export function advance(
+  state: NavState,
+  resolveBeats?: BeatsResolver,
+): NavState {
   const idx = sectionIndex(state.sectionId);
   const section = SECTIONS[idx];
   if (!section) return state;
 
-  if (state.beat < section.beats - 1) {
+  const total = beatCount(state.sectionId, resolveBeats);
+  if (state.beat < total - 1) {
     return { sectionId: state.sectionId, beat: state.beat + 1 };
   }
 
@@ -111,7 +135,10 @@ export function advance(state: NavState): NavState {
   return state;
 }
 
-export function retreat(state: NavState): NavState {
+export function retreat(
+  state: NavState,
+  resolveBeats?: BeatsResolver,
+): NavState {
   const idx = sectionIndex(state.sectionId);
   if (idx < 0) return state;
 
@@ -121,7 +148,8 @@ export function retreat(state: NavState): NavState {
 
   if (idx > 0) {
     const prev = SECTIONS[idx - 1];
-    return { sectionId: prev.id, beat: prev.beats - 1 };
+    const prevTotal = beatCount(prev.id, resolveBeats);
+    return { sectionId: prev.id, beat: Math.max(0, prevTotal - 1) };
   }
 
   return state;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence, useMotionValue, animate, type MotionValue } from "motion/react";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
@@ -13,6 +13,7 @@ import {
   advance,
   retreat,
   beatToLocalProgress,
+  createSkillBeatsResolver,
 } from "../lib/sections";
 import { SectionNavProvider } from "../context/SectionNavContext";
 import { AnimationObserverProvider } from "../context/AnimationObserverContext";
@@ -139,10 +140,31 @@ function WorkflowLayer({
   );
 }
 
+const LG_MQ = "(min-width: 1024px)";
+
+function subscribeLg(callback: () => void) {
+  const mq = window.matchMedia(LG_MQ);
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getLgSnapshot() {
+  return window.matchMedia(LG_MQ).matches;
+}
+
+function getLgServerSnapshot() {
+  return false;
+}
+
+function useIsLg() {
+  return useSyncExternalStore(subscribeLg, getLgSnapshot, getLgServerSnapshot);
+}
+
 function SectionBody({
   sectionId,
   beat,
   totalBeats,
+  isWideLayout,
   isZooming,
   isZoomingOut,
   nodePosition,
@@ -151,6 +173,7 @@ function SectionBody({
   sectionId: SectionId;
   beat: number;
   totalBeats: number;
+  isWideLayout: boolean;
   isZooming: boolean;
   isZoomingOut: boolean;
   nodePosition: NodeScreenPosition | null;
@@ -183,7 +206,15 @@ function SectionBody({
 
   const data = SKILL_PROPS[sectionId as keyof typeof SKILL_PROPS];
   if (!data) return null;
-  return <StickySkillSection {...data} sectionId={sectionId} contentLocal={contentLocal} />;
+  return (
+    <StickySkillSection
+      {...data}
+      sectionId={sectionId}
+      contentLocal={contentLocal}
+      beat={beat}
+      isWideLayout={isWideLayout}
+    />
+  );
 }
 
 function SectionNavigator() {
@@ -192,11 +223,14 @@ function SectionNavigator() {
     b: parseAsInteger.withDefault(0),
   });
 
+  const isLg = useIsLg();
+  const resolveBeats = useMemo(() => createSkillBeatsResolver(isLg), [isLg]);
+
   const rawSectionId = params.s;
   const beat = params.b;
   const sectionId = (findSection(rawSectionId) ? rawSectionId : DEFAULT_SECTION) as SectionId;
-  const section = findSection(sectionId)!;
-  const clampedBeat = Math.max(0, Math.min(beat, section.beats - 1));
+  const totalBeats = resolveBeats(sectionId);
+  const clampedBeat = Math.max(0, Math.min(beat, totalBeats - 1));
 
   const [isZooming, setIsZooming] = useState(false);
   const [isZoomingOut, setIsZoomingOut] = useState(false);
@@ -211,6 +245,12 @@ function SectionNavigator() {
     },
     [],
   );
+
+  useEffect(() => {
+    if (isLg && sectionId.startsWith("skill-") && beat > 0) {
+      setParams({ s: sectionId, b: 0 });
+    }
+  }, [isLg, sectionId, beat, setParams]);
 
   const step = useCallback(
     (direction: "forward" | "backward") => {
@@ -227,7 +267,10 @@ function SectionNavigator() {
       }
 
       const state = { sectionId, beat: clampedBeat };
-      const next = direction === "forward" ? advance(state) : retreat(state);
+      const next =
+        direction === "forward"
+          ? advance(state, resolveBeats)
+          : retreat(state, resolveBeats);
       if (next.sectionId === sectionId && next.beat === clampedBeat) return;
 
       const leavingWorkflow = sectionId.startsWith("workflow-");
@@ -257,7 +300,7 @@ function SectionNavigator() {
         setParams({ s: next.sectionId, b: next.beat });
       }
     },
-    [sectionId, clampedBeat, setParams, isZooming],
+    [sectionId, clampedBeat, setParams, isZooming, resolveBeats],
   );
 
   useEffect(() => {
@@ -372,7 +415,8 @@ function SectionNavigator() {
             <SectionBody
               sectionId={sectionId}
               beat={clampedBeat}
-              totalBeats={section.beats}
+              totalBeats={totalBeats}
+              isWideLayout={isLg}
               isZooming={isZooming}
               isZoomingOut={isZoomingOut}
               nodePosition={nodePositionRef.current}
