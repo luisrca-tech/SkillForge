@@ -32,6 +32,9 @@ const ATOM_NUCLEUS_OPACITY_MIN = 0.1;
 const ATOM_NUCLEUS_OPACITY_MAX = 0.15;
 const ATOM_RING_OPACITY = 0.06;
 const ATOM_ELECTRON_OPACITY = 0.12;
+const ATOM_WARP_ELECTRON_MULT = 1.5;
+const ATOM_WARP_OPACITY_SPIKE = 1.5;
+const ATOM_WARP_DECAY = 4.0;
 const ORBIT_SEGMENTS = 64;
 
 const ATOM_BREAKPOINTS: [number, number][] = [
@@ -331,10 +334,15 @@ function buildAtomDefs(count: number): AtomDef[] {
   return atoms;
 }
 
-function Atom({ def, contentLocal }: { def: AtomDef; contentLocal: MotionValue<number> }) {
+function Atom({ def, contentLocal, warp }: { def: AtomDef; contentLocal: MotionValue<number>; warp: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const electronsRef = useRef<THREE.Points>(null);
+  const nucleusRef = useRef<THREE.Points>(null);
+  const ringMatRef = useRef<THREE.LineBasicMaterial>(null);
   const elapsed = useRef(0);
+  const currentElectronMult = useRef(1);
+  const opacityPulse = useRef(0);
+  const wasWarping = useRef(false);
 
   const orbitGeom = useMemo(() => {
     const pts: THREE.Vector3[] = [];
@@ -368,7 +376,44 @@ function Atom({ def, contentLocal }: { def: AtomDef; contentLocal: MotionValue<n
   useFrame((_, delta) => {
     if (!groupRef.current || !electronsRef.current) return;
 
-    elapsed.current += delta;
+    if (warp && !wasWarping.current) {
+      opacityPulse.current = ATOM_WARP_OPACITY_SPIKE - 1;
+    }
+    wasWarping.current = warp;
+
+    const targetMult = warp ? ATOM_WARP_ELECTRON_MULT : 1;
+    currentElectronMult.current = lerp(currentElectronMult.current, targetMult, WARP_LERP);
+
+    if (opacityPulse.current > 0.01) {
+      opacityPulse.current *= Math.exp(-ATOM_WARP_DECAY * delta);
+    } else {
+      opacityPulse.current = 0;
+    }
+    const opacityScale = 1 + opacityPulse.current;
+
+    if (nucleusRef.current) {
+      const nMat = nucleusRef.current.material as THREE.PointsMaterial;
+      nMat.color.set(
+        nucleusColor.r * opacityScale,
+        nucleusColor.g * opacityScale,
+        nucleusColor.b * opacityScale,
+      );
+    }
+    if (ringMatRef.current) {
+      ringMatRef.current.color.set(
+        ringColor.r * opacityScale,
+        ringColor.g * opacityScale,
+        ringColor.b * opacityScale,
+      );
+    }
+    const eMat = electronsRef.current.material as THREE.PointsMaterial;
+    eMat.color.set(
+      electronColor.r * opacityScale,
+      electronColor.g * opacityScale,
+      electronColor.b * opacityScale,
+    );
+
+    elapsed.current += delta * currentElectronMult.current;
     const progress = contentLocal.get();
     const baseSpeed = lerp(SPEED_MIN, SPEED_MAX, progress);
     const drift = baseSpeed * ATOM_DRIFT_FACTOR * delta;
@@ -391,7 +436,7 @@ function Atom({ def, contentLocal }: { def: AtomDef; contentLocal: MotionValue<n
 
   return (
     <group ref={groupRef} position={[def.x, def.y, def.z]}>
-      <points>
+      <points ref={nucleusRef}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -411,6 +456,7 @@ function Atom({ def, contentLocal }: { def: AtomDef; contentLocal: MotionValue<n
       <line>
         <primitive object={orbitGeom} attach="geometry" />
         <lineBasicMaterial
+          ref={ringMatRef}
           color={ringColor}
           transparent
           depthWrite={false}
@@ -438,7 +484,7 @@ function Atom({ def, contentLocal }: { def: AtomDef; contentLocal: MotionValue<n
   );
 }
 
-function Atoms({ contentLocal }: { contentLocal: MotionValue<number> }) {
+function Atoms({ contentLocal, warp }: { contentLocal: MotionValue<number>; warp: boolean }) {
   const atomDefs = useMemo(() => {
     const count = getAtomCount();
     return buildAtomDefs(count);
@@ -447,7 +493,7 @@ function Atoms({ contentLocal }: { contentLocal: MotionValue<number> }) {
   return (
     <group>
       {atomDefs.map((def, i) => (
-        <Atom key={i} def={def} contentLocal={contentLocal} />
+        <Atom key={i} def={def} contentLocal={contentLocal} warp={warp} />
       ))}
     </group>
   );
@@ -511,7 +557,7 @@ export default function WorkflowParticlesCanvas({
       gl={{ antialias: false, alpha: true }}
       dpr={[1, 1.5]}
     >
-      <Atoms contentLocal={contentLocal} />
+      <Atoms contentLocal={contentLocal} warp={warp} />
       <Particles contentLocal={contentLocal} warp={warp} data={particleData} />
       <ConstellationLines data={particleData} />
       <CameraController />
