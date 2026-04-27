@@ -1,7 +1,8 @@
-import { useRef, useMemo, useCallback, useEffect } from "react";
+import { useRef, useMemo, useCallback, useEffect, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { MotionValue } from "motion/react";
+import type { HoveredNodeData } from "./WorkflowDiagram";
 
 const PARTICLE_COUNT = 850;
 const X_RANGE = 12;
@@ -51,6 +52,10 @@ const CONNECTION_OPACITY_MIN = 0.06;
 const MAX_LINE_SEGMENTS = PARTICLE_COUNT * CONNECTION_MAX;
 const GRID_CELL_SIZE = CONNECTION_DISTANCE;
 
+const ATTRACTION_RADIUS = 4.5;
+const ATTRACTION_STRENGTH = 1.8;
+const ATTRACTION_DECAY_MS = 4500;
+
 const EMERALD = new THREE.Color("#34d399");
 const CYAN = new THREE.Color("#22d3ee");
 
@@ -95,10 +100,12 @@ function Particles({
   contentLocal,
   warp,
   data,
+  hoveredNodeRef,
 }: {
   contentLocal: MotionValue<number>;
   warp: boolean;
   data: ParticleData;
+  hoveredNodeRef?: MutableRefObject<HoveredNodeData>;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const { positions, colors, velocities } = data;
@@ -122,8 +129,37 @@ function Particles({
     const mat = pointsRef.current.material as THREE.PointsMaterial;
     mat.size = currentSize.current;
 
+    const hovered = hoveredNodeRef?.current;
+    const hasAttraction = hovered?.position != null;
+    let attractX = 0;
+    let attractY = 0;
+    let attractionMult = 0;
+
+    if (hasAttraction && hovered.position) {
+      attractX = hovered.position.x;
+      attractY = hovered.position.y;
+      const elapsed = performance.now() - hovered.startTime;
+      attractionMult = Math.max(0, 1 - elapsed / ATTRACTION_DECAY_MS);
+    }
+
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       arr[i * 3] += velocitiesRef.current[i] * currentSpeed.current * delta;
+
+      if (hasAttraction && attractionMult > 0) {
+        const px = arr[i * 3];
+        const py = arr[i * 3 + 1];
+        const dx = attractX - px;
+        const dy = attractY - py;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < ATTRACTION_RADIUS && dist > 0.1) {
+          const falloff = 1 - dist / ATTRACTION_RADIUS;
+          const force = ATTRACTION_STRENGTH * falloff * attractionMult * delta;
+          arr[i * 3] += (dx / dist) * force;
+          arr[i * 3 + 1] += (dy / dist) * force;
+        }
+      }
+
       if (arr[i * 3] > X_RANGE) {
         arr[i * 3] = -X_RANGE;
       }
@@ -542,7 +578,7 @@ export default function WorkflowParticlesCanvas({
 }: {
   contentLocal: MotionValue<number>;
   warp?: boolean;
-  hoveredNodeRef?: import("react").MutableRefObject<import("./WorkflowDiagram").HoveredNodeData>;
+  hoveredNodeRef?: MutableRefObject<HoveredNodeData>;
 }) {
   const particleData = useMemo(buildParticleData, []);
 
@@ -560,7 +596,7 @@ export default function WorkflowParticlesCanvas({
       dpr={[1, 1.5]}
     >
       <Atoms contentLocal={contentLocal} warp={warp} />
-      <Particles contentLocal={contentLocal} warp={warp} data={particleData} />
+      <Particles contentLocal={contentLocal} warp={warp} data={particleData} hoveredNodeRef={hoveredNodeRef} />
       <ConstellationLines data={particleData} />
       <CameraController />
     </Canvas>
