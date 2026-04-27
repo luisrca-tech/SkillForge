@@ -21,6 +21,26 @@ const WARP_LERP = 0.08;
 const CAMERA_TILT_DEG = 3;
 const CAMERA_LERP = 0.05;
 
+const ATOM_Z_MIN = -5;
+const ATOM_Z_MAX = -3;
+const ATOM_DRIFT_FACTOR = 0.2;
+const ATOM_ORBIT_MIN = 0.3;
+const ATOM_ORBIT_MAX = 0.7;
+const ATOM_ROTATION_MIN = 0.1;
+const ATOM_ROTATION_MAX = 0.3;
+const ATOM_NUCLEUS_OPACITY_MIN = 0.1;
+const ATOM_NUCLEUS_OPACITY_MAX = 0.15;
+const ATOM_RING_OPACITY = 0.06;
+const ATOM_ELECTRON_OPACITY = 0.12;
+const ORBIT_SEGMENTS = 64;
+
+const ATOM_BREAKPOINTS: [number, number][] = [
+  [1536, 10],
+  [1024, 7],
+  [768, 5],
+  [0, 3],
+];
+
 const CONNECTION_DISTANCE = 1.2;
 const CONNECTION_MAX = 3;
 const CONNECTION_OPACITY_MAX = 0.12;
@@ -259,6 +279,180 @@ function ConstellationLines({ data }: { data: ParticleData }) {
   );
 }
 
+interface AtomDef {
+  x: number;
+  y: number;
+  z: number;
+  orbitRadius: number;
+  rotationSpeed: number;
+  electronCount: 1 | 2;
+  electronPhases: number[];
+  electronSpeed: number;
+  color: THREE.Color;
+  nucleusOpacity: number;
+}
+
+function getAtomCount(): number {
+  const w = window.innerWidth;
+  for (const [breakpoint, count] of ATOM_BREAKPOINTS) {
+    if (w >= breakpoint) return count;
+  }
+  return 3;
+}
+
+function buildAtomDefs(count: number): AtomDef[] {
+  const cols = Math.ceil(Math.sqrt(count * (X_RANGE / Y_RANGE)));
+  const rows = Math.ceil(count / cols);
+  const cellW = (X_RANGE * 2) / cols;
+  const cellH = (Y_RANGE * 2) / rows;
+  const atoms: AtomDef[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const cx = -X_RANGE + (col + 0.5) * cellW;
+    const cy = -Y_RANGE + (row + 0.5) * cellH;
+    const jitterX = (Math.random() - 0.5) * cellW * 0.7;
+    const jitterY = (Math.random() - 0.5) * cellH * 0.7;
+
+    atoms.push({
+      x: cx + jitterX,
+      y: cy + jitterY,
+      z: ATOM_Z_MIN + Math.random() * (ATOM_Z_MAX - ATOM_Z_MIN),
+      orbitRadius: ATOM_ORBIT_MIN + Math.random() * (ATOM_ORBIT_MAX - ATOM_ORBIT_MIN),
+      rotationSpeed: ATOM_ROTATION_MIN + Math.random() * (ATOM_ROTATION_MAX - ATOM_ROTATION_MIN),
+      electronCount: Math.random() < 0.5 ? 1 : 2,
+      electronPhases: [Math.random() * Math.PI * 2, Math.random() * Math.PI * 2],
+      electronSpeed: 0.8 + Math.random() * 0.4,
+      color: Math.random() < 0.8 ? EMERALD : CYAN,
+      nucleusOpacity: ATOM_NUCLEUS_OPACITY_MIN + Math.random() * (ATOM_NUCLEUS_OPACITY_MAX - ATOM_NUCLEUS_OPACITY_MIN),
+    });
+  }
+  return atoms;
+}
+
+function Atom({ def, contentLocal }: { def: AtomDef; contentLocal: MotionValue<number> }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const electronsRef = useRef<THREE.Points>(null);
+  const elapsed = useRef(0);
+
+  const orbitGeom = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= ORBIT_SEGMENTS; i++) {
+      const angle = (i / ORBIT_SEGMENTS) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(angle) * def.orbitRadius, Math.sin(angle) * def.orbitRadius, 0));
+    }
+    return new THREE.BufferGeometry().setFromPoints(pts);
+  }, [def.orbitRadius]);
+
+  const electronPositions = useMemo(
+    () => new Float32Array(def.electronCount * 3),
+    [def.electronCount],
+  );
+
+  const ringColor = useMemo(() => {
+    const c = def.color.clone();
+    return new THREE.Color(c.r * ATOM_RING_OPACITY, c.g * ATOM_RING_OPACITY, c.b * ATOM_RING_OPACITY);
+  }, [def.color]);
+
+  const nucleusColor = useMemo(() => {
+    const c = def.color.clone();
+    return new THREE.Color(c.r * def.nucleusOpacity, c.g * def.nucleusOpacity, c.b * def.nucleusOpacity);
+  }, [def.color, def.nucleusOpacity]);
+
+  const electronColor = useMemo(() => {
+    const c = def.color.clone();
+    return new THREE.Color(c.r * ATOM_ELECTRON_OPACITY, c.g * ATOM_ELECTRON_OPACITY, c.b * ATOM_ELECTRON_OPACITY);
+  }, [def.color]);
+
+  useFrame((_, delta) => {
+    if (!groupRef.current || !electronsRef.current) return;
+
+    elapsed.current += delta;
+    const progress = contentLocal.get();
+    const baseSpeed = lerp(SPEED_MIN, SPEED_MAX, progress);
+    const drift = baseSpeed * ATOM_DRIFT_FACTOR * delta;
+    groupRef.current.position.x += drift;
+    if (groupRef.current.position.x > X_RANGE + 1) {
+      groupRef.current.position.x = -X_RANGE - 1;
+    }
+
+    groupRef.current.rotation.z += def.rotationSpeed * delta;
+
+    for (let e = 0; e < def.electronCount; e++) {
+      const angle = elapsed.current * def.electronSpeed + def.electronPhases[e];
+      electronPositions[e * 3] = Math.cos(angle) * def.orbitRadius;
+      electronPositions[e * 3 + 1] = Math.sin(angle) * def.orbitRadius;
+      electronPositions[e * 3 + 2] = 0;
+    }
+    const posAttr = electronsRef.current.geometry.attributes.position as THREE.BufferAttribute;
+    posAttr.needsUpdate = true;
+  });
+
+  return (
+    <group ref={groupRef} position={[def.x, def.y, def.z]}>
+      <points>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[new Float32Array([0, 0, 0]), 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          color={nucleusColor}
+          transparent
+          depthWrite={false}
+          sizeAttenuation={false}
+          size={4}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+
+      <line>
+        <primitive object={orbitGeom} attach="geometry" />
+        <lineBasicMaterial
+          color={ringColor}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </line>
+
+      <points ref={electronsRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[electronPositions, 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          color={electronColor}
+          transparent
+          depthWrite={false}
+          sizeAttenuation={false}
+          size={2}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+    </group>
+  );
+}
+
+function Atoms({ contentLocal }: { contentLocal: MotionValue<number> }) {
+  const atomDefs = useMemo(() => {
+    const count = getAtomCount();
+    return buildAtomDefs(count);
+  }, []);
+
+  return (
+    <group>
+      {atomDefs.map((def, i) => (
+        <Atom key={i} def={def} contentLocal={contentLocal} />
+      ))}
+    </group>
+  );
+}
+
 function CameraController() {
   const { camera } = useThree();
   const targetRotation = useRef({ x: 0, y: 0 });
@@ -317,6 +511,7 @@ export default function WorkflowParticlesCanvas({
       gl={{ antialias: false, alpha: true }}
       dpr={[1, 1.5]}
     >
+      <Atoms contentLocal={contentLocal} />
       <Particles contentLocal={contentLocal} warp={warp} data={particleData} />
       <ConstellationLines data={particleData} />
       <CameraController />
