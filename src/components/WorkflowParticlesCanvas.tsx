@@ -55,6 +55,8 @@ const GRID_CELL_SIZE = CONNECTION_DISTANCE;
 const ATTRACTION_RADIUS = 4.5;
 const ATTRACTION_STRENGTH = 1.8;
 const ATTRACTION_DECAY_MS = 4500;
+const RESTORE_STRENGTH = 2.0;
+const RESTORE_LERP = 0.03;
 
 const EMERALD = new THREE.Color("#34d399");
 const CYAN = new THREE.Color("#22d3ee");
@@ -112,6 +114,8 @@ function Particles({
   const velocitiesRef = useRef(velocities);
   const currentSize = useRef(DEFAULT_SIZE);
   const currentSpeed = useRef(SPEED_MIN);
+  const baselineY = useRef<Float32Array | null>(null);
+  const displaced = useRef(new Uint8Array(PARTICLE_COUNT));
 
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
@@ -140,6 +144,13 @@ function Particles({
       attractY = hovered.position.y;
       const elapsed = performance.now() - hovered.startTime;
       attractionMult = Math.max(0, 1 - elapsed / ATTRACTION_DECAY_MS);
+
+      if (!baselineY.current) {
+        baselineY.current = new Float32Array(PARTICLE_COUNT);
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          baselineY.current[i] = arr[i * 3 + 1];
+        }
+      }
     }
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
@@ -157,6 +168,14 @@ function Particles({
           const force = ATTRACTION_STRENGTH * falloff * attractionMult * delta;
           arr[i * 3] += (dx / dist) * force;
           arr[i * 3 + 1] += (dy / dist) * force;
+          displaced.current[i] = 1;
+        }
+      } else if (displaced.current[i] && baselineY.current) {
+        const targetY = baselineY.current[i];
+        const dy = targetY - arr[i * 3 + 1];
+        arr[i * 3 + 1] += dy * RESTORE_LERP;
+        if (Math.abs(dy) < 0.05) {
+          displaced.current[i] = 0;
         }
       }
 
@@ -164,6 +183,20 @@ function Particles({
         arr[i * 3] = -X_RANGE;
       }
     }
+
+    if (!hasAttraction && baselineY.current) {
+      let allRestored = true;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        if (displaced.current[i]) {
+          allRestored = false;
+          break;
+        }
+      }
+      if (allRestored) {
+        baselineY.current = null;
+      }
+    }
+
     posAttr.needsUpdate = true;
   });
 
