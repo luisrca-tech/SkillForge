@@ -4,7 +4,19 @@ import * as THREE from "three";
 import type { MotionValue } from "motion/react";
 import type { HoveredNodeData } from "./WorkflowDiagram";
 
-const PARTICLE_COUNT = 850;
+const PARTICLE_BREAKPOINTS: [number, number][] = [
+  [1536, 1200],
+  [0, 850],
+];
+
+function resolveParticleCount() {
+  if (typeof window === "undefined") return 850;
+  const w = window.innerWidth;
+  for (const [bp, count] of PARTICLE_BREAKPOINTS) {
+    if (w >= bp) return count;
+  }
+  return 850;
+}
 const X_RANGE = 12;
 const Y_RANGE = 7;
 const Z_MIN = -4;
@@ -49,13 +61,11 @@ const CONNECTION_DISTANCE = 1.2;
 const CONNECTION_MAX = 3;
 const CONNECTION_OPACITY_MAX = 0.12;
 const CONNECTION_OPACITY_MIN = 0.06;
-const MAX_LINE_SEGMENTS = PARTICLE_COUNT * CONNECTION_MAX;
 const GRID_CELL_SIZE = CONNECTION_DISTANCE;
 
 const ATTRACTION_RADIUS = 4.5;
 const ATTRACTION_STRENGTH = 1.8;
 const ATTRACTION_DECAY_MS = 4500;
-const RESTORE_STRENGTH = 2.0;
 const RESTORE_LERP = 0.03;
 
 const EMERALD = new THREE.Color("#34d399");
@@ -65,12 +75,12 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-function buildParticleData() {
-  const positions = new Float32Array(PARTICLE_COUNT * 3);
-  const colors = new Float32Array(PARTICLE_COUNT * 3);
-  const velocities = new Float32Array(PARTICLE_COUNT);
+function buildParticleData(count: number) {
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const velocities = new Float32Array(count);
 
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
+  for (let i = 0; i < count; i++) {
     const x = (Math.random() * 2 - 1) * X_RANGE;
     const y = (Math.random() * 2 - 1) * Y_RANGE;
     const z = Z_MIN + Math.random() * (Z_MAX - Z_MIN);
@@ -89,10 +99,11 @@ function buildParticleData() {
     velocities[i] = MIN_VELOCITY + Math.random() * (MAX_VELOCITY - MIN_VELOCITY);
   }
 
-  return { positions, colors, velocities };
+  return { count, positions, colors, velocities };
 }
 
 interface ParticleData {
+  count: number;
   positions: Float32Array;
   colors: Float32Array;
   velocities: Float32Array;
@@ -110,12 +121,12 @@ function Particles({
   hoveredNodeRef?: MutableRefObject<HoveredNodeData>;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const { positions, colors, velocities } = data;
+  const { count, positions, colors, velocities } = data;
   const velocitiesRef = useRef(velocities);
   const currentSize = useRef(DEFAULT_SIZE);
   const currentSpeed = useRef(SPEED_MIN);
   const baselineY = useRef<Float32Array | null>(null);
-  const displaced = useRef(new Uint8Array(PARTICLE_COUNT));
+  const displaced = useRef(new Uint8Array(count));
 
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
@@ -146,14 +157,14 @@ function Particles({
       attractionMult = Math.max(0, 1 - elapsed / ATTRACTION_DECAY_MS);
 
       if (!baselineY.current) {
-        baselineY.current = new Float32Array(PARTICLE_COUNT);
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
+        baselineY.current = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
           baselineY.current[i] = arr[i * 3 + 1];
         }
       }
     }
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       arr[i * 3] += velocitiesRef.current[i] * currentSpeed.current * delta;
 
       if (hasAttraction && attractionMult > 0) {
@@ -186,7 +197,7 @@ function Particles({
 
     if (!hasAttraction && baselineY.current) {
       let allRestored = true;
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
+      for (let i = 0; i < count; i++) {
         if (displaced.current[i]) {
           allRestored = false;
           break;
@@ -223,14 +234,17 @@ const GRID_ROWS = Math.ceil((Y_RANGE * 2) / GRID_CELL_SIZE);
 
 function ConstellationLines({ data }: { data: ParticleData }) {
   const lineRef = useRef<THREE.LineSegments>(null);
+  const { count } = data;
+  const maxLineSegments = count * CONNECTION_MAX;
 
   const buffers = useMemo(() => {
-    const linePositions = new Float32Array(MAX_LINE_SEGMENTS * 2 * 3);
-    const lineColors = new Float32Array(MAX_LINE_SEGMENTS * 2 * 3);
+    const max = count * CONNECTION_MAX;
+    const linePositions = new Float32Array(max * 2 * 3);
+    const lineColors = new Float32Array(max * 2 * 3);
     const grid: number[][] = new Array(GRID_COLS * GRID_ROWS);
     for (let i = 0; i < grid.length; i++) grid[i] = [];
     return { linePositions, lineColors, grid };
-  }, []);
+  }, [count]);
 
   useFrame(() => {
     if (!lineRef.current) return;
@@ -240,7 +254,7 @@ function ConstellationLines({ data }: { data: ParticleData }) {
 
     for (let i = 0; i < grid.length; i++) grid[i].length = 0;
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       const x = positions[i * 3];
       const y = positions[i * 3 + 1];
       const col = Math.floor((x + X_RANGE) / GRID_CELL_SIZE);
@@ -250,10 +264,10 @@ function ConstellationLines({ data }: { data: ParticleData }) {
       grid[clampedRow * GRID_COLS + clampedCol].push(i);
     }
 
-    const connectionCounts = new Uint8Array(PARTICLE_COUNT);
+    const connectionCounts = new Uint8Array(count);
     let segmentCount = 0;
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       if (connectionCounts[i] >= CONNECTION_MAX) continue;
 
       const x = positions[i * 3];
@@ -308,16 +322,16 @@ function ConstellationLines({ data }: { data: ParticleData }) {
               connectionCounts[j]++;
               segmentCount++;
 
-              if (segmentCount >= MAX_LINE_SEGMENTS) break;
+              if (segmentCount >= maxLineSegments) break;
             }
           }
-          if (segmentCount >= MAX_LINE_SEGMENTS) break;
+          if (segmentCount >= maxLineSegments) break;
           if (connectionCounts[i] >= CONNECTION_MAX) break;
         }
-        if (segmentCount >= MAX_LINE_SEGMENTS) break;
+        if (segmentCount >= maxLineSegments) break;
         if (connectionCounts[i] >= CONNECTION_MAX) break;
       }
-      if (segmentCount >= MAX_LINE_SEGMENTS) break;
+      if (segmentCount >= maxLineSegments) break;
     }
 
     const geom = lineRef.current.geometry;
@@ -613,7 +627,7 @@ export default function WorkflowParticlesCanvas({
   warp?: boolean;
   hoveredNodeRef?: MutableRefObject<HoveredNodeData>;
 }) {
-  const particleData = useMemo(buildParticleData, []);
+  const particleData = useMemo(() => buildParticleData(resolveParticleCount()), []);
 
   return (
     <Canvas
