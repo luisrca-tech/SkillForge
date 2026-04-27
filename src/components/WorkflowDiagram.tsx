@@ -6,7 +6,7 @@ import {
   useRef,
   type MutableRefObject,
 } from "react";
-import { useMotionValueEvent, type MotionValue } from "motion/react";
+import { motion, useMotionValueEvent, type MotionValue } from "motion/react";
 import { useAnimationObserver } from "../context/AnimationObserverContext";
 import {
   ReactFlow,
@@ -157,6 +157,39 @@ function buildEdges(): Edge[] {
   return edges;
 }
 
+const GLOW_EMERALD = {
+  dim: [
+    "0 0 8px 0px rgba(52,211,153,0.15)",
+    "0 0 20px 2px rgba(52,211,153,0.08)",
+    "0 0 40px 4px rgba(52,211,153,0.04)",
+  ].join(", "),
+  bright: [
+    "0 0 10px 1px rgba(110,231,179,0.25)",
+    "0 0 24px 4px rgba(52,211,153,0.14)",
+    "0 0 48px 8px rgba(52,211,153,0.07)",
+  ].join(", "),
+};
+
+const GLOW_CYAN = {
+  dim: [
+    "0 0 8px 0px rgba(34,211,238,0.15)",
+    "0 0 20px 2px rgba(34,211,238,0.08)",
+    "0 0 40px 4px rgba(34,211,238,0.04)",
+  ].join(", "),
+  bright: [
+    "0 0 10px 1px rgba(103,232,249,0.25)",
+    "0 0 24px 4px rgba(34,211,238,0.14)",
+    "0 0 48px 8px rgba(34,211,238,0.07)",
+  ].join(", "),
+};
+
+const GLOW_PULSE_TRANSITION = {
+  duration: 3.5,
+  ease: "easeInOut" as const,
+  repeat: Infinity,
+  repeatType: "reverse" as const,
+};
+
 function SkillNode({ data }: NodeProps) {
   const { label, optional, handles } = data as {
     label: string;
@@ -169,13 +202,17 @@ function SkillNode({ data }: NodeProps) {
     ? "!bg-cyan-400 !w-2 !h-2 !border-0"
     : "!bg-emerald-400 !w-2 !h-2 !border-0";
 
+  const glow = optional ? GLOW_CYAN : GLOW_EMERALD;
+
   return (
-    <div
-      className={`relative box-border w-full min-w-0 rounded-lg font-mono text-[15px] leading-snug md:text-[13px] cursor-default transition-all duration-200 text-left
+    <motion.div
+      className={`relative box-border w-full min-w-0 rounded-lg font-mono text-[15px] leading-snug md:text-[13px] cursor-default text-left
         ${optional
           ? "bg-cyan-950/50 text-cyan-400 border border-dashed border-cyan-400/40"
           : "bg-emerald-950/50 text-emerald-400 border border-emerald-400/40"
         }`}
+      animate={{ boxShadow: [glow.dim, glow.bright] }}
+      transition={GLOW_PULSE_TRANSITION}
     >
       {h.has("left") && (
         <Handle type="target" position={Position.Left} id="left" className={handleClass} />
@@ -183,7 +220,7 @@ function SkillNode({ data }: NodeProps) {
       {h.has("top") && (
         <Handle type="target" position={Position.Top} id="top" className={handleClass} />
       )}
-      <div className="min-w-0 px-4 py-3 md:px-3.5 md:py-2.5">
+      <div className="relative min-w-0 px-4 py-3 md:px-3.5 md:py-2.5">
         <span className="block break-words pr-0.5 text-pretty">{label}</span>
         {optional && (
           <span className="mt-0.5 inline-block text-[11px] uppercase tracking-wider text-cyan-400/60 md:text-[10px]">
@@ -197,7 +234,7 @@ function SkillNode({ data }: NodeProps) {
       {h.has("bottom") && (
         <Handle type="source" position={Position.Bottom} id="bottom" className={handleClass} />
       )}
-    </div>
+    </motion.div>
   );
 }
 
