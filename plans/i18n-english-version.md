@@ -61,22 +61,27 @@ Durable decisions that apply across all phases:
 
 ---
 
-## Phase 3: Skills Content
+## Phase 3: Skills Content ✅
 
 **User stories**: 5, 17
 
-### What to build
+### What was built
 
-Split the current `skills.ts` into `skills.en.ts` and `skills.pt.ts`, each exporting the same data shape with locale-appropriate content. The current Portuguese content moves to `skills.pt.ts`; English translations are authored in `skills.en.ts`. Create a barrel module that selects the correct file based on the current locale. Update `VerticalScrollPage` to pass the locale-resolved skills data to skill section components. All 7 skills must be fully translated: titles, descriptions, step lists, and terminal dialogue lines.
+- Extracted shared interfaces to `src/data/skills.types.ts` (`SkillData`, `Scenario`, `TerminalLine`)
+- Created `src/data/skills.en.ts` with all 7 skills fully translated to English (titles, descriptions, steps, terminal dialogues)
+- Created `src/data/skills.pt.ts` preserving all original Portuguese content
+- Converted `src/data/skills.ts` into a barrel module with `getSkills(locale)` that selects the correct locale file
+- Updated `VerticalScrollPage` to resolve skills data via `useLocale()` + `getSkillProps(locale)` instead of static imports
+- Both locale files import from the shared types file, so TypeScript enforces identical shapes
 
 ### Acceptance criteria
 
-- [ ] `skills.en.ts` and `skills.pt.ts` exist with identical export shapes
-- [ ] All 7 skills are fully translated in `skills.en.ts` (titles, descriptions, steps, terminal dialogues)
-- [ ] Visiting `/` renders all skill sections in English
-- [ ] Visiting `/pt/` renders all skill sections in Portuguese (matching current behavior)
-- [ ] The barrel export selects the correct locale file based on context
-- [ ] TypeScript enforces that both locale files export the same shape
+- [x] `skills.en.ts` and `skills.pt.ts` exist with identical export shapes
+- [x] All 7 skills are fully translated in `skills.en.ts` (titles, descriptions, steps, terminal dialogues)
+- [x] Visiting `/` renders all skill sections in English
+- [x] Visiting `/pt/` renders all skill sections in Portuguese (matching current behavior)
+- [x] The barrel export selects the correct locale file based on context
+- [x] TypeScript enforces that both locale files export the same shape
 
 ---
 

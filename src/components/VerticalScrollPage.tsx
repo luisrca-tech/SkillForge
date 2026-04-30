@@ -19,15 +19,7 @@ import { SectionNavProvider } from "../context/SectionNavContext";
 import { AnimationObserverProvider } from "../context/AnimationObserverContext";
 import { LocaleProvider, useLocale } from "../context/LocaleContext";
 import type { Locale } from "../i18n";
-import {
-  grillMe,
-  writeAPrd,
-  prdToPlan,
-  planToTracker,
-  doWork,
-  improveCodebaseArchitecture,
-  handleCoderabbit,
-} from "../data/skills";
+import { getSkills } from "../data/skills";
 import StickyHero from "./StickyHero";
 import StickySkillSection from "./StickySkillSection";
 import StickyContextRot from "./StickyContextRot";
@@ -37,15 +29,18 @@ import DownloadButton from "./DownloadButton";
 import LanguageSwitcher from "./LanguageSwitcher";
 import WorkflowParticles from "./WorkflowParticles";
 
-const SKILL_PROPS = {
-  "skill-grill-me": grillMe,
-  "skill-write-a-prd": writeAPrd,
-  "skill-prd-to-plan": prdToPlan,
-  "skill-plan-to-tracker": planToTracker,
-  "skill-do-work": doWork,
-  "skill-improve-codebase-architecture": improveCodebaseArchitecture,
-  "skill-handle-coderabbit": handleCoderabbit,
-} as const;
+function getSkillProps(locale: Locale) {
+  const s = getSkills(locale);
+  return {
+    "skill-grill-me": s.grillMe,
+    "skill-write-a-prd": s.writeAPrd,
+    "skill-prd-to-plan": s.prdToPlan,
+    "skill-plan-to-tracker": s.planToTracker,
+    "skill-do-work": s.doWork,
+    "skill-improve-codebase-architecture": s.improveCodebaseArchitecture,
+    "skill-handle-coderabbit": s.handleCoderabbit,
+  };
+}
 
 const WHEEL_COOLDOWN_MS = 700;
 const TOUCH_THRESHOLD_PX = 50;
@@ -209,7 +204,9 @@ function SectionBody({
     return <ReferencesSection />;
   }
 
-  const data = SKILL_PROPS[sectionId as keyof typeof SKILL_PROPS];
+  const { locale } = useLocale();
+  const skillProps = getSkillProps(locale);
+  const data = skillProps[sectionId as keyof typeof skillProps];
   if (!data) return null;
   return (
     <StickySkillSection
