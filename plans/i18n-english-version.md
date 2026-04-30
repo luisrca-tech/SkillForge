@@ -85,22 +85,28 @@ Durable decisions that apply across all phases:
 
 ---
 
-## Phase 4: Context Rot + References + UI Components
+## Phase 4: Context Rot + References + UI Components ✅
 
 **User stories**: 6, 7, 8, 12
 
-### What to build
+### What was built
 
-Extract all remaining hardcoded Portuguese strings from `ContextRot.tsx`, `ReferencesSection.tsx`, `DownloadButton.tsx`, and `SkillsInstallDialog.tsx` into the locale JSON files and translate them. This includes: Context Rot headings, explanatory paragraphs, comparison panel items (Global Rules vs. On-Demand Skills), the analogy section, reference titles (both inline in ContextRot and in the marquee), the download button label, and the install dialog title/description/help text/footer button.
+- Added ~70 translation keys to `en.json` and `pt.json` covering all ContextRot, StickyContextRot, ReferencesSection, DownloadButton, and SkillsInstallDialog strings
+- `ContextRot.tsx` and `StickyContextRot.tsx` use `useLocale()` + `t()` for all headings, paragraphs (split around inline `<strong>`/`<em>`/`<code>` elements), comparison list items, and analogy text
+- `ReferencesSection.tsx` uses `t()` for heading, subtitle, and all 9 reference titles (via `titleKey` mapped to `TranslationKeys`)
+- `DownloadButton.tsx` uses `t("download.label")` for the button text
+- `SkillsInstallDialog.tsx` uses `t()` for title, description, WSL hint, path note, and close button
+- Shared keys (e.g. `contextRot.heading`, `contextRot.whatIsTitle`) are reused between `ContextRot` and `StickyContextRot`; abbreviated variants use `sticky.*` prefix
+- Reference titles shared between ContextRot inline grid and ReferencesSection marquee via `ref.N.title` keys; ReferencesSection ref 8 uses `ref.8.marquee.title` for its different paper
 
 ### Acceptance criteria
 
-- [ ] `ContextRot` section is fully translated — headings, paragraphs, comparison lists, analogy
-- [ ] `ReferencesSection` heading, subtitle, and reference titles are translated
-- [ ] `DownloadButton` label is translated ("Baixar skills" → "Download skills")
-- [ ] `SkillsInstallDialog` title, description, WSL help text, and close button are translated
-- [ ] No hardcoded Portuguese strings remain in any component outside of the locale files
-- [ ] Both `/` and `/pt/` render all sections correctly in their respective languages
+- [x] `ContextRot` section is fully translated — headings, paragraphs, comparison lists, analogy
+- [x] `ReferencesSection` heading, subtitle, and reference titles are translated
+- [x] `DownloadButton` label is translated ("Baixar skills" → "Download skills")
+- [x] `SkillsInstallDialog` title, description, WSL help text, and close button are translated
+- [x] No hardcoded Portuguese strings remain in any component outside of the locale files
+- [x] Both `/` and `/pt/` render all sections correctly in their respective languages
 
 ---
 

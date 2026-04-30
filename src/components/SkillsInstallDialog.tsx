@@ -7,6 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useLocale } from "../context/LocaleContext";
 
 function CodeBlock({ children }: { children: string }) {
   return (
@@ -23,15 +24,17 @@ export default function SkillsInstallDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useLocale();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="dark bg-neutral-950 border border-neutral-800 text-neutral-100 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-neutral-100">
-            Como instalar os skills
+            {t("dialog.installTitle")}
           </DialogTitle>
           <DialogDescription className="text-neutral-400">
-            Descompacte o arquivo e copie a pasta <code className="text-emerald-400 text-xs">skills/</code> para o diretório correto.
+            {t("dialog.installDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -51,8 +54,7 @@ export default function SkillsInstallDialog({
           <TabsContent value="wsl" className="mt-3 space-y-2">
             <CodeBlock>{"unzip skills.zip -d ~/.claude/skills/"}</CodeBlock>
             <p className="text-xs text-neutral-500">
-              Dentro do WSL, o home fica em <code className="text-neutral-400">/home/&lt;user&gt;/.claude/skills/</code>.
-              No Windows nativo, o caminho é diferente.
+              {t("dialog.wslHint")}
             </p>
           </TabsContent>
 
@@ -66,8 +68,7 @@ export default function SkillsInstallDialog({
         </Tabs>
 
         <p className="text-xs text-neutral-500 leading-relaxed border-l-2 border-neutral-800 pl-3">
-          Os caminhos podem variar dependendo da ferramenta que você usa.
-          A própria LLM pode te ajudar a encontrar o diretório correto para o seu setup.
+          {t("dialog.pathNote")}
         </p>
 
         <DialogFooter className="bg-neutral-900/50 border-neutral-800">
@@ -75,7 +76,7 @@ export default function SkillsInstallDialog({
             onClick={() => onOpenChange(false)}
             className="rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-700 transition-colors cursor-pointer"
           >
-            Fechar
+            {t("dialog.close")}
           </button>
         </DialogFooter>
       </DialogContent>

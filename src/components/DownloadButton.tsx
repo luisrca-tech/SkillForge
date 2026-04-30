@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { cn } from "../lib/utils";
 import SkillsInstallDialog from "./SkillsInstallDialog";
+import { useLocale } from "../context/LocaleContext";
 
 type DownloadButtonProps = {
   className?: string;
@@ -9,6 +10,7 @@ type DownloadButtonProps = {
 
 export default function DownloadButton({ className }: DownloadButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { t } = useLocale();
 
   return (
     <>
@@ -22,7 +24,7 @@ export default function DownloadButton({ className }: DownloadButtonProps) {
         )}
       >
         <Download className="size-4" />
-        Baixar skills
+        {t("download.label")}
       </a>
       <SkillsInstallDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>
