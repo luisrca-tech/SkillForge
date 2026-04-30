@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useLocale } from "../context/LocaleContext";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -12,6 +13,8 @@ const stagger = {
 };
 
 export default function HeroSection() {
+  const { t } = useLocale();
+
   return (
     <motion.div
       initial="hidden"
@@ -24,33 +27,30 @@ export default function HeroSection() {
         transition={{ duration: 0.5 }}
         className="text-sm uppercase tracking-widest text-emerald-400 mb-4 font-mono"
       >
-        AI Coding Workflow
+        {t("hero.eyebrow")}
       </motion.p>
       <motion.h1
         variants={fadeUp}
         transition={{ duration: 0.6 }}
         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold max-w-4xl leading-tight"
       >
-        Pare de fazer <span className="text-emerald-400">vibe coding.</span>
+        {t("hero.title")}<span className="text-emerald-400">{t("hero.titleHighlight")}</span>
       </motion.h1>
       <motion.p
         variants={fadeUp}
         transition={{ duration: 0.6 }}
         className="mt-6 max-w-2xl text-base sm:text-lg md:text-xl text-neutral-400 leading-relaxed"
       >
-        Você pede código à IA sem processo, sem rastreabilidade, sem revisão. O
-        resultado? Código frágil, débito técnico invisível e zero aproveitamento
-        do potencial real dessas ferramentas.
+        {t("hero.description")}
       </motion.p>
       <motion.p
         variants={fadeUp}
         transition={{ duration: 0.6 }}
         className="mt-4 max-w-2xl text-base sm:text-lg md:text-xl text-neutral-300 leading-relaxed"
       >
-        Este é um workflow completo de desenvolvimento assistido por IA —
-        da concepção da feature ao code review — com embasamento técnico sobre{" "}
-        <strong className="text-emerald-400">por que</strong> essa abordagem
-        funciona melhor.
+        {t("hero.value")}
+        <strong className="text-emerald-400">{t("hero.valueHighlightWhy")}</strong>
+        {t("hero.valueHighlightEnd")}
       </motion.p>
       <motion.nav
         variants={fadeUp}
@@ -61,7 +61,7 @@ export default function HeroSection() {
           href="#workflow"
           className="inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold rounded-lg transition-colors"
         >
-          Conhecer o workflow
+          {t("hero.cta")}
         </a>
       </motion.nav>
     </motion.div>

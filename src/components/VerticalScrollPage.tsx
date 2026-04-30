@@ -17,6 +17,8 @@ import {
 } from "../lib/sections";
 import { SectionNavProvider } from "../context/SectionNavContext";
 import { AnimationObserverProvider } from "../context/AnimationObserverContext";
+import { LocaleProvider, useLocale } from "../context/LocaleContext";
+import type { Locale } from "../i18n";
 import {
   grillMe,
   writeAPrd,
@@ -65,6 +67,7 @@ function WorkflowLayer({
   nodePosition: NodeScreenPosition | null;
   onNodeReveal?: (nodeId: string, position: NodeScreenPosition) => void;
 }) {
+  const { t } = useLocale();
   const showCta = visibleCount === 7;
   const nodePositionRef = useRef<NodeScreenPosition | null>(null);
   const hoveredNodeRef = useRef<HoveredNodeData>({ position: null, startTime: 0 });
@@ -99,11 +102,10 @@ function WorkflowLayer({
           className="w-full max-w-7xl mx-auto shrink-0 relative"
         >
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-1.5">
-            O Workflow
+            {t("workflow.title")}
           </h2>
           <p className="text-neutral-400 text-sm text-center max-w-2xl mx-auto">
-            7 skills que transformam o uso da IA em um processo disciplinado e
-            reproduzível.
+            {t("workflow.subtitle")}
           </p>
           <div
             className="mt-3 w-full flex flex-col items-stretch pointer-events-auto sm:mt-0 sm:absolute sm:right-0 sm:-bottom-2 sm:w-auto sm:items-end"
@@ -474,12 +476,14 @@ function SectionNavigator() {
   );
 }
 
-export default function VerticalScrollPage() {
+export default function VerticalScrollPage({ locale = "en" }: { locale?: Locale }) {
   return (
     <NuqsAdapter>
-      <AnimationObserverProvider>
-        <SectionNavigator />
-      </AnimationObserverProvider>
+      <LocaleProvider locale={locale}>
+        <AnimationObserverProvider>
+          <SectionNavigator />
+        </AnimationObserverProvider>
+      </LocaleProvider>
     </NuqsAdapter>
   );
 }
