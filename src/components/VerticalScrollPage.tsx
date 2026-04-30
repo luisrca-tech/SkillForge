@@ -5,7 +5,7 @@ import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
   type SectionId,
   SECTIONS,
-  SECTION_LABELS,
+  SECTION_LABEL_KEYS,
   SECTION_GROUP,
   DEFAULT_SECTION,
   findSection,
@@ -34,6 +34,7 @@ import StickyContextRot from "./StickyContextRot";
 import ReferencesSection from "./ReferencesSection";
 import WorkflowDiagram, { type NodeScreenPosition, type HoveredNodeData } from "./WorkflowDiagram";
 import DownloadButton from "./DownloadButton";
+import LanguageSwitcher from "./LanguageSwitcher";
 import WorkflowParticles from "./WorkflowParticles";
 
 const SKILL_PROPS = {
@@ -222,6 +223,7 @@ function SectionBody({
 }
 
 function SectionNavigator() {
+  const { t } = useLocale();
   const [params, setParams] = useQueryStates({
     s: parseAsString.withDefault(DEFAULT_SECTION),
     b: parseAsInteger.withDefault(0),
@@ -429,6 +431,8 @@ function SectionNavigator() {
           </motion.div>
         </AnimatePresence>
 
+        <LanguageSwitcher />
+
         <footer className="fixed bottom-0 inset-x-0 z-50 px-4 py-3 border-t border-neutral-800/50 bg-neutral-950/80 backdrop-blur-sm">
           <nav className="flex items-center justify-center text-xs">
             {SECTIONS.filter((s) => !s.hidden).map((sec, i, visible) => {
@@ -453,7 +457,7 @@ function SectionNavigator() {
                         : "text-neutral-700 hover:text-neutral-400",
                   ].join(" ")}
                   aria-current={isActive ? "step" : undefined}
-                  title={SECTION_LABELS[sec.id]}
+                  title={t(SECTION_LABEL_KEYS[sec.id])}
                 >
                   <span className="md:hidden flex items-center justify-center">
                     <span
@@ -464,7 +468,7 @@ function SectionNavigator() {
                     />
                   </span>
                   <span className="hidden md:inline">
-                    {SECTION_LABELS[sec.id]}
+                    {t(SECTION_LABEL_KEYS[sec.id])}
                   </span>
                 </button>
               );

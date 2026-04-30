@@ -3,7 +3,7 @@ import pt from "./pt.json";
 
 export type Locale = "en" | "pt";
 
-type TranslationKeys = keyof typeof en;
+export type TranslationKeys = keyof typeof en;
 
 const translations: Record<Locale, Record<string, string>> = { en, pt };
 

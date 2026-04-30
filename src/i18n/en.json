@@ -8,5 +8,16 @@
   "hero.valueHighlightEnd": " this approach works better.",
   "hero.cta": "Explore the workflow",
   "workflow.title": "The Workflow",
-  "workflow.subtitle": "7 skills that turn AI usage into a disciplined, reproducible process."
+  "workflow.subtitle": "7 skills that turn AI usage into a disciplined, reproducible process.",
+  "nav.hero": "Top",
+  "nav.workflow": "Workflow",
+  "nav.grill-me": "Grill Me",
+  "nav.prd": "PRD",
+  "nav.plan": "Plan",
+  "nav.tracker": "Tracker",
+  "nav.do-work": "Do Work",
+  "nav.arch": "Arch",
+  "nav.cr": "CR",
+  "nav.context-rot": "Context Rot",
+  "nav.references": "References"
 }

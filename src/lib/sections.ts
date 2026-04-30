@@ -1,3 +1,5 @@
+import type { TranslationKeys } from "../i18n";
+
 export type SectionId =
   | "hero"
   | "workflow-1"
@@ -43,24 +45,24 @@ export const SECTIONS: Section[] = [
   { id: "references", beats: 1 },
 ];
 
-export const SECTION_LABELS: Record<SectionId, string> = {
-  hero: "Topo",
-  "workflow-1": "Workflow",
-  "workflow-2": "Workflow",
-  "workflow-3": "Workflow",
-  "workflow-4": "Workflow",
-  "workflow-5": "Workflow",
-  "workflow-6": "Workflow",
-  "workflow-7": "Workflow",
-  "skill-grill-me": "Grill Me",
-  "skill-write-a-prd": "PRD",
-  "skill-prd-to-plan": "Plan",
-  "skill-plan-to-tracker": "Tracker",
-  "skill-do-work": "Do Work",
-  "skill-improve-codebase-architecture": "Arch",
-  "skill-handle-coderabbit": "CR",
-  "context-rot": "Context Rot",
-  references: "Referências",
+export const SECTION_LABEL_KEYS: Record<SectionId, TranslationKeys> = {
+  hero: "nav.hero",
+  "workflow-1": "nav.workflow",
+  "workflow-2": "nav.workflow",
+  "workflow-3": "nav.workflow",
+  "workflow-4": "nav.workflow",
+  "workflow-5": "nav.workflow",
+  "workflow-6": "nav.workflow",
+  "workflow-7": "nav.workflow",
+  "skill-grill-me": "nav.grill-me",
+  "skill-write-a-prd": "nav.prd",
+  "skill-prd-to-plan": "nav.plan",
+  "skill-plan-to-tracker": "nav.tracker",
+  "skill-do-work": "nav.do-work",
+  "skill-improve-codebase-architecture": "nav.arch",
+  "skill-handle-coderabbit": "nav.cr",
+  "context-rot": "nav.context-rot",
+  references: "nav.references",
 };
 
 export const SECTION_GROUP: Record<SectionId, number> = {
