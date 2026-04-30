@@ -110,18 +110,23 @@ Durable decisions that apply across all phases:
 
 ---
 
-## Phase 5: SEO + Sitemap
+## Phase 5: SEO + Sitemap ✅
 
 **User stories**: 11, 12, 13, 15
 
-### What to build
+### What was built
 
-Add `hreflang` link tags to both locale pages, pointing to each other as alternates. Move `<title>` and `<meta name="description">` into the locale JSON files so each version gets language-appropriate metadata. Install and configure `@astrojs/sitemap` to generate sitemap entries for both `/` and `/pt/`. Ensure the `<html lang="...">` attribute is set correctly per locale (`en` vs `pt-BR`).
+- Added `meta.title` and `meta.description` keys to both `en.json` and `pt.json`
+- Both pages use `createTranslator()` in Astro frontmatter to render translated `<title>` and `<meta description>`
+- Added `<link rel="alternate" hreflang="en|pt">` tags to both `index.astro` and `pt/index.astro`
+- Installed `@astrojs/sitemap` and configured it with `site: 'https://skillforge.dev'` in `astro.config.mjs`
+- Sitemap generates at build time with entries for both `/` and `/pt/`
+- `<html lang="en">` on `/` and `<html lang="pt-BR">` on `/pt/` were already correct from Phase 1
 
 ### Acceptance criteria
 
-- [ ] Both pages include `<link rel="alternate" hreflang="en" href="/">` and `<link rel="alternate" hreflang="pt" href="/pt/">`
-- [ ] `<title>` and `<meta description>` are translated per locale
-- [ ] `<html lang="en">` on `/` and `<html lang="pt-BR">` on `/pt/`
-- [ ] Sitemap includes both `/` and `/pt/` URLs
-- [ ] `@astrojs/sitemap` is configured and generating output at build time
+- [x] Both pages include `<link rel="alternate" hreflang="en" href="/">` and `<link rel="alternate" hreflang="pt" href="/pt/">`
+- [x] `<title>` and `<meta description>` are translated per locale
+- [x] `<html lang="en">` on `/` and `<html lang="pt-BR">` on `/pt/`
+- [x] Sitemap includes both `/` and `/pt/` URLs
+- [x] `@astrojs/sitemap` is configured and generating output at build time

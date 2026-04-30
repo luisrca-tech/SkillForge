@@ -96,5 +96,8 @@
   "dialog.installDescription": "Descompacte o arquivo e copie a pasta skills/ para o diretório correto.",
   "dialog.wslHint": "Dentro do WSL, o home fica em /home/<user>/.claude/skills/. No Windows nativo, o caminho é diferente.",
   "dialog.pathNote": "Os caminhos podem variar dependendo da ferramenta que você usa. A própria LLM pode te ajudar a encontrar o diretório correto para o seu setup.",
-  "dialog.close": "Fechar"
+  "dialog.close": "Fechar",
+
+  "meta.title": "Workflow profissional de AI coding",
+  "meta.description": "Pare de fazer vibe coding. Tenha um workflow profissional de desenvolvimento assistido por IA — da concepção ao code review."
 }

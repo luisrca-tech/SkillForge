@@ -1,6 +1,9 @@
 ---
 import '../styles/global.css'
 import VerticalScrollPage from '../components/VerticalScrollPage'
+import { createTranslator } from '../i18n'
+
+const t = createTranslator('en')
 ---
 
 <html lang="en" class="h-full">
@@ -10,9 +13,11 @@ import VerticalScrollPage from '../components/VerticalScrollPage'
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Professional AI coding workflow</title>
-		<meta name="description" content="Stop vibe coding. Adopt a professional AI-assisted development workflow — from feature conception to code review." />
+		<title>{t('meta.title')}</title>
+		<meta name="description" content={t('meta.description')} />
 		<meta name="theme-color" content="#0a0a0a" />
+		<link rel="alternate" hreflang="en" href="/" />
+		<link rel="alternate" hreflang="pt" href="/pt/" />
 	</head>
 	<body class="h-full min-h-0 m-0 overflow-hidden overscroll-none bg-neutral-950 text-neutral-100 antialiased">
 		<VerticalScrollPage locale="en" client:load />

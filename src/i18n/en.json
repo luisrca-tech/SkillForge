@@ -96,5 +96,8 @@
   "dialog.installDescription": "Unzip the file and copy the skills/ folder to the correct directory.",
   "dialog.wslHint": "Inside WSL, the home directory is at /home/<user>/.claude/skills/. On native Windows, the path is different.",
   "dialog.pathNote": "Paths may vary depending on the tool you use. The LLM itself can help you find the correct directory for your setup.",
-  "dialog.close": "Close"
+  "dialog.close": "Close",
+
+  "meta.title": "Professional AI coding workflow",
+  "meta.description": "Stop vibe coding. Adopt a professional AI-assisted development workflow — from feature conception to code review."
 }
